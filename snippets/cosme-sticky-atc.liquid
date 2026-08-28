@@ -1,0 +1,451 @@
+{% doc %}
+  Renders a sticky purchase bar that submits the existing product form.
+
+  @param {product} product - Product to display
+  @param {variant} [current_variant] - Currently selected variant
+  @param {image} [image] - Thumbnail image
+  @param {string} product_form_id - ID of the existing product form
+  @param {string} section_id - Product section ID
+  @param {string} atc_label - Add to cart button label
+  @param {boolean} [atc_disabled] - Whether the add to cart action is disabled
+  @param {string} [button_style] - Button style matching the product form
+  @param {string} [color_scheme] - Color scheme class suffix
+  @param {boolean} [enable_desktop] - Show the bar on desktop
+  @param {boolean} [enable_mobile] - Show the bar on mobile
+  @param {boolean} [show_image] - Show the product thumbnail
+  @param {boolean} [show_title] - Show the product title
+  @param {boolean} [show_price] - Show the selected price
+  @param {boolean} [show_variant] - Show the selected variant control
+
+  @example
+  {% render 'cosme-sticky-atc', product: product, product_form_id: product_form_id, section_id: section.id, atc_label: atc_label %}
+{% enddoc %}
+
+{% liquid
+  assign sticky_disabled = false
+  if atc_disabled
+    assign sticky_disabled = true
+  endif
+
+  assign sticky_style = button_style | default: 'primary'
+  assign sticky_scheme = color_scheme | default: 'scheme-1'
+
+  assign show_desktop = true
+  if enable_desktop == false
+    assign show_desktop = false
+  endif
+
+  assign show_mobile = true
+  if enable_mobile == false
+    assign show_mobile = false
+  endif
+
+  assign display_image = true
+  if show_image == false
+    assign display_image = false
+  endif
+
+  assign display_title = true
+  if show_title == false
+    assign display_title = false
+  endif
+
+  assign display_price = true
+  if show_price == false
+    assign display_price = false
+  endif
+
+  assign display_variant = true
+  if show_variant == false
+    assign display_variant = false
+  endif
+
+  assign sticky_image = image
+  assign atc_accessible = 'products.add_to_cart' | t: title: product.title
+%}
+
+<aside
+  class="cosme-sticky-atc color-{{ sticky_scheme }}{% unless show_desktop %} cosme-sticky-atc--hide-desktop{% endunless %}{% unless show_mobile %} cosme-sticky-atc--hide-mobile{% endunless %}"
+  data-sticky-atc
+  data-enable-desktop="{% if show_desktop %}true{% else %}false{% endif %}"
+  data-enable-mobile="{% if show_mobile %}true{% else %}false{% endif %}"
+  aria-hidden="true"
+  inert
+  aria-label="{{ 'products.sticky_atc.bar_label' | t }}"
+>
+  <div class="cosme-sticky-atc__bar" data-sticky-atc-inner>
+    <div class="cosme-sticky-atc__product">
+      {% if display_image %}
+        <div class="cosme-sticky-atc__media">
+          {% if sticky_image %}
+            {% render 'cosme-image',
+              image: sticky_image,
+              width: 96,
+              height: 96,
+              crop: 'center',
+              class: 'cosme-sticky-atc__image',
+              alt: product.title,
+              sizes: '48px'
+            %}
+          {% else %}
+            <span class="cosme-sticky-atc__placeholder" aria-hidden="true"></span>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="cosme-sticky-atc__copy">
+        {% if display_title %}
+          <p class="cosme-sticky-atc__title">{{ product.title | escape }}</p>
+        {% endif %}
+
+        {% if display_variant %}
+          {% unless product.has_only_default_variant %}
+            <label class="cosme-visually-hidden" for="StickyVariant-{{ section_id }}">
+              {{ 'products.sticky_atc.variant' | t }}
+            </label>
+            <select
+              id="StickyVariant-{{ section_id }}"
+              class="cosme-sticky-atc__variant"
+              data-sticky-variant
+            >
+              {% for variant in product.variants %}
+                {% liquid
+                  assign option_value_ids = ''
+                  for option in product.options_with_values
+                    case option.position
+                      when 1
+                        assign match_name = variant.option1
+                      when 2
+                        assign match_name = variant.option2
+                      when 3
+                        assign match_name = variant.option3
+                    endcase
+                    for option_value in option.values
+                      if option_value.name == match_name
+                        if option_value_ids == blank
+                          assign option_value_ids = option_value.id
+                        else
+                          assign option_value_ids = option_value_ids | append: ',' | append: option_value.id
+                        endif
+                      endif
+                    endfor
+                  endfor
+                %}
+                <option
+                  value="{{ variant.id }}"
+                  data-option-value-ids="{{ option_value_ids }}"
+                  {% if current_variant.id == variant.id %}
+                    selected
+                  {% endif %}
+                >
+                  {{ variant.title | escape }}
+                  {% unless variant.available %}
+                    – {{ 'products.badge.sold_out' | t }}
+                  {% endunless %}
+                </option>
+              {% endfor %}
+            </select>
+          {% endunless %}
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="cosme-sticky-atc__purchase">
+      {% if display_price %}
+        <div class="cosme-sticky-atc__price">
+          {% if current_variant %}
+            {% render 'cosme-price', variant: current_variant, show_from: false, show_unit_price: false %}
+          {% else %}
+            {% render 'cosme-price', product: product, show_unit_price: false %}
+          {% endif %}
+        </div>
+      {% endif %}
+
+      {% render 'cosme-button',
+        label: atc_label,
+        type: 'submit',
+        style: sticky_style,
+        disabled: sticky_disabled,
+        name: 'add',
+        form: product_form_id,
+        class: 'cosme-sticky-atc__submit',
+        aria_label: atc_accessible
+      %}
+    </div>
+
+    <p class="cosme-visually-hidden" data-sticky-atc-status role="status" aria-live="polite"></p>
+  </div>
+</aside>
+
+{% stylesheet %}
+  .cosme-sticky-atc {
+    position: fixed;
+    left: var(--page-margin);
+    right: var(--page-margin);
+    bottom: var(--page-margin);
+    top: auto;
+    z-index: 25;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(100%);
+    transition: opacity var(--transition-duration) var(--transition-easing),
+      transform var(--transition-duration) var(--transition-easing),
+      visibility var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-sticky-atc.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .cosme-sticky-atc__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: var(--page-width);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    min-height: 3.25rem;
+    margin-inline: auto;
+    padding: 0.5rem var(--page-margin) calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .cosme-sticky-atc__product {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
+  }
+
+  .cosme-sticky-atc__media,
+  .cosme-sticky-atc__placeholder {
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 2.5rem;
+    overflow: hidden;
+    border-radius: var(--radius-card, 0.25rem);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-sticky-atc__image,
+  .cosme-sticky-atc__image img,
+  .cosme-sticky-atc__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cosme-sticky-atc__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .cosme-sticky-atc__title {
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--color-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cosme-sticky-atc__variant {
+    max-width: 11rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font: inherit;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .cosme-sticky-atc__variant:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-sticky-atc__purchase {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 0 0 auto;
+  }
+
+  .cosme-sticky-atc__price .cosme-price {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-heading);
+    white-space: nowrap;
+  }
+
+  .cosme-sticky-atc__submit {
+    min-height: 2.5rem;
+    padding-inline: var(--spacing-md);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+
+  @media screen and (max-width: 767px) {
+    .cosme-sticky-atc--hide-mobile {
+      display: none;
+    }
+
+    .cosme-sticky-atc__bar {
+      min-height: 3.25rem;
+      padding-block: 0.4rem;
+      padding-block-end: calc(0.4rem + env(safe-area-inset-bottom, 0px));
+      gap: var(--spacing-xs);
+    }
+
+    .cosme-sticky-atc__copy {
+      display: none;
+    }
+
+    .cosme-sticky-atc__price .cosme-price__compare,
+    .cosme-sticky-atc__price .cosme-price__unit {
+      display: none;
+    }
+
+    .cosme-sticky-atc__submit {
+      min-height: 2.35rem;
+      padding-inline: var(--spacing-sm);
+      font-size: 0.75rem;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-sticky-atc--hide-desktop {
+      display: none;
+    }
+
+    .cosme-sticky-atc__bar {
+      min-height: 3.5rem;
+      padding-block: 0.45rem;
+    }
+
+    .cosme-sticky-atc__media,
+    .cosme-sticky-atc__placeholder {
+      width: 2.75rem;
+      height: 2.75rem;
+      flex-basis: 2.75rem;
+    }
+
+    .cosme-sticky-atc__title {
+      font-size: 0.875rem;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    if (window._cosmeStickyAtc) return;
+    window._cosmeStickyAtc = true;
+
+    const desktopQuery = window.matchMedia('(min-width: 768px)');
+    const observers = new WeakMap();
+
+    const canShow = (sticky) => {
+      if (desktopQuery.matches) return sticky.dataset.enableDesktop === 'true';
+      return sticky.dataset.enableMobile === 'true';
+    };
+
+    const setVisible = (sticky, visible) => {
+      const shouldShow = visible && canShow(sticky);
+      sticky.classList.toggle('is-visible', shouldShow);
+      sticky.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+      document.body.style.paddingBottom = shouldShow ? `${sticky.offsetHeight}px` : '';
+      if (shouldShow) {
+        sticky.removeAttribute('inert');
+      } else {
+        if (sticky.contains(document.activeElement)) {
+          const section = sticky.closest('[data-main-product]');
+          const mainButton = section?.querySelector('.cosme-product-form__submit');
+          if (mainButton) mainButton.focus();
+        }
+        sticky.setAttribute('inert', '');
+      }
+    };
+
+    const observe = (section) => {
+      const sticky = section.querySelector('[data-sticky-atc]');
+      const sentinel = section.querySelector('[data-product-atc-sentinel]');
+      if (!sticky || !sentinel) return;
+
+      observers.get(section)?.disconnect();
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const intersecting = entries.some((entry) => entry.isIntersecting);
+          setVisible(sticky, !intersecting);
+        },
+        { threshold: 0 }
+      );
+
+      observer.observe(sentinel);
+      observers.set(section, observer);
+    };
+
+    const syncVariantFromSticky = (select) => {
+      const section = select.closest('[data-main-product]');
+      if (!section) return;
+
+      const option = select.selectedOptions[0];
+      const ids = (option?.dataset.optionValueIds || '').split(',').filter(Boolean);
+      if (!ids.length) return;
+
+      let lastInput = null;
+      ids.forEach((id) => {
+        const input = section.querySelector(`[data-option-value-id="${CSS.escape(id)}"]`);
+        if (!input) return;
+        input.disabled = false;
+        input.checked = true;
+        lastInput = input;
+      });
+
+      if (lastInput) {
+        // Устанавливаем флаг, что изменение инициировано из sticky
+        window._cosmeVariantFromSticky = true;
+        lastInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    };
+
+    document.querySelectorAll('[data-main-product]').forEach(observe);
+
+    document.addEventListener('cosme:product-updated', (event) => {
+      const section = event.target.closest('[data-main-product]') || event.target;
+      if (section?.matches?.('[data-main-product]')) observe(section);
+    });
+
+    document.addEventListener('shopify:section:load', (event) => {
+      const section = event.target.querySelector('[data-main-product]');
+      if (section) observe(section);
+    });
+
+    document.addEventListener('change', (event) => {
+      const select = event.target.closest('[data-sticky-variant]');
+      if (!select) return;
+      syncVariantFromSticky(select);
+    });
+
+    desktopQuery.addEventListener('change', () => {
+      document.querySelectorAll('[data-main-product]').forEach(observe);
+    });
+  })();
+{% endjavascript %}

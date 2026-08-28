@@ -1,0 +1,106 @@
+{% doc %}
+  Renders cart drawer line items, subtotal, and actions.
+
+  @example
+  {% render 'cosme-cart-drawer-content' %}
+{% enddoc %}
+
+<div class="cosme-cart-drawer__content" data-cart-drawer-content>
+  {%- if cart.item_count == 0 -%}
+    <p class="cosme-cart-drawer__empty">{{ 'cart.empty' | t }}</p>
+  {%- else -%}
+    <ul class="cosme-cart-drawer__items" role="list">
+      {%- for item in cart.items -%}
+        <li class="cosme-cart-drawer__item" data-cart-item data-line-key="{{ item.key }}">
+          <a class="cosme-cart-drawer__item-media" href="{{ item.url }}">
+            {%- if item.image -%}
+              {% render 'cosme-image',
+                image: item.image,
+                width: 120,
+                aspect_ratio: '1',
+                alt: item.product.title
+              %}
+            {%- endif -%}
+          </a>
+
+          <div class="cosme-cart-drawer__item-details">
+            <a class="cosme-cart-drawer__item-title" href="{{ item.url }}">
+              {{ item.product.title | escape }}
+            </a>
+
+            {%- unless item.product.has_only_default_variant -%}
+              <p class="cosme-cart-drawer__item-variant">{{ item.variant.title | escape }}</p>
+            {%- endunless -%}
+
+            <div class="cosme-cart-drawer__item-price">
+              {% render 'cosme-price', variant: item.variant, show_from: false %}
+            </div>
+
+            <div class="cosme-cart-drawer__item-actions">
+              <div class="cosme-cart-drawer__quantity">
+                <button
+                  type="button"
+                  class="cosme-cart-drawer__quantity-btn"
+                  data-cart-quantity-decrease
+                  aria-label="{{ 'cart.decrease_quantity' | t: product: item.product.title }}"
+                >
+                  {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+                </button>
+                <input
+                  class="cosme-cart-drawer__quantity-input"
+                  type="number"
+                  name="updates[]"
+                  value="{{ item.quantity }}"
+                  min="0"
+                  aria-label="{{ 'cart.quantity' | t: product: item.product.title }}"
+                  data-cart-quantity-input
+                  data-line-key="{{ item.key }}"
+                >
+                <button
+                  type="button"
+                  class="cosme-cart-drawer__quantity-btn"
+                  data-cart-quantity-increase
+                  aria-label="{{ 'cart.increase_quantity' | t: product: item.product.title }}"
+                >
+                  {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                class="cosme-cart-drawer__remove"
+                data-cart-remove
+                data-line-key="{{ item.key }}"
+              >
+                {{ 'cart.remove' | t }}
+              </button>
+            </div>
+          </div>
+        </li>
+      {%- endfor -%}
+    </ul>
+
+    <div class="cosme-cart-drawer__footer">
+      <div class="cosme-cart-drawer__subtotal">
+        <span class="cosme-cart-drawer__subtotal-label">{{ 'cart.subtotal' | t }}</span>
+        <span class="cosme-cart-drawer__subtotal-value" data-cart-subtotal>{{ cart.total_price | money }}</span>
+      </div>
+
+      <div class="cosme-cart-drawer__buttons">
+        {%- assign view_cart_label = 'cart.view_cart' | t -%}
+        {%- assign checkout_label = 'cart.checkout' | t -%}
+        {% render 'cosme-button',
+          label: view_cart_label,
+          url: routes.cart_url,
+          style: 'secondary',
+          class: 'cosme-cart-drawer__view-cart'
+        %}
+        <form action="{{ routes.cart_url }}" method="post">
+          <button type="submit" name="checkout" class="cosme-button cosme-button--primary cosme-cart-drawer__checkout">
+            {{ checkout_label | escape }}
+          </button>
+        </form>
+      </div>
+    </div>
+  {%- endif -%}
+</div>

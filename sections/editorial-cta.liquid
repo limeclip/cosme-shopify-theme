@@ -1,0 +1,1083 @@
+{% liquid
+  assign layout = section.settings.layout | default: 'image_left'
+  assign content_alignment = section.settings.content_alignment | default: 'center'
+  assign bg_alternate = false
+  if section.settings.background_style == 'alternate'
+    assign bg_alternate = true
+  endif
+  assign section_height = section.settings.section_height | default: 'large'
+  assign section_spacing = section.settings.section_spacing | default: 'medium'
+  assign image_fit = section.settings.image_fit | default: 'contain'
+  assign image_position = section.settings.image_position | default: 'center'
+  assign image_focal_position = section.settings.image_focal_position | default: 'center'
+  assign image_width = section.settings.image_width | default: 58
+  assign content_width = section.settings.content_width | default: 420
+  assign text_alignment = section.settings.text_alignment | default: 'center'
+  assign has_primary_button = false
+  assign has_secondary_button = false
+  assign has_image = false
+  assign has_mobile_image = false
+  assign image_alt = ''
+  assign heading_id = 'EditorialCtaHeading-' | append: section.id
+
+  assign is_text_only = false
+  if layout == 'text_only'
+    assign is_text_only = true
+  endif
+
+  if section.settings.primary_button_label != blank
+    assign has_primary_button = true
+  endif
+  if section.settings.secondary_button_label != blank
+    assign has_secondary_button = true
+  endif
+  if section.settings.image != blank
+    assign has_image = true
+  endif
+  if section.settings.mobile_image != blank
+    assign has_mobile_image = true
+  endif
+
+  assign has_copy = false
+  if section.settings.eyebrow != blank
+    assign has_copy = true
+  endif
+  if section.settings.heading != blank
+    assign has_copy = true
+  endif
+  if section.settings.description != blank
+    assign has_copy = true
+  endif
+  if has_primary_button
+    assign has_copy = true
+  endif
+  if has_secondary_button
+    assign has_copy = true
+  endif
+
+  if has_image
+    if section.settings.image.alt != blank
+      assign image_alt = section.settings.image.alt
+    elsif section.settings.heading != blank
+      assign image_alt = section.settings.heading
+    endif
+  endif
+
+  assign image_sizes = '(min-width: 990px) ' | append: image_width | append: 'vw, (min-width: 750px) 50vw, 100vw'
+  assign image_link_label = 'sections.editorial_cta.image_link_label' | t
+  if section.settings.heading != blank
+    assign image_link_label = section.settings.heading
+  endif
+  assign placeholder_label = 'sections.editorial_cta.image_placeholder' | t
+  if image_alt != blank
+    assign placeholder_label = image_alt
+  elsif section.settings.heading != blank
+    assign placeholder_label = section.settings.heading
+  endif
+
+  assign focal_css = ''
+  case image_focal_position
+    when 'top'
+      assign focal_css = 'top center'
+    when 'bottom'
+      assign focal_css = 'bottom center'
+    when 'left'
+      assign focal_css = 'center left'
+    when 'right'
+      assign focal_css = 'center right'
+    when 'top_left'
+      assign focal_css = 'top left'
+    when 'top_right'
+      assign focal_css = 'top right'
+    when 'bottom_left'
+      assign focal_css = 'bottom left'
+    when 'bottom_right'
+      assign focal_css = 'bottom right'
+  endcase
+%}
+
+<section
+  id="EditorialCta-{{ section.id }}"
+  class="
+     cosme-editorial-cta
+     full-width
+     color-{{ section.settings.color_scheme }}
+     cosme-editorial-cta--layout-{{ layout }}
+     cosme-editorial-cta--align-{{ content_alignment }}
+     cosme-editorial-cta--height-{{ section_height }}
+     cosme-editorial-cta--spacing-{{ section_spacing }}
+     cosme-editorial-cta--fit-{{ image_fit }}
+     cosme-editorial-cta--image-{{ image_position }}
+     cosme-editorial-cta--focal-{{ image_focal_position }}
+     cosme-editorial-cta--text-{{ text_alignment }}
+     {% if section.settings.show_border %}cosme-editorial-cta--border{% endif %}
+     {% if settings.enable_animations %}cosme-editorial-cta--animated{% endif %}
+     {% unless has_copy %}cosme-editorial-cta--media-only{% endunless %}
+     {% if is_text_only %}cosme-editorial-cta--text-only{% endif %}
+    {% if bg_alternate %}cosme-editorial-cta--bg-alternate{% endif %}
+  "
+  style="
+    --editorial-cta-image-width: {{ image_width }}%;
+    --editorial-cta-content-width: {{ content_width }}px;
+    --editorial-cta-border-width: {{ section.settings.border_width | default: settings.border_width }}px;
+    {% if focal_css != blank %}
+      --editorial-cta-focal: {{ focal_css }};
+    {% endif %}
+  "
+  {% if section.settings.heading != blank %}
+    aria-labelledby="{{ heading_id }}"
+  {% else %}
+    aria-label="{{ 'sections.editorial_cta.landmark_label' | t }}"
+  {% endif %}
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-editorial-cta__inner">
+    <div class="cosme-editorial-cta__grid">
+      {% unless is_text_only %}
+        <div class="cosme-editorial-cta__media">
+          {%- if section.settings.image_link != blank -%}
+            <a
+              class="cosme-editorial-cta__media-link"
+              href="{{ section.settings.image_link }}"
+              {% if image_alt == blank %}
+                aria-label="{{ image_link_label | escape }}"
+              {% endif %}
+            >
+          {%- endif -%}
+
+          {%- if has_image -%}
+            <div class="cosme-editorial-cta__media-frame">
+              {%- if has_mobile_image -%}
+                <picture>
+                  <source
+                    media="(max-width: 749px)"
+                    srcset="
+                      {{ section.settings.mobile_image | image_url: width: 500 }} 500w,
+                      {{ section.settings.mobile_image | image_url: width: 750 }} 750w,
+                      {{ section.settings.mobile_image | image_url: width: 1000 }} 1000w,
+                      {{ section.settings.mobile_image | image_url: width: 1400 }} 1400w
+                    "
+                    sizes="100vw"
+                  >
+                  {{
+                    section.settings.image
+                    | image_url: width: 2000
+                    | image_tag:
+                      class: 'cosme-editorial-cta__img',
+                      alt: image_alt,
+                      loading: 'lazy',
+                      widths: '600, 800, 1000, 1200, 1400, 1600, 1800, 2000',
+                      sizes: image_sizes
+                  }}
+                </picture>
+              {%- else -%}
+                {% render 'cosme-image',
+                  image: section.settings.image,
+                  alt: image_alt,
+                  class: 'cosme-editorial-cta__image',
+                  width: 2000,
+                  sizes: image_sizes,
+                  loading: 'lazy'
+                %}
+              {%- endif -%}
+            </div>
+          {%- else -%}
+            <div
+              class="cosme-editorial-cta__placeholder"
+              {% if section.settings.heading != blank or image_alt != blank %}
+                role="img"
+                aria-label="{{ placeholder_label | escape }}"
+              {% else %}
+                aria-hidden="true"
+              {% endif %}
+            >
+              {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-cta__placeholder-svg' }}
+            </div>
+          {%- endif -%}
+
+          {%- if section.settings.image_link != blank -%}
+            </a>
+          {%- endif -%}
+        </div>
+      {% endunless %}
+
+      <div class="cosme-editorial-cta__content">
+        <div class="cosme-editorial-cta__content-inner">
+          {%- if section.settings.eyebrow != blank -%}
+            <p class="cosme-editorial-cta__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+          {%- endif -%}
+
+          {%- if section.settings.heading != blank -%}
+            <h2 class="cosme-editorial-cta__heading" id="{{ heading_id }}">
+              {{ section.settings.heading | escape }}
+            </h2>
+          {%- endif -%}
+
+          {%- if section.settings.description != blank -%}
+            <p class="cosme-editorial-cta__description">
+              {{ section.settings.description | escape | newline_to_br }}
+            </p>
+          {%- endif -%}
+
+          {%- if has_primary_button or has_secondary_button -%}
+            <div class="cosme-editorial-cta__actions">
+              {%- if has_primary_button -%}
+                {% render 'cosme-button',
+                  label: section.settings.primary_button_label,
+                  url: section.settings.primary_button_link,
+                  style: 'primary',
+                  class: 'cosme-editorial-cta__button'
+                %}
+              {%- endif -%}
+
+              {%- if has_secondary_button -%}
+                {% render 'cosme-button',
+                  label: section.settings.secondary_button_label,
+                  url: section.settings.secondary_button_link,
+                  style: 'outline',
+                  class: 'cosme-editorial-cta__button'
+                %}
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-editorial-cta {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    overflow-x: clip;
+  }
+
+  .cosme-editorial-cta--bg-alternate {
+    background-color: var(--color-background-2);
+  }
+  .cosme-editorial-cta--border {
+    border-block: var(--editorial-cta-border-width, var(--border-width)) solid var(--color-border);
+  }
+
+  .cosme-editorial-cta__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-editorial-cta--spacing-small .cosme-editorial-cta__inner {
+    padding-block: calc(var(--spacing-section) * 0.45);
+  }
+
+  .cosme-editorial-cta--spacing-medium .cosme-editorial-cta__inner {
+    padding-block: clamp(2.5rem, 6vw, var(--spacing-section));
+  }
+
+  .cosme-editorial-cta--spacing-large .cosme-editorial-cta__inner {
+    padding-block: clamp(3.25rem, 8vw, calc(var(--spacing-section) * 1.2));
+  }
+
+  .cosme-editorial-cta__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-md);
+    align-items: start;
+    min-width: 0;
+  }
+
+  .cosme-editorial-cta--text-only .cosme-editorial-cta__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cosme-editorial-cta--text-only .cosme-editorial-cta__content-inner {
+    max-width: 100%;
+    margin-inline: 0;
+  }
+
+  .cosme-editorial-cta--text-only.cosme-editorial-cta--text-left .cosme-editorial-cta__content-inner {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .cosme-editorial-cta--text-only.cosme-editorial-cta--text-center .cosme-editorial-cta__content-inner {
+    align-items: center;
+    text-align: center;
+  }
+
+  .cosme-editorial-cta--text-only.cosme-editorial-cta--text-right .cosme-editorial-cta__content-inner {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .cosme-editorial-cta--align-center .cosme-editorial-cta__grid {
+    align-items: center;
+  }
+
+  .cosme-editorial-cta--align-bottom .cosme-editorial-cta__grid {
+    align-items: end;
+  }
+
+  .cosme-editorial-cta--media-only .cosme-editorial-cta__content {
+    display: none;
+  }
+
+  .cosme-editorial-cta__media,
+  .cosme-editorial-cta__content {
+    min-width: 0;
+  }
+
+  .cosme-editorial-cta__media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+  }
+
+  .cosme-editorial-cta--image-left .cosme-editorial-cta__media {
+    justify-content: flex-start;
+  }
+
+  .cosme-editorial-cta--image-right .cosme-editorial-cta__media {
+    justify-content: flex-end;
+  }
+
+  .cosme-editorial-cta__media-link,
+  .cosme-editorial-cta__media-frame,
+  .cosme-editorial-cta__placeholder,
+  .cosme-editorial-cta picture {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .cosme-editorial-cta__media-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-editorial-cta__media-link:hover,
+  .cosme-editorial-cta__media-link:focus-visible,
+  .cosme-editorial-cta__media-link:active {
+    color: inherit;
+  }
+
+  .cosme-editorial-cta__media-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-editorial-cta__image.cosme-image,
+  .cosme-editorial-cta__image .cosme-image__img {
+    width: 100%;
+  }
+
+  .cosme-editorial-cta__img,
+  .cosme-editorial-cta__image .cosme-image__img,
+  .cosme-editorial-cta__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: min(62vh, 34rem);
+    object-fit: contain;
+    object-position: center center;
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-editorial-cta--fit-cover .cosme-editorial-cta__img,
+  .cosme-editorial-cta--fit-cover .cosme-editorial-cta__image .cosme-image__img {
+    object-fit: cover;
+    height: 100%;
+    min-height: 16rem;
+  }
+
+  .cosme-editorial-cta--focal-top .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-top .cosme-editorial-cta__image .cosme-image__img {
+    object-position: top center;
+  }
+
+  .cosme-editorial-cta--focal-bottom .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-bottom .cosme-editorial-cta__image .cosme-image__img {
+    object-position: bottom center;
+  }
+
+  .cosme-editorial-cta--focal-left .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-left .cosme-editorial-cta__image .cosme-image__img {
+    object-position: center left;
+  }
+
+  .cosme-editorial-cta--focal-right .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-right .cosme-editorial-cta__image .cosme-image__img {
+    object-position: center right;
+  }
+
+  .cosme-editorial-cta--focal-top_left .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-top_left .cosme-editorial-cta__image .cosme-image__img {
+    object-position: top left;
+  }
+
+  .cosme-editorial-cta--focal-top_right .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-top_right .cosme-editorial-cta__image .cosme-image__img {
+    object-position: top right;
+  }
+
+  .cosme-editorial-cta--focal-bottom_left .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-bottom_left .cosme-editorial-cta__image .cosme-image__img {
+    object-position: bottom left;
+  }
+
+  .cosme-editorial-cta--focal-bottom_right .cosme-editorial-cta__img,
+  .cosme-editorial-cta--focal-bottom_right .cosme-editorial-cta__image .cosme-image__img {
+    object-position: bottom right;
+  }
+
+  .cosme-editorial-cta[style*='--editorial-cta-focal'] .cosme-editorial-cta__img,
+  .cosme-editorial-cta[style*='--editorial-cta-focal'] .cosme-editorial-cta__image .cosme-image__img {
+    object-position: var(--editorial-cta-focal) !important;
+  }
+
+  .cosme-editorial-cta__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 4 / 5;
+    max-height: min(62vh, 34rem);
+    background-color: var(--color-background-2);
+    color: var(--color-muted);
+  }
+
+  .cosme-editorial-cta__placeholder-svg {
+    width: auto;
+    max-width: min(22rem, 72%);
+    max-height: 72%;
+    margin-inline: auto;
+    opacity: 0.28;
+    filter: brightness(0);
+  }
+
+  .cosme-editorial-cta.color-scheme-2 .cosme-editorial-cta__placeholder-svg {
+    filter: brightness(0) invert(1);
+  }
+
+  .cosme-editorial-cta__content {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .cosme-editorial-cta--align-center .cosme-editorial-cta__content {
+    align-items: center;
+  }
+
+  .cosme-editorial-cta--align-bottom .cosme-editorial-cta__content {
+    align-items: flex-end;
+  }
+
+  .cosme-editorial-cta__content-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: min(var(--editorial-cta-content-width), 100%);
+    min-width: 0;
+  }
+
+  .cosme-editorial-cta__eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-editorial-cta__heading {
+    margin: 0;
+    max-width: 14ch;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.85rem, 5vw, 3.15rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.08;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+    overflow-wrap: break-word;
+  }
+
+  .cosme-editorial-cta--text-only .cosme-editorial-cta__heading {
+    max-width: 100%;
+  }
+
+  .cosme-editorial-cta__description {
+    margin: 0;
+    margin-block-start: var(--spacing-xs);
+    max-width: 100%;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .cosme-editorial-cta--text-only .cosme-editorial-cta__description {
+    max-width: 100%;
+  }
+
+  .cosme-editorial-cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    width: 100%;
+    margin-block-start: var(--spacing-md);
+  }
+
+  .cosme-editorial-cta--text-only .cosme-editorial-cta__actions {
+    justify-content: flex-start; /* по умолчанию */
+  }
+
+  .cosme-editorial-cta--text-only.cosme-editorial-cta--text-center .cosme-editorial-cta__actions {
+    justify-content: center;
+  }
+
+  .cosme-editorial-cta--text-only.cosme-editorial-cta--text-right .cosme-editorial-cta__actions {
+    justify-content: flex-end;
+  }
+  .cosme-editorial-cta__button {
+    max-width: 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .cosme-editorial-cta .cosme-button--primary:active {
+    background-color: var(--color-button-primary-background-hover, var(--color-foreground));
+    border-color: var(--color-button-primary-background-hover, var(--color-foreground));
+    color: var(--color-button-primary-label-hover, var(--color-background));
+  }
+
+  .cosme-editorial-cta .cosme-button--secondary:active {
+    background-color: var(--color-button-secondary-background-hover, transparent);
+    border-color: var(--color-button-secondary-background-hover, var(--color-foreground));
+    color: var(--color-button-secondary-label-hover, var(--color-foreground));
+  }
+
+  .cosme-editorial-cta--animated .cosme-editorial-cta__media,
+  .cosme-editorial-cta--animated .cosme-editorial-cta__content {
+    animation: cosme-editorial-cta-reveal var(--animation-duration) var(--transition-easing) both;
+  }
+
+  .cosme-editorial-cta--animated .cosme-editorial-cta__content {
+    animation-delay: 90ms;
+  }
+
+  @keyframes cosme-editorial-cta-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(0.6rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-editorial-cta--animated .cosme-editorial-cta__media,
+    .cosme-editorial-cta--animated .cosme-editorial-cta__content {
+      animation: none;
+    }
+  }
+
+  @media (max-width: 749px) {
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__media {
+      order: 2;
+    }
+
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__content {
+      order: 1;
+    }
+
+    .cosme-editorial-cta__heading {
+      max-width: none;
+      font-size: clamp(1.75rem, 8vw, 2.25rem);
+    }
+
+    .cosme-editorial-cta__placeholder {
+      max-height: min(46vh, 22rem);
+    }
+
+    .cosme-editorial-cta__img,
+    .cosme-editorial-cta__image .cosme-image__img,
+    .cosme-editorial-cta__placeholder-svg {
+      max-height: min(46vh, 22rem);
+    }
+
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__img,
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__image .cosme-image__img {
+      min-height: 14rem;
+      max-height: min(42vh, 20rem);
+    }
+
+    .cosme-editorial-cta--text-only .cosme-editorial-cta__content-inner {
+      max-width: 100%;
+    }
+  }
+
+  @media (min-width: 750px) {
+    .cosme-editorial-cta:not(.cosme-editorial-cta--text-only) .cosme-editorial-cta__grid {
+      grid-template-columns: minmax(0, var(--editorial-cta-image-width)) minmax(14rem, 1fr);
+      gap: var(--spacing-xl);
+    }
+
+    .cosme-editorial-cta--layout-content_left:not(.cosme-editorial-cta--text-only) .cosme-editorial-cta__grid {
+      grid-template-columns: minmax(14rem, 1fr) minmax(0, var(--editorial-cta-image-width));
+    }
+
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__media {
+      order: 2;
+    }
+
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__content {
+      order: 1;
+      justify-content: flex-end;
+    }
+
+    .cosme-editorial-cta--layout-image_left .cosme-editorial-cta__content {
+      padding-inline-start: var(--spacing-md);
+    }
+
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__content {
+      padding-inline-end: var(--spacing-md);
+    }
+
+    .cosme-editorial-cta--media-only .cosme-editorial-cta__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cosme-editorial-cta--height-medium .cosme-editorial-cta__grid,
+    .cosme-editorial-cta--text-only.cosme-editorial-cta--height-medium .cosme-editorial-cta__grid {
+      min-height: min(44vh, 26rem);
+    }
+
+    .cosme-editorial-cta--height-large .cosme-editorial-cta__grid,
+    .cosme-editorial-cta--text-only.cosme-editorial-cta--height-large .cosme-editorial-cta__grid {
+      min-height: min(56vh, 34rem);
+    }
+
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__media-link,
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__media-frame,
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__image,
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__placeholder {
+      height: 100%;
+      max-height: none;
+      aspect-ratio: auto;
+    }
+
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__img,
+    .cosme-editorial-cta--fit-cover .cosme-editorial-cta__image .cosme-image__img {
+      min-height: 22rem;
+      max-height: none;
+      height: 100%;
+    }
+
+    .cosme-editorial-cta--text-only .cosme-editorial-cta__grid {
+      gap: 0;
+    }
+
+    .cosme-editorial-cta--text-only .cosme-editorial-cta__content {
+      justify-content: center;
+    }
+  }
+
+  @media (min-width: 750px) and (max-width: 989px) {
+    .cosme-editorial-cta--spacing-medium .cosme-editorial-cta__inner,
+    .cosme-editorial-cta--spacing-large .cosme-editorial-cta__inner {
+      padding-block: var(--spacing-xl);
+    }
+
+    .cosme-editorial-cta__heading {
+      font-size: clamp(1.75rem, 3.4vw, 2.35rem);
+    }
+
+    .cosme-editorial-cta__grid {
+      gap: var(--spacing-lg);
+    }
+
+    .cosme-editorial-cta--layout-image_left .cosme-editorial-cta__content,
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__content {
+      padding-inline: 0;
+    }
+  }
+
+  @media (min-width: 990px) {
+    .cosme-editorial-cta:not(.cosme-editorial-cta--text-only) .cosme-editorial-cta__grid {
+      gap: var(--spacing-2xl);
+    }
+
+    .cosme-editorial-cta__heading {
+      font-size: clamp(2.35rem, 3.8vw, 3.35rem);
+    }
+
+    .cosme-editorial-cta--layout-image_left .cosme-editorial-cta__content {
+      padding-inline-start: var(--spacing-lg);
+    }
+
+    .cosme-editorial-cta--layout-content_left .cosme-editorial-cta__content {
+      padding-inline-end: var(--spacing-lg);
+    }
+
+    .cosme-editorial-cta--height-large .cosme-editorial-cta__grid {
+      min-height: min(62vh, 38rem);
+    }
+
+    .cosme-editorial-cta--text-only .cosme-editorial-cta__grid {
+      min-height: 0;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:sections.editorial_cta.name",
+  "tag": "div",
+  "class": "section-editorial-cta",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.editorial_cta.settings.content_header"
+    },
+
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.editorial_cta.settings.eyebrow",
+      "default": "THE EVERYDAY EDIT"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.editorial_cta.settings.heading",
+      "default": "Make space for your ritual."
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "t:sections.editorial_cta.settings.description",
+      "default": "Thoughtfully selected essentials designed to become part of your everyday."
+    },
+    {
+      "type": "text",
+      "id": "primary_button_label",
+      "label": "t:sections.editorial_cta.settings.primary_button_label",
+      "default": "Shop essentials"
+    },
+    {
+      "type": "url",
+      "id": "primary_button_link",
+      "label": "t:sections.editorial_cta.settings.primary_button_link"
+    },
+    {
+      "type": "text",
+      "id": "secondary_button_label",
+      "label": "t:sections.editorial_cta.settings.secondary_button_label",
+      "default": "Explore collections"
+    },
+    {
+      "type": "url",
+      "id": "secondary_button_link",
+      "label": "t:sections.editorial_cta.settings.secondary_button_link"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.editorial_cta.settings.image_header"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:labels.image"
+    },
+    {
+      "type": "image_picker",
+      "id": "mobile_image",
+      "label": "t:sections.editorial_cta.settings.mobile_image",
+      "info": "t:sections.editorial_cta.settings.mobile_image_info"
+    },
+    {
+      "type": "url",
+      "id": "image_link",
+      "label": "t:labels.image_link"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "t:labels.image_position",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:options.alignment.left"
+        },
+        {
+          "value": "center",
+          "label": "t:options.alignment.center"
+        },
+        {
+          "value": "right",
+          "label": "t:options.alignment.right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "image_width",
+      "label": "t:sections.main_hero.blocks.slide.image_width",
+      "min": 40,
+      "max": 70,
+      "step": 1,
+      "unit": "%",
+      "default": 58
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "t:sections.main_hero.blocks.slide.image_fit",
+      "options": [
+        {
+          "value": "contain",
+          "label": "t:sections.main_hero.blocks.slide.image_fit_contain"
+        },
+        {
+          "value": "cover",
+          "label": "t:sections.main_hero.blocks.slide.image_fit_cover"
+        }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "select",
+      "id": "image_focal_position",
+      "label": "t:sections.main_hero.blocks.slide.image_focal_position",
+      "options": [
+        {
+          "value": "center",
+          "label": "t:options.alignment.center"
+        },
+        {
+          "value": "top",
+          "label": "t:sections.main_hero.blocks.slide.image_position_top"
+        },
+        {
+          "value": "bottom",
+          "label": "t:sections.main_hero.blocks.slide.image_position_bottom"
+        },
+        {
+          "value": "left",
+          "label": "t:options.alignment.left"
+        },
+        {
+          "value": "right",
+          "label": "t:options.alignment.right"
+        },
+        {
+          "value": "top_left",
+          "label": "t:sections.editorial_cta.settings.focal_top_left"
+        },
+        {
+          "value": "top_right",
+          "label": "t:sections.editorial_cta.settings.focal_top_right"
+        },
+        {
+          "value": "bottom_left",
+          "label": "t:sections.editorial_cta.settings.focal_bottom_left"
+        },
+        {
+          "value": "bottom_right",
+          "label": "t:sections.editorial_cta.settings.focal_bottom_right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "t:general.layout"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.editorial_cta.settings.layout",
+      "options": [
+        {
+          "value": "image_left",
+          "label": "t:sections.editorial_cta.settings.layout_image_left"
+        },
+        {
+          "value": "content_left",
+          "label": "t:sections.editorial_cta.settings.layout_content_left"
+        },
+        {
+          "value": "text_only",
+          "label": "t:sections.editorial_cta.settings.layout_text_only"
+        }
+      ],
+      "default": "image_left"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "t:sections.editorial_cta.settings.content_alignment",
+      "options": [
+        {
+          "value": "top",
+          "label": "t:sections.editorial_cta.settings.alignment_top"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.editorial_cta.settings.alignment_center"
+        },
+        {
+          "value": "bottom",
+          "label": "t:sections.editorial_cta.settings.alignment_bottom"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "section_height",
+      "label": "t:sections.editorial_cta.settings.section_height",
+      "options": [
+        {
+          "value": "auto",
+          "label": "t:sections.editorial_cta.settings.height_auto"
+        },
+        {
+          "value": "medium",
+          "label": "t:options.size.medium"
+        },
+        {
+          "value": "large",
+          "label": "t:options.size.large"
+        }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "range",
+      "id": "content_width",
+      "label": "t:sections.editorial_cta.settings.content_width",
+      "min": 280,
+      "max": 640,
+      "step": 10,
+      "unit": "px",
+      "default": 420
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:sections.editorial_cta.settings.text_alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:options.alignment.left"
+        },
+        {
+          "value": "center",
+          "label": "t:options.alignment.center"
+        },
+        {
+          "value": "right",
+          "label": "t:options.alignment.right"
+        }
+      ],
+      "default": "center",
+      "visible_if": "{{ section.settings.layout == 'text_only' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:general.appearance"
+    },
+    {
+      "type": "select",
+      "id": "background_style",
+      "label": "t:sections.editorial_cta.settings.background_style",
+      "options": [
+        {
+          "value": "default",
+          "label": "t:sections.editorial_cta.settings.background_default"
+        },
+        {
+          "value": "alternate",
+          "label": "t:sections.editorial_cta.settings.background_alternate"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_border",
+      "label": "t:sections.editorial_cta.settings.show_border",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "t:labels.border_width",
+      "min": 1,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "default": 1,
+      "visible_if": "{{ section.settings.show_border }}"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        {
+          "value": "small",
+          "label": "t:options.size.small"
+        },
+        {
+          "value": "medium",
+          "label": "t:options.size.medium"
+        },
+        {
+          "value": "large",
+          "label": "t:options.size.large"
+        }
+      ],
+      "default": "medium"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.editorial_cta.name",
+      "settings": {
+        "eyebrow": "THE EVERYDAY EDIT",
+        "heading": "Make space for your ritual.",
+        "description": "Thoughtfully selected essentials designed to become part of your everyday.",
+        "primary_button_label": "Shop essentials",
+        "secondary_button_label": "Explore collections",
+        "layout": "image_left",
+        "content_alignment": "center",
+        "section_height": "large",
+        "image_fit": "contain",
+        "image_width": 58,
+        "color_scheme": "scheme-1"
+      }
+    }
+  ]
+}
+{% endschema %}

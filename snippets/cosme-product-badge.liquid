@@ -1,0 +1,63 @@
+{% doc %}
+  Renders a small product badge for sale, sold out, or custom labels.
+
+  @param {string} type - Badge type: `sale`, `sold-out`, or `custom`
+  @param {string} [text] - Custom label text when `type` is `custom`
+  @param {string} [class] - Additional CSS classes
+
+  @example
+  {% render 'cosme-product-badge', type: 'sale' %}
+  {% render 'cosme-product-badge', type: 'sold-out' %}
+  {% render 'cosme-product-badge', type: 'custom', text: 'New' %}
+{% enddoc %}
+
+{% liquid
+  case type
+    when 'sale'
+      assign badge_text = 'products.badge.sale' | t
+      assign badge_modifier = 'sale'
+    when 'sold-out'
+      assign badge_text = 'products.badge.sold_out' | t
+      assign badge_modifier = 'sold-out'
+    when 'custom'
+      assign badge_text = text
+      assign badge_modifier = 'custom'
+  endcase
+%}
+
+{% if badge_text != blank %}
+  <span class="cosme-product-badge cosme-product-badge--{{ badge_modifier }}{% if class != blank %} {{ class }}{% endif %}">
+    {{ badge_text | escape }}
+  </span>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-product-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-card);
+    border: var(--border-width) solid transparent;
+    font-size: 0.75em;
+    font-weight: inherit;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .cosme-product-badge--sale {
+    background-color: var(--color-sale);
+    color: var(--color-accent-contrast);
+  }
+
+  .cosme-product-badge--sold-out {
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .cosme-product-badge--custom {
+    background-color: var(--color-badge-background, var(--color-background));
+    border-color: var(--color-border);
+    color: var(--color-badge-text, var(--color-foreground));
+  }
+{% endstylesheet %}

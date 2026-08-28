@@ -13,8 +13,11 @@
     {% unless settings.type_primary_font.system? %}
       <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
 
-      {% comment %} Preload the base font variant for initial page render {% endcomment %}
+      {% comment %} Preload body and heading base font variants {% endcomment %}
       {{ settings.type_primary_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
+      {% unless settings.type_heading_font.system? %}
+        {{ settings.type_heading_font | font_url | preload_tag: as: 'font', crossorigin: 'anonymous' }}
+      {% endunless %}
     {% endunless %}
 
     {% # Load and preload the critical CSS %}
@@ -23,14 +26,24 @@
     {% # Social, title, etc. %}
     {% render 'meta-tags' %}
 
+    {%- if settings.favicon != blank -%}
+      <link
+        rel="icon"
+        type="image/png"
+        href="{{ settings.favicon | image_url: width: 32, height: 32 }}"
+      >
+    {%- endif -%}
+
     {{ content_for_header }}
   </head>
 
-  <body>
+  <body class="color-{{ settings.color_scheme }}">
     {% sections 'header-group' %}
 
     {{ content_for_layout }}
 
     {% sections 'footer-group' %}
+
+    {% render 'cosme-quick-view' %}
   </body>
 </html>

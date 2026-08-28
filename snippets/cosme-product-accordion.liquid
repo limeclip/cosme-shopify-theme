@@ -1,0 +1,287 @@
+{% doc %}
+  Renders product accordion rows from the parent section's description and information blocks.
+
+  Description rows show a short excerpt. Information rows use a metafield, then fallback content.
+  Empty rows are omitted.
+
+  @param {product} product - Product to read description and metafields from
+  @param {object} section - Parent product section with accordion blocks and settings
+
+  @example
+  {% render 'cosme-product-accordion', product: product, section: section %}
+{% enddoc %}
+
+{% liquid
+  assign accordion_icon = section.settings.accordion_icon_style | default: 'plus_minus'
+  assign open_first_row = false
+  if section.settings.open_first_accordion
+    assign open_first_row = true
+  endif
+  assign first_row_opened = false
+%}
+
+<div class="cosme-product-details cosme-product-details--inline cosme-product-details--icon-{{ accordion_icon }}">
+  <div class="cosme-product-details__accordion">
+    {% for block in section.blocks %}
+      {% liquid
+        assign row_enabled = true
+        if block.settings.enabled == false
+          assign row_enabled = false
+        endif
+
+        assign row_heading = block.settings.heading | strip
+        assign row_content = ''
+        assign row_has_content = false
+      %}
+
+      {% if row_enabled %}
+        {% case block.type %}
+          {% when 'description' %}
+            {% if section.settings.show_description %}
+              {% liquid
+                assign description_excerpt = ''
+                assign short_description_field = product.metafields.custom.short_description
+                if short_description_field != blank
+                  assign description_excerpt = short_description_field | metafield_text | strip
+                endif
+                if description_excerpt == blank
+                  if product.description != blank
+                    assign description_excerpt = product.description | strip_html | strip | truncate: 200
+                  endif
+                endif
+              %}
+              {% if description_excerpt != blank %}
+                {% if row_heading == blank %}
+                  {% assign row_heading = 'products.details.description' | t %}
+                {% endif %}
+                {% capture row_content %}
+                  <p>{{ description_excerpt | escape }}</p>
+                {% endcapture %}
+              {% endif %}
+            {% endif %}
+
+          {% when 'information' %}
+            {% if row_heading == blank %}
+              {% assign row_heading = 'products.details.information' | t %}
+            {% endif %}
+            {% capture row_content %}
+              {% render 'cosme-metafield',
+                product: product,
+                namespace: block.settings.metafield_namespace,
+                key: block.settings.metafield_key
+              %}
+            {% endcapture %}
+            {% assign metafield_plain = row_content | strip_html | strip %}
+            {% if metafield_plain == blank %}
+              {% if block.settings.content != blank %}
+                {% capture row_content %}
+                  <div class="cosme-rte">{{ block.settings.content }}</div>
+                {% endcapture %}
+              {% else %}
+                {% assign row_content = '' %}
+              {% endif %}
+            {% endif %}
+        {% endcase %}
+
+        {% assign row_plain = row_content | strip_html | strip %}
+        {% if row_plain != blank %}
+          {% if row_heading != blank %}
+            {% assign row_has_content = true %}
+          {% endif %}
+        {% endif %}
+      {% endif %}
+
+      {% if row_has_content %}
+        {% liquid
+          assign row_open = false
+          if open_first_row
+            unless first_row_opened
+              assign row_open = true
+              assign first_row_opened = true
+            endunless
+          endif
+          assign row_id = 'ProductAccordion-' | append: section.id | append: '-' | append: block.id
+        %}
+        <details
+          class="cosme-product-details__item"
+          id="{{ row_id }}"
+          {% if row_open %}
+            open
+          {% endif %}
+          {{ block.shopify_attributes }}
+        >
+          <summary class="cosme-product-details__summary">
+            <span class="cosme-product-details__title">{{ row_heading | escape }}</span>
+            <span class="cosme-product-details__icon" aria-hidden="true">
+              {% if accordion_icon == 'chevron' %}
+                {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+              {% else %}
+                <span class="cosme-product-details__icon-plus">
+                  {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+                </span>
+                <span class="cosme-product-details__icon-minus">
+                  {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+                </span>
+              {% endif %}
+            </span>
+          </summary>
+          <div class="cosme-product-details__panel">
+            <div class="cosme-product-details__content">
+              {{ row_content }}
+            </div>
+          </div>
+        </details>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .cosme-product-details--inline {
+    width: 100%;
+    max-width: none;
+    background: transparent;
+  }
+
+  .cosme-product-details--inline .cosme-product-details__accordion {
+    max-width: none;
+  }
+
+  .cosme-product-details {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  .cosme-product-details__accordion {
+    width: 100%;
+    max-width: 42rem;
+    min-width: 0;
+  }
+
+  .cosme-product-details__item {
+    border-block-end: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-product-details__item:first-child {
+    border-block-start: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-product-details__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    width: 100%;
+    min-height: 3.25rem;
+    padding-block: 0.9rem;
+    cursor: pointer;
+    list-style: none;
+    color: var(--color-heading);
+  }
+
+  .cosme-product-details__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cosme-product-details__summary:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-product-details__title {
+    font-family: var(--font-heading--family);
+    font-style: var(--font-heading--style);
+    font-weight: var(--font-heading--weight);
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-product-details__icon {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--color-foreground);
+  }
+
+  .cosme-product-details__icon-minus {
+    display: none;
+  }
+
+  .cosme-product-details__item[open] .cosme-product-details__icon-plus {
+    display: none;
+  }
+
+  .cosme-product-details__item[open] .cosme-product-details__icon-minus {
+    display: inline-flex;
+  }
+
+  .cosme-product-details--icon-chevron .cosme-product-details__icon {
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-product-details--icon-chevron .cosme-product-details__item[open] .cosme-product-details__icon {
+    transform: rotate(180deg);
+  }
+
+  .cosme-product-details__item::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 0.35s var(--transition-easing),
+      content-visibility 0.35s allow-discrete;
+  }
+
+  .cosme-product-details__item[open]::details-content {
+    block-size: auto;
+  }
+
+  .cosme-product-details__content {
+    padding-block: 0 1.25rem;
+    max-width: 40rem;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-product-details__content p,
+  .cosme-product-details__content ul,
+  .cosme-product-details__content ol {
+    margin: 0 0 0.75rem;
+  }
+
+  .cosme-product-details__content ul,
+  .cosme-product-details__content ol {
+    padding-inline-start: 1.1rem;
+  }
+
+  .cosme-product-details__content .cosme-rte > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-product-details__content .cosme-rte > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-product-details__content a {
+    color: var(--color-foreground);
+  }
+
+  .cosme-product-details__content a:hover,
+  .cosme-product-details__content a:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-product-details__accordion:empty {
+    display: none;
+  }
+{% endstylesheet %}

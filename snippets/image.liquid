@@ -1,11 +1,8 @@
 {% doc %}
   Renders a responsive image that might be wrapped in a link.
 
-  When `width`, `height` and `crop` are provided, the image will be rendered
-  with a fixed aspect ratio.
-
-  Serves as an example of how to use the `image_url` filter and `image_tag` filter
-  as well as how you can use LiquidDoc to document your code.
+  Skeleton compatibility wrapper. Delegates to `cosme-image` with extended
+  Cosme image support while preserving the original parameter surface.
 
   @param {image} image - The image to be rendered
   @param {string} [url] - An optional destination URL for the image
@@ -17,48 +14,13 @@
   @example
   {% render 'image', image: product.featured_image %}
   {% render 'image', image: product.featured_image, url: product.url %}
-  {% render 'image',
-    class: 'product__image',
-    image: product.featured_image,
-    url: product.url,
-    width: 1200,
-    height: 800,
-    crop: 'center',
-  %}
 {% enddoc %}
 
-{% liquid
-  unless height
-    assign width = width | default: image.width
-  endunless
-
-  if url
-    assign wrapper = 'a'
-  else
-    assign wrapper = 'div'
-  endif
+{% render 'cosme-image',
+  image: image,
+  url: url,
+  class: class,
+  width: width,
+  height: height,
+  crop: crop
 %}
-
-<{{ wrapper }}
-  class="image {{ class }}"
-  {% if url %}
-    href="{{ url }}"
-  {% endif %}
->
-  {{ image | image_url: width: width, height: height, crop: crop | image_tag }}
-</{{ wrapper }}>
-
-{% stylesheet %}
-  .image {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    height: auto;
-  }
-
-  .image > img {
-    width: 100%;
-    height: auto;
-  }
-{% endstylesheet %}

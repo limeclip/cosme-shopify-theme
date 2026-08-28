@@ -1,0 +1,95 @@
+{% doc %}
+  Renders product option selectors from Shopify option values.
+
+  Color-like options with swatches use circular swatches. Other options use pills.
+
+  @param {product} product - Product to render options for
+  @param {string} section_id - Section ID used to generate unique input IDs
+
+  @example
+  {% render 'cosme-variant-picker', product: product, section_id: section.id %}
+{% enddoc %}
+
+{% unless product.has_only_default_variant %}
+  <div class="cosme-variant-picker" data-variant-picker>
+    {% for option in product.options_with_values %}
+      {% liquid
+        assign option_name_downcase = option.name | downcase
+        assign use_swatches = false
+
+        if option_name_downcase contains 'color'
+          assign use_swatches = true
+        endif
+        if option_name_downcase contains 'colour'
+          assign use_swatches = true
+        endif
+
+        for option_value in option.values
+          if option_value.swatch
+            assign use_swatches = true
+          endif
+        endfor
+      %}
+
+      <fieldset class="cosme-variant-picker__option">
+        <legend class="cosme-variant-picker__legend">
+          <span class="cosme-variant-picker__legend-label">{{ option.name | escape }}</span>
+          {% for option_value in option.values %}
+            {% if option_value.selected %}
+              <span class="cosme-variant-picker__legend-value">{{ option_value.name | escape }}</span>
+            {% endif %}
+          {% endfor %}
+        </legend>
+
+        <div
+          class="cosme-variant-picker__values{% if use_swatches %} cosme-variant-picker__values--swatches{% endif %}"
+        >
+          {% for option_value in option.values %}
+            {% liquid
+              assign input_id = section_id | append: '-option-' | append: option.position | append: '-' | append: forloop.index0
+              assign is_unavailable = false
+              if option_value.available == false
+                assign is_unavailable = true
+              endif
+            %}
+
+            <div class="cosme-variant-picker__value">
+              <input
+                type="radio"
+                id="{{ input_id }}"
+                class="cosme-visually-hidden"
+                name="{{ section_id }}-option-{{ option.position }}"
+                value="{{ option_value.name | escape }}"
+                data-option-value-id="{{ option_value.id }}"
+                data-product-url="{{ option_value.product_url }}"
+                {% if option_value.selected %}
+                  checked
+                {% endif %}
+              >
+              <label
+                class="cosme-variant-picker__label{% if use_swatches %} cosme-variant-picker__label--swatch{% else %} cosme-variant-picker__label--pill{% endif %}{% if is_unavailable %} is-unavailable{% endif %}"
+                for="{{ input_id }}"
+                title="{{ option_value.name | escape }}"
+              >
+                {% if use_swatches %}
+                  <span class="cosme-visually-hidden">{{ option_value.name | escape }}</span>
+                  <span
+                    class="cosme-variant-picker__swatch"
+                    aria-hidden="true"
+                    {% if option_value.swatch.image %}
+                      style="background-image: url({{ option_value.swatch.image | image_url: width: 80 }});"
+                    {% elsif option_value.swatch.color %}
+                      style="background-color: {{ option_value.swatch.color }};"
+                    {% endif %}
+                  ></span>
+                {% else %}
+                  {{ option_value.name | escape }}
+                {% endif %}
+              </label>
+            </div>
+          {% endfor %}
+        </div>
+      </fieldset>
+    {% endfor %}
+  </div>
+{% endunless %}

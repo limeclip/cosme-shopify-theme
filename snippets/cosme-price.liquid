@@ -1,0 +1,99 @@
+{% doc %}
+  Renders product or variant pricing with sale, compare-at, unit, and from-price support.
+
+  @param {product} [product] - Product object for catalog or summary pricing
+  @param {variant} [variant] - Variant object for precise line-item pricing
+  @param {boolean} [show_compare_at] - Show compare-at price when on sale (default: true)
+  @param {boolean} [show_unit_price] - Show unit price when available (default: false)
+  @param {boolean} [show_from] - Show "from" prefix when product price varies (default: true)
+  @param {string} [class] - Additional CSS classes
+
+  @example
+  {% render 'cosme-price', product: product %}
+  {% render 'cosme-price', variant: product.selected_or_first_available_variant, show_unit_price: true %}
+{% enddoc %}
+
+{% liquid
+  assign show_compare = show_compare_at | default: true
+  assign show_unit = show_unit_price | default: false
+  assign show_from_label = show_from | default: true
+  assign on_sale = false
+  assign price_amount = nil
+  assign compare_at_amount = nil
+  assign unit_price_amount = nil
+  assign unit_price_measurement = nil
+  assign display_from = false
+
+  if variant
+    assign price_amount = variant.price
+    assign compare_at_amount = variant.compare_at_price
+    assign unit_price_amount = variant.unit_price
+    assign unit_price_measurement = variant.unit_price_measurement
+  elsif product
+    if product.price_varies and show_from_label
+      assign price_amount = product.price_min
+      assign compare_at_amount = product.compare_at_price_min
+      assign display_from = true
+    else
+      assign price_amount = product.price
+      assign compare_at_amount = product.compare_at_price
+    endif
+  endif
+
+  if compare_at_amount > price_amount
+    assign on_sale = true
+  endif
+
+  assign formatted_price = price_amount | money
+%}
+
+{% if price_amount %}
+  <div
+    class="cosme-price{% if on_sale %} cosme-price--on-sale{% endif %}{% if class != blank %} {{ class }}{% endif %}"
+  >
+    {% if on_sale and show_compare and compare_at_amount %}
+      <span class="cosme-visually-hidden">{{ 'products.price.regular' | t }}</span>
+      <s class="cosme-price__compare">{{ compare_at_amount | money }}</s>
+      <span class="cosme-visually-hidden">{{ 'products.price.sale' | t }}</span>
+    {% endif %}
+
+    {% if display_from %}
+      <span class="cosme-price__regular">
+        {{- 'products.price.from' | t: price: formatted_price -}}
+      </span>
+    {% else %}
+      <span class="cosme-price__regular">{{ formatted_price }}</span>
+    {% endif %}
+
+    {% if show_unit and unit_price_amount and unit_price_measurement %}
+      <span class="cosme-price__unit">
+        {{ unit_price_amount | unit_price_with_measurement: unit_price_measurement }}
+      </span>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-sm);
+    color: var(--color-foreground);
+  }
+
+  .cosme-price--on-sale .cosme-price__regular {
+    color: var(--color-sale);
+  }
+
+  .cosme-price__compare {
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+
+  .cosme-price__unit {
+    flex-basis: 100%;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+{% endstylesheet %}

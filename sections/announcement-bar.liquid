@@ -1,0 +1,415 @@
+{%- if section.settings.show_announcement and section.settings.message != blank -%}
+  <aside
+    class="cosme-announcement-bar full-width{% unless section.settings.use_custom_colors %} color-{{ section.settings.color_scheme }}{% endunless %}{% if settings.enable_animations %} cosme-announcement-bar--animated{% endif %}"
+    style="
+      {% if section.settings.use_custom_colors %}
+        --announcement-background: {{ section.settings.background_color }};
+        --announcement-text: {{ section.settings.text_color }};
+      {% endif %}
+      --announcement-text-align: {{ section.settings.text_alignment }};
+      --announcement-justify: {% if section.settings.text_alignment == 'center' %}center{% elsif section.settings.text_alignment == 'right' %}flex-end{% else %}flex-start{% endif %};
+      --announcement-height: {{ section.settings.height_desktop }}px;
+      --announcement-height-mobile: {{ section.settings.height_mobile }}px;
+      --announcement-speed: {{ section.settings.speed }}s;
+      --announcement-font-size: {{ section.settings.text_size }};
+      --announcement-text-transform: {{ section.settings.text_transform }};
+      --announcement-font-style: {{ section.settings.font_style }};
+      --announcement-font-weight: {{ section.settings.font_weight }};
+      {% if section.settings.enable_top_border %}border-top: var(--border-width) solid {{ section.settings.border_color | default: 'var(--color-border)' }};{% endif %}
+      {% if section.settings.enable_bottom_border %}border-bottom: var(--border-width) solid {{ section.settings.border_color | default: 'var(--color-border)' }};{% endif %}
+    "
+    {{ section.shopify_attributes }}
+  >
+    {%- if section.settings.enable_ticker -%}
+      <div class="cosme-announcement-bar__ticker">
+        <div class="cosme-announcement-bar__ticker-track">
+          {%- for i in (1..5) -%}
+            <span class="cosme-announcement-bar__message">
+              {%- if section.settings.icon != blank -%}
+                <span class="cosme-announcement-bar__icon-wrapper">
+                  {% render 'cosme-icon', icon: section.settings.icon, size: 'md' %}
+                </span>
+              {%- endif -%}
+              {{ section.settings.message }}
+            </span>
+          {%- endfor -%}
+          {%- for i in (1..5) -%}
+            <span class="cosme-announcement-bar__message">
+              {%- if section.settings.icon != blank -%}
+                <span class="cosme-announcement-bar__icon-wrapper">
+                  {% render 'cosme-icon', icon: section.settings.icon, size: 'md' %}
+                </span>
+              {%- endif -%}
+              {{ section.settings.message }}
+            </span>
+          {%- endfor -%}
+        </div>
+      </div>
+    {%- else -%}
+      <div class="cosme-announcement-bar__inner">
+        {%- if section.settings.link != blank -%}
+          <a
+            class="cosme-announcement-bar__message"
+            href="{{ section.settings.link }}"
+            {% if section.settings.link_label != blank %}
+              aria-label="{{ section.settings.link_label | escape }}"
+            {% endif %}
+          >
+            {%- if section.settings.icon != blank -%}
+              <span class="cosme-announcement-bar__icon-wrapper">
+                {% render 'cosme-icon', icon: section.settings.icon, size: 'md' %}
+              </span>
+            {%- endif -%}
+            {{ section.settings.message }}
+          </a>
+        {%- else -%}
+          <span class="cosme-announcement-bar__message">
+            {%- if section.settings.icon != blank -%}
+              <span class="cosme-announcement-bar__icon-wrapper">
+                {% render 'cosme-icon', icon: section.settings.icon, size: 'md' %}
+              </span>
+            {%- endif -%}
+            {{ section.settings.message }}
+          </span>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </aside>
+
+  {%- if section.settings.custom_css != blank -%}
+    <style>
+      {{ section.settings.custom_css }}
+    </style>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .cosme-announcement-bar {
+    display: flex;
+    align-items: center;
+    min-height: var(--announcement-height, 48px);
+    background-color: var(--announcement-background, var(--color-background));
+    color: var(--announcement-text, var(--color-foreground));
+  }
+
+  @media (max-width: 768px) {
+    .cosme-announcement-bar {
+      min-height: var(--announcement-height-mobile, var(--announcement-height, 40px));
+    }
+  }
+
+  .cosme-announcement-bar__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    overflow: hidden;
+  }
+
+  .cosme-announcement-bar__message {
+    display: flex;
+    align-items: center;
+    justify-content: var(--announcement-justify, center);
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding-block: var(--spacing-xs);
+    color: inherit;
+    text-decoration: none;
+    width: 100%;
+
+    /* Новые настройки */
+    font-size: var(--announcement-font-size, inherit);
+    text-transform: var(--announcement-text-transform, none);
+    font-style: var(--announcement-font-style, normal);
+    font-weight: var(--announcement-font-weight, normal);
+  }
+
+  a.cosme-announcement-bar__message:hover,
+  a.cosme-announcement-bar__message:focus-visible {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .cosme-announcement-bar__icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* -------- Режим тикера -------- */
+  .cosme-announcement-bar__ticker {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .cosme-announcement-bar__ticker-track {
+    display: flex;
+    width: max-content;
+    gap: calc(var(--spacing-xl) * 2);
+    animation: cosme-ticker var(--announcement-duration, 10s) linear infinite;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-announcement-bar__ticker-track .cosme-announcement-bar__message {
+    flex-shrink: 0;
+    width: auto;
+    justify-content: center;
+  }
+
+  .cosme-announcement-bar--animated .cosme-announcement-bar__ticker-track {
+    animation: cosme-ticker var(--announcement-speed, 10s) linear infinite;
+  }
+
+  @keyframes cosme-ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .cosme-announcement-bar__ticker:hover .cosme-announcement-bar__ticker-track {
+    animation-play-state: paused;
+  }
+
+  .cosme-announcement-bar--animated a.cosme-announcement-bar__message {
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-announcement-bar--animated a.cosme-announcement-bar__message:hover {
+    opacity: 0.85;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-announcement-bar__ticker-track {
+      animation-duration: 0s !important;
+      animation-play-state: paused !important;
+    }
+    .cosme-announcement-bar--animated .cosme-announcement-bar__ticker-track {
+      animation: none !important;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.announcement_bar",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_announcement",
+      "label": "t:labels.show_announcement",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "richtext",
+      "id": "message",
+      "label": "t:labels.message",
+      "default": "<p>Here can be a short promotional message</p>"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "t:labels.link"
+    },
+    {
+      "type": "text",
+      "id": "link_label",
+      "label": "t:labels.link_label",
+      "info": "t:info.announcement_link_label"
+    },
+    {
+      "type": "select",
+      "id": "icon",
+      "label": "t:labels.icon",
+      "options": [
+        { "value": "", "label": "t:options.none" },
+        { "value": "cart", "label": "Cart" },
+        { "value": "search", "label": "Search" },
+        { "value": "account", "label": "Account" },
+        { "value": "menu", "label": "Menu" },
+        { "value": "close", "label": "Close" },
+        { "value": "chevron-down", "label": "Chevron down" },
+        { "value": "chevron-up", "label": "Chevron up" },
+        { "value": "chevron-left", "label": "Chevron left" },
+        { "value": "chevron-right", "label": "Chevron right" },
+        { "value": "plus", "label": "Plus" },
+        { "value": "minus", "label": "Minus" },
+        { "value": "arrow-right", "label": "Arrow right" },
+        { "value": "external-link", "label": "External link" },
+        { "value": "gift", "label": "Gift" },
+        { "value": "star", "label": "Star" },
+        { "value": "shipping", "label": "Shipping" },
+        { "value": "discount", "label": "Discount" }
+      ],
+      "default": ""
+    },
+    {
+      "type": "header",
+      "content": "t:general.appearance"
+    },
+    {
+      "type": "text_alignment",
+      "id": "text_alignment",
+      "label": "t:labels.alignment",
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "height_desktop",
+      "min": 20,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "t:labels.height_desktop",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "height_mobile",
+      "min": 20,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "label": "t:labels.height_mobile",
+      "default": 40
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_ticker",
+      "label": "t:labels.enable_ticker",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "min": 10,
+      "max": 70,
+      "step": 1,
+      "unit": "s",
+      "label": "t:labels.speed",
+      "default": 30,
+      "info": "t:info.speed"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.typography"
+    },
+    {
+      "type": "select",
+      "id": "text_size",
+      "label": "t:labels.text_size",
+      "options": [
+        { "value": "0.75rem", "label": "t:options.size.small" },
+        { "value": "0.875rem", "label": "t:options.size.medium" },
+        { "value": "1rem", "label": "t:options.size.large" }
+      ],
+      "default": "0.875rem"
+    },
+    {
+      "type": "select",
+      "id": "text_transform",
+      "label": "t:labels.text_transform",
+      "options": [
+        { "value": "none", "label": "t:options.text_transform.none" },
+        { "value": "uppercase", "label": "t:options.text_transform.uppercase" },
+        { "value": "lowercase", "label": "t:options.text_transform.lowercase" },
+        { "value": "capitalize", "label": "t:options.text_transform.capitalize" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "font_style",
+      "label": "t:labels.font_style",
+      "options": [
+        { "value": "normal", "label": "t:options.font_style.normal" },
+        { "value": "italic", "label": "t:options.font_style.italic" }
+      ],
+      "default": "normal"
+    },
+    {
+      "type": "select",
+      "id": "font_weight",
+      "label": "t:labels.font_weight",
+      "options": [
+        { "value": "300", "label": "300" },
+        { "value": "400", "label": "400 (normal)" },
+        { "value": "500", "label": "500" },
+        { "value": "700", "label": "700 (bold)" }
+      ],
+      "default": "400"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_custom_colors",
+      "label": "t:labels.use_custom_colors",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "t:labels.background",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "t:labels.text_color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "header",
+      "content": "t:general.borders"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_top_border",
+      "label": "t:labels.enable_top_border",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_bottom_border",
+      "label": "t:labels.enable_bottom_border",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "t:labels.border_color",
+      "default": "#E5E5E5",
+      "info": "t:info.border_color"
+    },
+    {
+      "type": "header",
+      "content": "t:general.custom_css"
+    },
+    {
+      "type": "textarea",
+      "id": "custom_css",
+      "label": "t:labels.custom_css",
+      "info": "t:info.custom_css"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.announcement_bar"
+    }
+  ]
+}
+{% endschema %}

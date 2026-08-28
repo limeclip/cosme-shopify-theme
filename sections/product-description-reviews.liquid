@@ -1,0 +1,418 @@
+{% liquid
+  assign enable_reviews = false
+  if section.settings.enable_reviews
+    assign enable_reviews = true
+  endif
+
+  assign show_reviews_tab = false
+  if enable_reviews
+    assign show_reviews_tab = true
+  endif
+
+  assign has_app_blocks = false
+  for block in section.blocks
+    if block.type == '@app'
+      assign has_app_blocks = true
+    endif
+  endfor
+%}
+
+<section
+  id="ProductDescriptionReviews-{{ section.id }}"
+  class="cosme-product-tabs full-width color-{{ section.settings.color_scheme }}"
+  data-product-tabs
+  aria-label="{{ 'sections.product_description_reviews.landmark_label' | t }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-product-tabs__inner">
+    {% if show_reviews_tab %}
+      <div class="cosme-product-tabs__list" role="tablist" aria-label="{{ 'sections.product_description_reviews.landmark_label' | t }}">
+        <button
+          type="button"
+          class="cosme-product-tabs__tab"
+          id="ProductTab-{{ section.id }}-description"
+          role="tab"
+          aria-selected="true"
+          aria-controls="ProductPanel-{{ section.id }}-description"
+          data-product-tab
+          tabindex="0"
+        >
+          {{ 'products.tabs.description' | t }}
+        </button>
+        <button
+          type="button"
+          class="cosme-product-tabs__tab"
+          id="ProductTab-{{ section.id }}-reviews"
+          role="tab"
+          aria-selected="false"
+          aria-controls="ProductReviews"
+          data-product-tab
+          tabindex="-1"
+        >
+          {{ 'products.tabs.reviews' | t }}
+        </button>
+      </div>
+    {% endif %}
+
+    <div
+      class="cosme-product-tabs__panel"
+      id="ProductPanel-{{ section.id }}-description"
+      {% if show_reviews_tab %}
+        role="tabpanel"
+        aria-labelledby="ProductTab-{{ section.id }}-description"
+        data-product-panel
+      {% endif %}
+    >
+      {% if product.description != blank %}
+        <div class="cosme-product-tabs__rte cosme-rte">
+          {{ product.description }}
+        </div>
+      {% else %}
+        <p class="cosme-product-tabs__empty">{{ 'products.tabs.description_empty' | t }}</p>
+      {% endif %}
+    </div>
+
+    {% if show_reviews_tab %}
+      <div
+        class="cosme-product-tabs__panel"
+        id="ProductReviews"
+        role="tabpanel"
+        aria-labelledby="ProductTab-{{ section.id }}-reviews"
+        data-product-panel
+        hidden
+      >
+        {% render 'cosme-product-reviews-content',
+          product: product,
+          section_id: section.id,
+          enable_reviews: true,
+          allow_empty: true,
+          show_heading: false,
+          show_rating_summary: section.settings.show_rating_summary,
+          show_rating_distribution: section.settings.show_rating_distribution,
+          show_review_count: section.settings.show_review_count,
+          show_verified_badge: section.settings.show_verified_badge,
+          show_review_dates: section.settings.show_review_dates,
+          show_review_images: section.settings.show_review_images,
+          show_sorting: section.settings.show_sorting,
+          show_pagination: section.settings.show_pagination,
+          pagination_mode: section.settings.pagination_mode,
+          reviews_per_page: section.settings.reviews_per_page,
+          show_write_review: section.settings.show_write_review,
+          reviews_namespace: section.settings.reviews_namespace,
+          reviews_list_key: section.settings.reviews_list_key,
+          has_app_blocks: has_app_blocks
+        %}
+        {% if has_app_blocks %}
+          <div class="cosme-reviews__apps" id="ProductReviewsApps" data-reviews-apps>
+            {% for block in section.blocks %}
+              {% if block.type == '@app' %}
+                <div class="cosme-reviews__app" {{ block.shopify_attributes }}>
+                  {% render block %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-product-tabs {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  .cosme-product-tabs__inner {
+    width: 100%;
+    max-width: var(--content-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: var(--spacing-section) var(--page-margin);
+  }
+
+  .cosme-product-tabs__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xl);
+    margin-block-end: var(--spacing-lg);
+
+    border-block-end: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-product-tabs__tab {
+    position: relative;
+    margin: 0;
+    padding: 0.85rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font-family: var(--font-heading--family);
+    font-size: 0.8125rem;
+    font-weight: var(--font-heading--weight);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .cosme-product-tabs__tab[aria-selected='true'] {
+    color: var(--color-heading);
+  }
+
+  .cosme-product-tabs__tab[aria-selected='true']::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background-color: var(--color-heading);
+  }
+
+  .cosme-product-tabs__tab:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-product-tabs__rte {
+  
+    font-size: 1rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-product-tabs__rte > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-product-tabs__rte > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-product-tabs__rte a {
+    color: var(--color-foreground);
+  }
+
+  .cosme-product-tabs__empty {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  @media screen and (max-width: 749px) {
+    .cosme-product-tabs__inner {
+      padding-block: var(--spacing-lg);
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    if (window._cosmeProductTabs) return;
+    window._cosmeProductTabs = true;
+
+    const selectTab = (root, tab) => {
+      const tabs = Array.from(root.querySelectorAll('[data-product-tab]'));
+      const panels = Array.from(root.querySelectorAll('[data-product-panel]'));
+      tabs.forEach((item) => {
+        const selected = item === tab;
+        item.setAttribute('aria-selected', selected ? 'true' : 'false');
+        item.tabIndex = selected ? 0 : -1;
+      });
+      panels.forEach((panel) => {
+        panel.hidden = panel.id !== tab.getAttribute('aria-controls');
+      });
+    };
+
+    const init = (root) => {
+      if (!root || root._tabsReady) return;
+      root._tabsReady = true;
+
+      const tabs = Array.from(root.querySelectorAll('[data-product-tab]'));
+      if (!tabs.length) return;
+
+      const openFromHash = () => {
+        if (window.location.hash !== '#ProductReviews') return;
+        const reviewsTab = root.querySelector('[aria-controls="ProductReviews"]');
+        if (reviewsTab) selectTab(root, reviewsTab);
+      };
+
+      openFromHash();
+      window.addEventListener('hashchange', openFromHash);
+
+      root.addEventListener('click', (event) => {
+        const tab = event.target.closest('[data-product-tab]');
+        if (!tab || !root.contains(tab)) return;
+        selectTab(root, tab);
+      });
+
+      root.addEventListener('keydown', (event) => {
+        const tab = event.target.closest('[data-product-tab]');
+        if (!tab || !root.contains(tab)) return;
+        const index = tabs.indexOf(tab);
+        let next = null;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          next = tabs[(index + 1) % tabs.length];
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          next = tabs[(index - 1 + tabs.length) % tabs.length];
+        } else if (event.key === 'Home') {
+          next = tabs[0];
+        } else if (event.key === 'End') {
+          next = tabs[tabs.length - 1];
+        }
+        if (!next) return;
+        event.preventDefault();
+        next.focus();
+        selectTab(root, next);
+      });
+    };
+
+    const initAll = (container = document) => {
+      container.querySelectorAll('[data-product-tabs]').forEach(init);
+    };
+
+    initAll();
+
+    document.addEventListener('shopify:section:load', (event) => {
+      initAll(event.target);
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:general.product_description_reviews",
+  "tag": "div",
+  "class": "section-product-description-reviews",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_reviews",
+      "label": "t:sections.product_reviews.settings.enable_reviews",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating_summary",
+      "label": "t:sections.product_reviews.settings.show_rating_summary",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating_distribution",
+      "label": "t:sections.product_reviews.settings.show_rating_distribution",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_review_count",
+      "label": "t:sections.product_reviews.settings.show_review_count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_verified_badge",
+      "label": "t:sections.product_reviews.settings.show_verified_badge",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_review_dates",
+      "label": "t:sections.product_reviews.settings.show_review_dates",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_review_images",
+      "label": "t:sections.product_reviews.settings.show_review_images",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sorting",
+      "label": "t:sections.product_reviews.settings.show_sorting",
+      "info": "t:sections.product_reviews.settings.show_sorting_info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "t:sections.product_reviews.settings.show_pagination",
+      "info": "t:sections.product_reviews.settings.show_pagination_info",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "pagination_mode",
+      "label": "t:sections.product_reviews.settings.pagination_mode",
+      "options": [
+        {
+          "value": "load_more",
+          "label": "t:sections.product_reviews.settings.mode_load_more"
+        },
+        {
+          "value": "pages",
+          "label": "t:sections.product_reviews.settings.mode_pages"
+        }
+      ],
+      "default": "load_more",
+      "visible_if": "{{ section.settings.show_pagination }}"
+    },
+    {
+      "type": "range",
+      "id": "reviews_per_page",
+      "label": "t:sections.product_reviews.settings.reviews_per_page",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 6,
+      "visible_if": "{{ section.settings.show_pagination }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_write_review",
+      "label": "t:sections.product_reviews.settings.show_write_review",
+      "info": "t:sections.product_reviews.settings.show_write_review_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.product_reviews.settings.data_header"
+    },
+    {
+      "type": "text",
+      "id": "reviews_namespace",
+      "label": "t:sections.product_reviews.settings.reviews_namespace",
+      "default": "reviews"
+    },
+    {
+      "type": "text",
+      "id": "reviews_list_key",
+      "label": "t:sections.product_reviews.settings.reviews_list_key",
+      "info": "t:sections.product_reviews.settings.reviews_list_key_info"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.product_description_reviews"
+    }
+  ]
+}
+{% endschema %}

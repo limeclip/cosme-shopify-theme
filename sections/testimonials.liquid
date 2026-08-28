@@ -1,0 +1,1347 @@
+{% comment %}
+  Demo testimonials in the section preset and homepage JSON are fictional
+  placeholder quotes for theme preview only. They are not verified customer
+  reviews from a live COSME store. Replace them in the theme editor.
+{% endcomment %}
+
+{% liquid
+  assign heading_align = section.settings.heading_alignment | default: 'left'
+  assign summary_rating = section.settings.rating | plus: 0
+  assign review_count = section.settings.review_count | plus: 0
+  assign testimonial_count = 0
+  assign show_header = false
+
+  if section.settings.eyebrow != blank
+    assign show_header = true
+  endif
+  if section.settings.heading != blank
+    assign show_header = true
+  endif
+  if section.settings.description != blank
+    assign show_header = true
+  endif
+
+  for block in section.blocks
+    if block.type == 'testimonial'
+      if block.settings.quote != blank
+        assign testimonial_count = testimonial_count | plus: 1
+      endif
+    endif
+  endfor
+%}
+
+<section
+  id="Testimonials-{{ section.id }}"
+  class="cosme-testimonials full-width color-{{ section.settings.color_scheme }} cosme-testimonials--align-{{ heading_align }}"
+  style="
+    --testimonials-desktop-cards: {{ section.settings.desktop_cards | default: 3 }};
+    --testimonials-tablet-cards: {{ section.settings.tablet_cards | default: 2 }};
+  "
+  aria-label="{{ 'sections.testimonials.landmark_label' | t }}"
+  data-testimonials
+  data-autoplay="{{ section.settings.autoplay }}"
+  data-autoplay-interval="{{ section.settings.autoplay_interval }}"
+  data-enable-animations="{{ settings.enable_animations }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-testimonials__inner">
+    {% if show_header %}
+      <header class="cosme-testimonials__header">
+        {% if section.settings.eyebrow != blank %}
+          <p class="cosme-testimonials__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {% endif %}
+
+        {% if section.settings.heading != blank %}
+          <h2 class="cosme-testimonials__heading">{{ section.settings.heading | escape }}</h2>
+        {% endif %}
+
+        {% if section.settings.description != blank %}
+          <p class="cosme-testimonials__description">{{ section.settings.description | escape | newline_to_br }}</p>
+        {% endif %}
+      </header>
+    {% endif %}
+
+    {% if section.settings.show_rating_summary %}
+      <div class="cosme-testimonials__summary">
+        {% if review_count > 0 %}
+          <p class="cosme-visually-hidden">
+            {{ 'sections.testimonials.rating_summary' | t: rating: summary_rating, count: review_count }}
+          </p>
+        {% else %}
+          <p class="cosme-visually-hidden">
+            {{ 'sections.testimonials.rating_stars' | t: rating: summary_rating }}
+          </p>
+        {% endif %}
+
+        <div class="cosme-testimonials__summary-visual" aria-hidden="true">
+          <span class="cosme-testimonials__summary-score">{{ summary_rating }}</span>
+          <span class="cosme-testimonials__stars">
+            {% for i in (1..5) %}
+              {% liquid
+                assign star_floor = i | minus: 1
+                assign star_fill = 0
+                if summary_rating >= i
+                  assign star_fill = 100
+                else
+                  if summary_rating > star_floor
+                    assign star_fill = summary_rating | minus: star_floor | times: 100
+                  endif
+                endif
+              %}
+              <span class="cosme-testimonials__star" style="--star-fill: {{ star_fill }}%;">
+                <span class="cosme-testimonials__star-base">
+                  {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+                </span>
+                <span class="cosme-testimonials__star-fill">
+                  {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+                </span>
+              </span>
+            {% endfor %}
+          </span>
+          {% if section.settings.rating_label != blank %}
+            <span class="cosme-testimonials__summary-label">{{ section.settings.rating_label | escape }}</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if testimonial_count > 0 %}
+      <div class="cosme-testimonials__carousel">
+        {% if section.settings.show_arrows %}
+          <button
+            type="button"
+            class="cosme-testimonials__arrow cosme-testimonials__arrow--prev"
+            data-testimonials-prev
+            aria-label="{{ 'sections.testimonials.previous' | t }}"
+            hidden
+          >
+            {% render 'cosme-icon', icon: 'chevron-left' %}
+          </button>
+        {% endif %}
+
+        <div
+          class="cosme-testimonials__viewport"
+          data-testimonials-viewport
+          tabindex="0"
+          role="region"
+          aria-label="{{ 'sections.testimonials.carousel_label' | t }}"
+        >
+          <ul class="cosme-testimonials__track">
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'testimonial' -%}
+                {%- if block.settings.quote != blank -%}
+                  {%- liquid
+                    assign author_name = block.settings.author_name | strip
+                    assign author_location = block.settings.author_location | strip
+                    assign author_role = block.settings.author_role | strip
+                    assign card_rating = block.settings.rating | plus: 0
+                    assign avatar = block.settings.avatar
+                    assign product = block.settings.product
+                    assign show_product = false
+
+                    if block.settings.show_product
+                      if product != blank
+                        assign show_product = true
+                      endif
+                    endif
+
+                    assign initials = ''
+                    if author_name != blank
+                      assign name_parts = author_name | split: ' '
+                      assign initials = name_parts.first | slice: 0
+                      if name_parts.size > 1
+                        assign last_initial = name_parts.last | slice: 0
+                        assign initials = initials | append: last_initial
+                      endif
+                      assign initials = initials | upcase
+                    endif
+
+                    if author_name != blank
+                      assign avatar_alt = author_name
+                    else
+                      assign avatar_alt = 'sections.testimonials.author_fallback' | t
+                    endif
+                  -%}
+                  <li class="cosme-testimonials__slide" {{ block.shopify_attributes }}>
+                    <article class="cosme-testimonials__card">
+                      <div class="cosme-testimonials__card-top">
+                        <div class="cosme-testimonials__author">
+                          {% if avatar != blank %}
+                            <div class="cosme-testimonials__avatar">
+                              {% render 'cosme-image',
+                                image: avatar,
+                                alt: avatar_alt,
+                                class: 'cosme-testimonials__avatar-image',
+                                width: 160,
+                                height: 160,
+                                crop: 'center',
+                                loading: 'lazy',
+                                aspect_ratio: '1'
+                              %}
+                            </div>
+                          {% else %}
+                            <div
+                              class="cosme-testimonials__avatar cosme-testimonials__avatar--fallback"
+                              aria-hidden="true"
+                            >
+                              {% if initials != blank %}
+                                <span class="cosme-testimonials__initials">{{ initials | escape }}</span>
+                              {% endif %}
+                            </div>
+                          {% endif %}
+
+                          <div class="cosme-testimonials__author-copy">
+                            {% if author_name != blank %}
+                              <div class="cosme-testimonials__author-row">
+                                <p class="cosme-testimonials__author-name">{{ author_name | escape }}</p>
+                                {% if block.settings.verified %}
+                                  {% if block.settings.verified_label != blank %}
+                                    <span class="cosme-testimonials__verified">
+                                      {{- block.settings.verified_label | escape -}}
+                                    </span>
+                                  {% endif %}
+                                {% endif %}
+                              </div>
+                            {% else %}
+                              {% if block.settings.verified %}
+                                {% if block.settings.verified_label != blank %}
+                                  <p class="cosme-testimonials__verified">
+                                    {{ block.settings.verified_label | escape }}
+                                  </p>
+                                {% endif %}
+                              {% endif %}
+                            {% endif %}
+                            {% if author_role != blank %}
+                              <p class="cosme-testimonials__author-role">{{ author_role | escape }}</p>
+                            {% endif %}
+                            {% if author_location != blank %}
+                              <p class="cosme-testimonials__author-location">{{ author_location | escape }}</p>
+                            {% endif %}
+                          </div>
+                        </div>
+
+                        <div class="cosme-testimonials__card-rating">
+                          <p class="cosme-visually-hidden">
+                            {{ 'sections.testimonials.rating_stars' | t: rating: card_rating }}
+                          </p>
+                          <span class="cosme-testimonials__stars" aria-hidden="true">
+                            {% for i in (1..5) %}
+                              {% liquid
+                                assign star_floor = i | minus: 1
+                                assign star_fill = 0
+                                if card_rating >= i
+                                  assign star_fill = 100
+                                else
+                                  if card_rating > star_floor
+                                    assign star_fill = card_rating | minus: star_floor | times: 100
+                                  endif
+                                endif
+                              %}
+                              <span class="cosme-testimonials__star" style="--star-fill: {{ star_fill }}%;">
+                                <span class="cosme-testimonials__star-base">
+                                  {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+                                </span>
+                                <span class="cosme-testimonials__star-fill">
+                                  {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+                                </span>
+                              </span>
+                            {% endfor %}
+                          </span>
+                        </div>
+                      </div>
+
+                      <blockquote class="cosme-testimonials__quote">
+                        <p>{{ block.settings.quote | escape | newline_to_br }}</p>
+                      </blockquote>
+
+                      {% if show_product %}
+                        <div class="cosme-testimonials__product-container">
+                          <a
+                            class="cosme-testimonials__product"
+                            href="{{ product.url }}"
+                            aria-label="{{ 'sections.testimonials.view_product' | t: title: product.title }}"
+                          >
+                            {% if product.featured_image != blank %}
+                              <span class="cosme-testimonials__product-image">
+                                {% render 'cosme-image',
+                                  image: product.featured_image,
+                                  alt: '',
+                                  class: 'cosme-testimonials__product-thumb',
+                                  width: 160,
+                                  height: 160,
+                                  crop: 'center',
+                                  loading: 'lazy',
+                                  aspect_ratio: '1'
+                                %}
+                              </span>
+                            {% endif %}
+                            <span class="cosme-testimonials__product-copy">
+                              <span class="cosme-testimonials__product-title">{{ product.title | escape }}</span>
+                              {% render 'cosme-price', product: product, class: 'cosme-testimonials__product-price' %}
+                            </span>
+                          </a>
+                          <button
+                            type="button"
+                            class="cosme-testimonials__product-add"
+                            data-quick-view
+                            data-product-handle="{{ product.handle }}"
+                            data-product-url="{{ product.url }}"
+                            aria-label="{{ 'products.quick_view' | t: title: product.title }}"
+                          >
+                            {% render 'cosme-icon', icon: 'plus' %}
+                          </button>
+                        </div>
+                      {% endif %}
+                    </article>
+                  </li>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </ul>
+        </div>
+
+        {% if section.settings.show_arrows %}
+          <button
+            type="button"
+            class="cosme-testimonials__arrow cosme-testimonials__arrow--next"
+            data-testimonials-next
+            aria-label="{{ 'sections.testimonials.next' | t }}"
+            hidden
+          >
+            {% render 'cosme-icon', icon: 'chevron-right' %}
+          </button>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-testimonials {
+    --testimonials-gap: var(--grid-gap);
+    --testimonials-desktop-cards: 3;
+    --testimonials-tablet-cards: 2;
+    --testimonials-peek: 0.18;
+    --testimonials-visible: calc(1 + var(--testimonials-peek));
+    --testimonials-card-min-height: 19.5rem;
+
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-testimonials__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: clamp(3rem, 7vw, var(--spacing-section)) var(--page-margin);
+  }
+
+  .cosme-testimonials__header {
+    display: grid;
+    gap: var(--spacing-sm);
+    max-width: 38rem;
+    margin-block-end: var(--spacing-lg);
+  }
+
+  .cosme-testimonials--align-center .cosme-testimonials__header,
+  .cosme-testimonials--align-center .cosme-testimonials__summary {
+    margin-inline: auto;
+    text-align: center;
+    justify-items: center;
+  }
+  .cosme-testimonials--align-center .cosme-testimonials__header,
+  .cosme-testimonials--align-center .cosme-testimonials__summary {
+    margin-inline: auto;
+    text-align: center;
+    justify-items: center;
+  }
+
+  .cosme-testimonials__eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.08;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-testimonials__description {
+    margin: 0;
+    max-width: 40ch;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__summary {
+    display: block;
+    margin-block-end: var(--spacing-xl);
+  }
+
+  .cosme-testimonials__summary-visual {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .cosme-testimonials__summary-score {
+    font-family: var(--font-heading--family);
+    font-size: 1.25rem;
+    font-weight: var(--font-heading--weight);
+    line-height: 1;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cosme-testimonials__summary-label {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .cosme-testimonials__star {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 0.9rem;
+    height: 0.9rem;
+    color: color-mix(in srgb, var(--color-foreground) 22%, var(--color-border));
+  }
+
+  .cosme-testimonials__star-base,
+  .cosme-testimonials__star-fill {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-testimonials__star-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    overflow: hidden;
+    width: var(--star-fill, 0%);
+    color: var(--color-accent);
+  }
+
+  .cosme-testimonials__star .cosme-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+
+  .cosme-testimonials__star-fill .cosme-icon svg {
+    fill: currentcolor;
+    stroke: currentcolor;
+  }
+
+  .cosme-testimonials__carousel {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .cosme-testimonials__viewport {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
+  }
+
+  .cosme-testimonials__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cosme-testimonials__track {
+    display: flex;
+    align-items: stretch;
+    gap: var(--testimonials-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-testimonials__slide {
+    flex: 0 0 calc((100% - (var(--testimonials-gap) * (var(--testimonials-visible) - 1))) / var(--testimonials-visible));
+    min-width: 0;
+    max-width: 100%;
+    scroll-snap-align: start;
+  }
+
+  .cosme-testimonials__card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-height: var(--testimonials-card-min-height);
+    height: 100%;
+    padding: clamp(1.25rem, 2.4vw, 1.75rem);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-background-2);
+  }
+
+  .cosme-testimonials__card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-testimonials__author {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .cosme-testimonials__avatar {
+    position: relative;
+    flex: 0 0 2.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background-color: var(--color-background);
+  }
+
+  .cosme-testimonials__avatar .cosme-image,
+  .cosme-testimonials__avatar .cosme-image__img,
+  .cosme-testimonials__avatar-image {
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-testimonials__avatar .cosme-image__img {
+    object-fit: cover;
+  }
+
+  .cosme-testimonials__avatar--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: var(--border-width) solid var(--color-border);
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__initials {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+
+  .cosme-testimonials__author-copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.15rem;
+  }
+
+  .cosme-testimonials__author-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.4rem 0.55rem;
+  }
+
+  .cosme-testimonials__author-name {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-heading);
+  }
+
+  .cosme-testimonials__author-role,
+  .cosme-testimonials__author-location {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__card-rating {
+    flex-shrink: 0;
+    padding-block-start: 0.15rem;
+  }
+
+  .cosme-testimonials__quote {
+    margin: 0;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .cosme-testimonials__quote p {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: clamp(1rem, 1.3vw, 1.125rem);
+    line-height: 1.65;
+    color: var(--color-foreground);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    line-clamp: 8;
+  }
+
+  .cosme-testimonials__verified {
+    margin: 0;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__product {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-block-start: auto;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-testimonials__product-image {
+    position: relative;
+    flex: 0 0 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    overflow: hidden;
+    aspect-ratio: 1;
+    border-radius: calc(var(--radius-card) * 0.28);
+    background-color: var(--color-background);
+  }
+
+  .cosme-testimonials__product-image .cosme-image,
+  .cosme-testimonials__product-image .cosme-image__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cosme-testimonials__product-copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.1rem;
+  }
+
+  .cosme-testimonials__product-title {
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-heading);
+  }
+
+  .cosme-testimonials__product-price,
+  .cosme-testimonials .cosme-price {
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    color: var(--color-muted);
+  }
+
+  .cosme-testimonials__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 50%;
+    color: var(--color-slider-arrows, var(--color-foreground));
+    background-color: color-mix(in srgb, var(--color-background) 92%, transparent);
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  .cosme-testimonials__arrow[hidden] {
+    display: none;
+  }
+
+  .cosme-testimonials__arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .cosme-testimonials__arrow:hover:not(:disabled),
+  .cosme-testimonials__arrow:focus-visible:not(:disabled) {
+    background-color: var(--color-background);
+  }
+
+  .cosme-testimonials__arrow--prev {
+    left: 0;
+  }
+
+  .cosme-testimonials__arrow--next {
+    right: 0;
+  }
+
+  .cosme-testimonials[data-enable-animations='false'] .cosme-testimonials__viewport {
+    scroll-behavior: auto;
+    scroll-snap-type: x proximity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-testimonials__viewport {
+      scroll-behavior: auto;
+      scroll-snap-type: none;
+    }
+
+    .cosme-testimonials__arrow {
+      transition: none;
+    }
+  }
+
+  @media (min-width: 750px) {
+    .cosme-testimonials {
+      --testimonials-visible: calc(var(--testimonials-tablet-cards) + var(--testimonials-peek));
+      --testimonials-card-min-height: 20.5rem;
+    }
+
+    .cosme-testimonials__header {
+      margin-block-end: var(--spacing-xl);
+    }
+  }
+
+  @media (min-width: 990px) {
+    .cosme-testimonials {
+      --testimonials-visible: calc(var(--testimonials-desktop-cards) + var(--testimonials-peek));
+      --testimonials-card-min-height: 21.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .cosme-testimonials__inner {
+      padding-block: var(--spacing-section);
+    }
+  }
+
+  @media (max-width: 749px) {
+    .cosme-testimonials__arrow--prev {
+      left: var(--spacing-xs, 0.25rem);
+    }
+
+    .cosme-testimonials__arrow--next {
+      right: var(--spacing-xs, 0.25rem);
+    }
+  }
+  .cosme-testimonials__product-add {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: var(--border-width) solid color-mix(in srgb, var(--color-foreground) 45%, transparent);
+    border-radius: 50%;
+    color: var(--color-foreground);
+    background-color: color-mix(in srgb, var(--color-background) 35%, transparent);
+    text-decoration: none;
+  }
+  .cosme-testimonials__product-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border-top: var(--border-width) solid var(--color-border);
+    padding-top: var(--spacing-md);
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const instances = new WeakMap();
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const prefersReducedMotion = () => reducedMotionQuery.matches;
+
+    const allowMotion = (root) => root.getAttribute('data-enable-animations') !== 'false' && !prefersReducedMotion();
+
+    const initTestimonials = (root) => {
+      if (!root || instances.has(root)) return;
+
+      const viewport = root.querySelector('[data-testimonials-viewport]');
+      const track = root.querySelector('.cosme-testimonials__track');
+      const prevButton = root.querySelector('[data-testimonials-prev]');
+      const nextButton = root.querySelector('[data-testimonials-next]');
+      const slides = track ? Array.from(track.querySelectorAll('.cosme-testimonials__slide')) : [];
+
+      if (!viewport || !track || slides.length === 0) return;
+
+      const autoplayEnabled = root.getAttribute('data-autoplay') === 'true';
+      const autoplayInterval = Math.max(3000, Number(root.getAttribute('data-autoplay-interval')) || 5000);
+
+      let autoplayTimer = 0;
+      let resumeTimer = 0;
+      let visible = false;
+      let programmaticScroll = false;
+      let focusedInside = false;
+      let userPaused = false;
+
+      const cleanupFns = [];
+
+      const on = (target, event, handler, options) => {
+        target.addEventListener(event, handler, options);
+        cleanupFns.push(() => target.removeEventListener(event, handler, options));
+      };
+
+      const metrics = () => {
+        const slide = slides[0];
+        const styles = window.getComputedStyle(track);
+        const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+        const slideWidth = slide.getBoundingClientRect().width;
+        const unit = slideWidth + gap;
+        const visibleCount = Math.max(1, Math.round(viewport.clientWidth / unit));
+        const maxScroll = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        return { unit, visibleCount, maxScroll };
+      };
+
+      const hasOverflow = () => metrics().maxScroll > 4;
+
+      const atStart = () => viewport.scrollLeft <= 4;
+
+      const atEnd = () => viewport.scrollLeft >= metrics().maxScroll - 4;
+
+      const updateControls = () => {
+        const overflow = hasOverflow();
+
+        if (prevButton) {
+          prevButton.hidden = !overflow;
+          prevButton.disabled = !overflow || atStart();
+        }
+
+        if (nextButton) {
+          nextButton.hidden = !overflow;
+          nextButton.disabled = !overflow || atEnd();
+        }
+      };
+
+      const scrollBehavior = () => (allowMotion(root) ? 'smooth' : 'auto');
+
+      const goTo = (left) => {
+        const { maxScroll } = metrics();
+        const nextLeft = Math.min(maxScroll, Math.max(0, left));
+        programmaticScroll = true;
+        viewport.scrollTo({ left: nextLeft, behavior: scrollBehavior() });
+
+        const finish = () => {
+          programmaticScroll = false;
+          updateControls();
+        };
+
+        if ('onscrollend' in viewport) {
+          viewport.addEventListener('scrollend', finish, { once: true });
+        } else {
+          window.setTimeout(finish, allowMotion(root) ? 420 : 50);
+        }
+      };
+
+      const scrollByGroup = (direction) => {
+        const { unit, visibleCount, maxScroll } = metrics();
+        const delta = unit * visibleCount * direction;
+        goTo(Math.min(maxScroll, Math.max(0, viewport.scrollLeft + delta)));
+      };
+
+      const stopAutoplay = () => {
+        if (autoplayTimer) {
+          window.clearTimeout(autoplayTimer);
+          autoplayTimer = 0;
+        }
+      };
+
+      const stopResume = () => {
+        if (resumeTimer) {
+          window.clearTimeout(resumeTimer);
+          resumeTimer = 0;
+        }
+      };
+
+      const canAutoplay = () =>
+        autoplayEnabled &&
+        allowMotion(root) &&
+        visible &&
+        !document.hidden &&
+        !focusedInside &&
+        !userPaused &&
+        hasOverflow();
+
+      const scheduleAutoplay = () => {
+        stopAutoplay();
+        if (!canAutoplay()) return;
+
+        autoplayTimer = window.setTimeout(() => {
+          autoplayTimer = 0;
+          if (!canAutoplay()) return;
+
+          if (atEnd()) {
+            goTo(0);
+          } else {
+            scrollByGroup(1);
+          }
+
+          scheduleAutoplay();
+        }, autoplayInterval);
+      };
+
+      const pauseAutoplay = (untilIdle) => {
+        stopAutoplay();
+        stopResume();
+        userPaused = true;
+
+        if (!untilIdle) return;
+
+        resumeTimer = window.setTimeout(() => {
+          resumeTimer = 0;
+          userPaused = false;
+          scheduleAutoplay();
+        }, autoplayInterval);
+      };
+
+      const handleUserScroll = () => {
+        updateControls();
+        if (programmaticScroll) return;
+        pauseAutoplay(true);
+      };
+
+      if (prevButton) {
+        on(prevButton, 'click', () => {
+          pauseAutoplay(true);
+          scrollByGroup(-1);
+        });
+      }
+
+      if (nextButton) {
+        on(nextButton, 'click', () => {
+          pauseAutoplay(true);
+          scrollByGroup(1);
+        });
+      }
+
+      on(viewport, 'scroll', handleUserScroll, { passive: true });
+
+      on(root, 'focusin', () => {
+        focusedInside = true;
+        pauseAutoplay(false);
+      });
+
+      on(root, 'focusout', (event) => {
+        if (root.contains(event.relatedTarget)) return;
+        focusedInside = false;
+        userPaused = false;
+        scheduleAutoplay();
+      });
+
+      const onVisibility = () => {
+        if (document.hidden) {
+          stopAutoplay();
+          return;
+        }
+        scheduleAutoplay();
+      };
+
+      on(document, 'visibilitychange', onVisibility);
+
+      const onMotionChange = () => {
+        stopAutoplay();
+        updateControls();
+        scheduleAutoplay();
+      };
+
+      if (reducedMotionQuery.addEventListener) {
+        reducedMotionQuery.addEventListener('change', onMotionChange);
+        cleanupFns.push(() => reducedMotionQuery.removeEventListener('change', onMotionChange));
+      } else if (reducedMotionQuery.addListener) {
+        reducedMotionQuery.addListener(onMotionChange);
+        cleanupFns.push(() => reducedMotionQuery.removeListener(onMotionChange));
+      }
+
+      let intersectionObserver = null;
+      if ('IntersectionObserver' in window) {
+        intersectionObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              visible = entry.isIntersecting && entry.intersectionRatio >= 0.35;
+              if (visible) {
+                scheduleAutoplay();
+              } else {
+                stopAutoplay();
+              }
+            });
+          },
+          { threshold: [0, 0.35, 0.6, 1] }
+        );
+        intersectionObserver.observe(root);
+      } else {
+        visible = true;
+        scheduleAutoplay();
+      }
+
+      let resizeObserver = null;
+      if ('ResizeObserver' in window) {
+        resizeObserver = new ResizeObserver(() => {
+          updateControls();
+          if (!canAutoplay()) stopAutoplay();
+          else scheduleAutoplay();
+        });
+        resizeObserver.observe(viewport);
+        resizeObserver.observe(track);
+      }
+
+      updateControls();
+      scheduleAutoplay();
+
+      instances.set(root, () => {
+        stopAutoplay();
+        stopResume();
+        cleanupFns.forEach((fn) => fn());
+        if (intersectionObserver) intersectionObserver.disconnect();
+        if (resizeObserver) resizeObserver.disconnect();
+        instances.delete(root);
+      });
+    };
+
+    const destroyTestimonials = (root) => {
+      const destroy = instances.get(root);
+      if (destroy) destroy();
+    };
+
+    document.querySelectorAll('[data-testimonials]').forEach(initTestimonials);
+
+    document.addEventListener('shopify:section:load', (event) => {
+      const root = event.target.querySelector('[data-testimonials]');
+      if (root) initTestimonials(root);
+    });
+
+    document.addEventListener('shopify:section:unload', (event) => {
+      const root = event.target.querySelector('[data-testimonials]');
+      if (root) destroyTestimonials(root);
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.testimonials.name",
+  "tag": "section",
+  "class": "section-testimonials",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "t:sections.testimonials.settings.demo_info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.testimonials.settings.content_header"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.testimonials.settings.eyebrow",
+      "default": "TESTIMONIALS"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.testimonials.settings.heading",
+      "default": "Loved by our customers"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "t:sections.testimonials.settings.description",
+      "default": "Real experiences from people who use our products every day."
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "t:sections.testimonials.settings.heading_alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:options.alignment.left"
+        },
+        {
+          "value": "center",
+          "label": "t:options.alignment.center"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.testimonials.settings.rating_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating_summary",
+      "label": "t:sections.testimonials.settings.show_rating_summary",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "rating",
+      "label": "t:sections.testimonials.settings.rating",
+      "min": 1,
+      "max": 5,
+      "step": 0.1,
+      "default": 4.9
+    },
+    {
+      "type": "number",
+      "id": "review_count",
+      "label": "t:sections.testimonials.settings.review_count",
+      "default": 120
+    },
+    {
+      "type": "text",
+      "id": "rating_label",
+      "label": "t:sections.testimonials.settings.rating_label",
+      "default": "Based on 120+ reviews"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.testimonials.settings.layout_header"
+    },
+    {
+      "type": "select",
+      "id": "desktop_cards",
+      "label": "t:sections.testimonials.settings.desktop_cards",
+      "options": [
+        { "value": "2", "label": "t:sections.testimonials.settings.cards_2" },
+        { "value": "3", "label": "t:sections.testimonials.settings.cards_3" },
+        { "value": "4", "label": "t:sections.testimonials.settings.cards_4" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "select",
+      "id": "tablet_cards",
+      "label": "t:sections.testimonials.settings.tablet_cards",
+      "options": [
+        { "value": "1", "label": "t:sections.testimonials.settings.cards_1" },
+        { "value": "2", "label": "t:sections.testimonials.settings.cards_2" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "t:sections.testimonials.settings.show_arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "t:sections.testimonials.settings.autoplay",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "autoplay_interval",
+      "label": "t:sections.testimonials.settings.autoplay_interval",
+      "min": 3000,
+      "max": 8000,
+      "step": 1000,
+      "unit": "ms",
+      "default": 5000,
+      "visible_if": "{{ section.settings.autoplay }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.testimonials.settings.appearance_header"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "testimonial",
+      "name": "t:sections.testimonials.blocks.testimonial.name",
+      "limit": 12,
+      "settings": [
+        {
+          "type": "header",
+          "content": "t:sections.testimonials.blocks.testimonial.quote_header"
+        },
+        {
+          "type": "textarea",
+          "id": "quote",
+          "label": "t:sections.testimonials.blocks.testimonial.quote",
+          "info": "t:sections.testimonials.blocks.testimonial.quote_info"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.testimonials.blocks.testimonial.author_header"
+        },
+        {
+          "type": "text",
+          "id": "author_name",
+          "label": "t:sections.testimonials.blocks.testimonial.author_name",
+          "default": "Emma R."
+        },
+        {
+          "type": "text",
+          "id": "author_location",
+          "label": "t:sections.testimonials.blocks.testimonial.author_location",
+          "default": "New York"
+        },
+        {
+          "type": "image_picker",
+          "id": "avatar",
+          "label": "t:sections.testimonials.blocks.testimonial.avatar",
+          "info": "t:sections.testimonials.blocks.testimonial.avatar_info"
+        },
+        {
+          "type": "text",
+          "id": "author_role",
+          "label": "t:sections.testimonials.blocks.testimonial.author_role"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.testimonials.blocks.testimonial.rating_header"
+        },
+        {
+          "type": "range",
+          "id": "rating",
+          "label": "t:sections.testimonials.blocks.testimonial.rating",
+          "min": 1,
+          "max": 5,
+          "step": 1,
+          "default": 5
+        },
+        {
+          "type": "checkbox",
+          "id": "verified",
+          "label": "t:sections.testimonials.blocks.testimonial.verified",
+          "info": "t:sections.testimonials.blocks.testimonial.verified_info",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "verified_label",
+          "label": "t:sections.testimonials.blocks.testimonial.verified_label",
+          "default": "Verified"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.testimonials.blocks.testimonial.product_header"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.product",
+          "info": "t:sections.testimonials.blocks.testimonial.product_info"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_product",
+          "label": "t:sections.testimonials.blocks.testimonial.show_product",
+          "info": "t:sections.testimonials.blocks.testimonial.show_product_info",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.testimonials.name",
+      "blocks": [
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The texture feels incredibly luxurious on the skin. It has become the one product I reach for every morning.",
+            "author_name": "Emma R.",
+            "author_location": "New York",
+            "rating": 5,
+            "verified": false
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Quietly beautiful, and now part of my every morning.",
+            "author_name": "Sofia M.",
+            "author_location": "London",
+            "rating": 5,
+            "verified": false
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "I love how lightweight it feels, and the glow looks like my own skin. It is quietly beautiful.",
+            "author_name": "Olivia K.",
+            "author_location": "Sydney",
+            "rating": 5,
+            "verified": false
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The packaging is as considered as the formula. Everything about it feels calm and elevated, from the first touch of the texture to the way it sits on the skin through the day.",
+            "author_name": "Maya L.",
+            "author_location": "Toronto",
+            "rating": 5,
+            "verified": false
+          }
+        },
+        {
+          "type": "testimonial",
+          "settings": {
+            "quote": "A true everyday essential.",
+            "author_name": "Nora P.",
+            "author_location": "Copenhagen",
+            "rating": 5,
+            "verified": false
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

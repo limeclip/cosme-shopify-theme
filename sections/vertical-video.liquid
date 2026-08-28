@@ -1,0 +1,2046 @@
+{% liquid
+  assign collection_blocks = section.blocks | where: 'type', 'collection_link'
+  assign video_blocks = section.blocks | where: 'type', 'video'
+  assign video_count = video_blocks.size
+
+  assign aspect_ratio = section.settings.video_aspect_ratio | default: '9/16'
+  assign desktop_cards = section.settings.desktop_cards | default: '5'
+  assign mobile_cards = section.settings.mobile_cards | default: '1.5'
+
+  assign show_categories = false
+  if section.settings.layout == 'video_collections'
+    if section.settings.show_category_navigation
+      if collection_blocks.size > 0
+        assign show_categories = true
+      endif
+    endif
+  endif
+
+  assign show_arrows = false
+  if section.settings.show_arrows
+    if video_count > 1
+      assign show_arrows = true
+    endif
+  endif
+
+  assign heading_align_class = 'cosme-vertical-video--align-left'
+  if section.settings.heading_alignment == 'center'
+    assign heading_align_class = 'cosme-vertical-video--align-center'
+  endif
+%}
+
+<section
+  id="VerticalVideo-{{ section.id }}"
+  class="cosme-vertical-video full-width color-{{ section.settings.color_scheme }} {{ heading_align_class }}"
+  style="
+    --vertical-video-ratio: {{ aspect_ratio }};
+    --vertical-video-desktop-cards: {{ desktop_cards }};
+    --vertical-video-mobile-cards: {{ mobile_cards }};
+  "
+  data-vertical-video
+  data-autoplay="{{ section.settings.autoplay }}"
+  data-autoplay-behavior="{{ section.settings.autoplay_behavior | default: 'viewport' }}"
+  data-carousel-autoplay="{{ section.settings.carousel_autoplay }}"
+  data-carousel-autoplay-delay="{{ section.settings.carousel_autoplay_delay | default: 5000 }}"
+  data-enable-animations="{{ settings.enable_animations }}"
+  data-slide-count="{{ video_count }}"
+  aria-label="{{ 'sections.vertical_video.landmark_label' | t }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-vertical-video__inner">
+    {% if section.settings.eyebrow != blank or section.settings.heading != blank %}
+      <header class="cosme-vertical-video__header">
+        {% if section.settings.eyebrow != blank %}
+          <p class="cosme-vertical-video__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {% endif %}
+
+        {% if section.settings.heading != blank %}
+          <h2 class="cosme-vertical-video__heading">{{ section.settings.heading | escape }}</h2>
+        {% endif %}
+      </header>
+    {% endif %}
+
+    {% if show_categories %}
+      <nav
+        class="cosme-vertical-video__categories"
+        aria-label="{{ 'sections.vertical_video.category_navigation' | t }}"
+      >
+        <ul class="cosme-vertical-video__category-track">
+          {%- for block in collection_blocks -%}
+            {%- liquid
+              assign category_collection = block.settings.collection
+              assign category_label = block.settings.label
+              if category_label == blank and category_collection != blank
+                assign category_label = category_collection.title
+              endif
+
+              assign category_url = blank
+              if category_collection != blank
+                assign category_url = category_collection.url
+              endif
+
+              assign category_image = blank
+              if block.settings.image != blank
+                assign category_image = block.settings.image
+              elsif category_collection != blank
+                assign category_image = category_collection.featured_image
+              endif
+
+              assign image_fit_class = 'cosme-vertical-video__category-image--cover'
+              if block.settings.image_fit == 'contain'
+                assign image_fit_class = 'cosme-vertical-video__category-image--contain'
+              endif
+              assign category_image_classes = 'cosme-vertical-video__category-image ' | append: image_fit_class
+
+              assign placeholder_name = 'collection-' | append: forloop.index
+            -%}
+
+            {% if category_label != blank %}
+              <li class="cosme-vertical-video__category-item" {{ block.shopify_attributes }}>
+                {% if category_url != blank %}
+                  <a
+                    class="cosme-vertical-video__category"
+                    href="{{ category_url }}"
+                    aria-label="{{ category_label | escape }}"
+                  >
+                {% else %}
+                  <div class="cosme-vertical-video__category cosme-vertical-video__category--static">
+                {% endif %}
+                <div class="cosme-vertical-video__category-media" aria-hidden="true">
+                  {% if category_image != blank %}
+                    {% render 'cosme-image',
+                      image: category_image,
+                      alt: '',
+                      class: category_image_classes,
+                      width: 700,
+                      loading: 'lazy',
+                      sizes: '(min-width: 990px) 16vw, 42vw'
+                    %}
+                  {% else %}
+                    {{ placeholder_name | placeholder_svg_tag: 'cosme-vertical-video__category-placeholder' }}
+                  {% endif %}
+                </div>
+                <span class="cosme-vertical-video__category-label">{{ category_label | escape }}</span>
+                {% if category_url != blank %}
+                  </a>
+                {% else %}
+                  </div>
+                {% endif %}
+              </li>
+            {% endif %}
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {% endif %}
+
+    {% if video_count > 0 %}
+      <div class="cosme-vertical-video__carousel">
+        {% if show_arrows %}
+          <button
+            type="button"
+            class="cosme-vertical-video__arrow cosme-vertical-video__arrow--prev"
+            data-vertical-video-prev
+            aria-label="{{ 'sections.vertical_video.previous' | t }}"
+          >
+            {% render 'cosme-icon', icon: 'chevron-left' %}
+          </button>
+        {% endif %}
+
+        <div class="cosme-vertical-video__viewport" data-vertical-video-viewport>
+          <ul class="cosme-vertical-video__track" data-vertical-video-track>
+            {%- for block in video_blocks -%}
+              {%- liquid
+                assign video = block.settings.video
+                assign poster = block.settings.poster
+                assign product = block.settings.product
+                assign product_position = block.settings.product_position | default: 'bottom-left'
+
+                assign video_label = block.settings.video_alt
+                if video_label == blank and video != blank
+                  assign video_label = video.alt
+                endif
+
+                assign fallback_image = poster
+                if fallback_image == blank and video != blank
+                  assign fallback_image = video.preview_image
+                endif
+
+                assign poster_url = blank
+                if fallback_image != blank
+                  assign poster_url = fallback_image | image_url: width: 900
+                endif
+
+                assign show_block_product = false
+                if section.settings.show_product
+                  if block.settings.show_product
+                    assign show_block_product = true
+                  endif
+                endif
+
+                assign has_real_product = false
+                if show_block_product
+                  if product != blank
+                    assign has_real_product = true
+                  endif
+                endif
+
+                assign media_url = blank
+                assign media_label = blank
+                unless has_real_product
+                  if block.settings.link != blank
+                    assign media_url = block.settings.link
+                    if block.settings.custom_label != blank
+                      assign media_label = block.settings.custom_label
+                    elsif video_label != blank
+                      assign media_label = video_label
+                    else
+                      assign media_label = 'sections.vertical_video.open_media' | t
+                    endif
+                  endif
+                endunless
+
+                assign demo_placeholder = 'product-1'
+                assign demo_title = 'sections.vertical_video.demo_product_1' | t
+                assign demo_price = 3800
+                case forloop.index
+                  when 2
+                    assign demo_placeholder = 'product-2'
+                    assign demo_title = 'sections.vertical_video.demo_product_2' | t
+                    assign demo_price = 2400
+                  when 3
+                    assign demo_placeholder = 'product-3'
+                    assign demo_title = 'sections.vertical_video.demo_product_3' | t
+                    assign demo_price = 4200
+                  when 4
+                    assign demo_placeholder = 'product-4'
+                    assign demo_title = 'sections.vertical_video.demo_product_4' | t
+                    assign demo_price = 5800
+                  when 5
+                    assign demo_placeholder = 'product-5'
+                    assign demo_title = 'sections.vertical_video.demo_product_5' | t
+                    assign demo_price = 3600
+                  when 6
+                    assign demo_placeholder = 'product-6'
+                    assign demo_title = 'sections.vertical_video.demo_product_6' | t
+                    assign demo_price = 6400
+                endcase
+
+                if forloop.first
+                  assign media_loading = 'eager'
+                else
+                  assign media_loading = 'lazy'
+                endif
+              -%}
+
+              <li
+                class="cosme-vertical-video__slide{% if forloop.first %} is-active{% endif %}"
+                {{ block.shopify_attributes }}
+              >
+                <article class="cosme-vertical-video__card">
+                  <div
+                    class="cosme-vertical-video__media{% if video != blank %} cosme-vertical-video__media--has-video{% endif %}"
+                    data-vertical-video-card
+                  >
+                    {% if video != blank %}
+                      {% if fallback_image != blank %}
+                        <div class="cosme-vertical-video__fallback" aria-hidden="true">
+                          {% render 'cosme-image',
+                            image: fallback_image,
+                            alt: '',
+                            class: 'cosme-vertical-video__poster',
+                            width: 900,
+                            loading: media_loading,
+                            sizes: '(min-width: 990px) 18vw, 62vw'
+                          %}
+                        </div>
+                      {% endif %}
+
+                      {% if media_url != blank %}
+                        <a
+                          class="cosme-vertical-video__media-link"
+                          href="{{ media_url }}"
+                          aria-label="{{ media_label | escape }}"
+                        >
+                      {% endif %}
+                      <video
+                        class="cosme-vertical-video__video"
+                        playsinline
+                        loop
+                        muted
+                        preload="none"
+                        controlslist="nodownload nofullscreen noremoteplayback"
+                        disablepictureinpicture
+                        {% if poster_url != blank %}
+                          poster="{{ poster_url }}"
+                        {% endif %}
+                        {% if video_label != blank %}
+                          aria-label="{{ video_label | escape }}"
+                        {% endif %}
+                        data-vertical-video-media
+                      >
+                        {%- for source in video.sources -%}
+                          <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                        {%- endfor -%}
+                      </video>
+                      {% if media_url != blank %}
+                        </a>
+                      {% endif %}
+
+                      <div class="cosme-vertical-video__controls">
+                        <button
+                          type="button"
+                          class="cosme-vertical-video__control"
+                          data-vertical-video-mute
+                          aria-pressed="true"
+                          aria-label="{{ 'sections.vertical_video.unmute' | t }}"
+                          data-label-mute="{{ 'sections.vertical_video.mute' | t }}"
+                          data-label-unmute="{{ 'sections.vertical_video.unmute' | t }}"
+                        >
+                          <span data-icon-muted>
+                            {% render 'cosme-icon', icon: 'volume-off', size: 'xl' %}
+                          </span>
+                          <span data-icon-unmuted hidden>
+                            {% render 'cosme-icon', icon: 'volume', size: 'xl' %}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          class="cosme-vertical-video__control"
+                          data-vertical-video-playback
+                          aria-pressed="false"
+                          aria-label="{{ 'sections.vertical_video.play' | t }}"
+                          data-label-play="{{ 'sections.vertical_video.play' | t }}"
+                          data-label-pause="{{ 'sections.vertical_video.pause' | t }}"
+                        >
+                          <span data-icon-play>
+                            {% render 'cosme-icon', icon: 'play', size: 'xl' %}
+                          </span>
+                          <span data-icon-pause hidden>
+                            {% render 'cosme-icon', icon: 'pause', size: 'xl' %}
+                          </span>
+                        </button>
+                      </div>
+                    {% elsif poster != blank %}
+                      {% if media_url != blank %}
+                        <a
+                          class="cosme-vertical-video__media-link"
+                          href="{{ media_url }}"
+                          aria-label="{{ media_label | escape }}"
+                        >
+                      {% endif %}
+                      {% render 'cosme-image',
+                        image: poster,
+                        alt: video_label,
+                        class: 'cosme-vertical-video__poster',
+                        width: 900,
+                        loading: media_loading,
+                        sizes: '(min-width: 990px) 18vw, 62vw'
+                      %}
+                      {% if media_url != blank %}
+                        </a>
+                      {% endif %}
+                    {% else %}
+                      {% if media_url != blank %}
+                        <a
+                          class="cosme-vertical-video__media-link"
+                          href="{{ media_url }}"
+                          aria-label="{{ media_label | escape }}"
+                        >
+                      {% endif %}
+                      <div
+                        class="cosme-vertical-video__placeholder"
+                        {% if video_label != blank %}
+                          role="img"
+                          aria-label="{{ video_label | escape }}"
+                        {% else %}
+                          aria-hidden="true"
+                        {% endif %}
+                      >
+                        {{ demo_placeholder | placeholder_svg_tag: 'cosme-vertical-video__placeholder-svg' }}
+                      </div>
+                      {% if media_url != blank %}
+                        </a>
+                      {% endif %}
+                    {% endif %}
+
+                    <div class="product-bottom-wrapper">
+                      {% if block.settings.custom_label != blank %}
+                        <p class="cosme-vertical-video__caption">{{ block.settings.custom_label | escape }}</p>
+                      {% endif %}
+
+                      {% if has_real_product %}
+                        <div class="cosme-vertical-video__product cosme-vertical-video__product--{{ product_position }}">
+                          <a
+                            class="cosme-vertical-video__product-link"
+                            href="{{ product.url }}"
+                            aria-label="{{ 'sections.vertical_video.view_product' | t: title: product.title }}"
+                          >
+                            {% if section.settings.show_product_image %}
+                              {% if product.featured_image != blank %}
+                                <span class="cosme-vertical-video__product-image">
+                                  {% render 'cosme-image',
+                                    image: product.featured_image,
+                                    alt: '',
+                                    class: 'cosme-vertical-video__product-thumb',
+                                    width: 160,
+                                    height: 160,
+                                    crop: 'center',
+                                    loading: 'lazy',
+                                    aspect_ratio: '1/1'
+                                  %}
+                                </span>
+                              {% endif %}
+                            {% endif %}
+
+                            <span class="cosme-vertical-video__product-copy">
+                              <span class="cosme-vertical-video__product-title">{{ product.title | escape }}</span>
+                              {% render 'cosme-price',
+                                product: product,
+                                show_compare_at: false,
+                                show_from: false,
+                                class: 'cosme-vertical-video__product-price'
+                              %}
+                            </span>
+                          </a>
+
+                          <button
+                            type="button"
+                            class="cosme-vertical-video__product-add"
+                            data-quick-view
+                            data-product-handle="{{ product.handle }}"
+                            data-product-url="{{ product.url }}"
+                            aria-label="{{ 'products.quick_view' | t: title: product.title }}"
+                          >
+                            {% render 'cosme-icon', icon: 'plus' %}
+                          </button>
+                        </div>
+                      {% elsif show_block_product %}
+                        <div class="cosme-vertical-video__product cosme-vertical-video__product--{{ product_position }} cosme-vertical-video__product--demo">
+                          {% if section.settings.show_product_image %}
+                            <span class="cosme-vertical-video__product-image" aria-hidden="true">
+                              {{ demo_placeholder | placeholder_svg_tag: 'cosme-vertical-video__product-placeholder' }}
+                            </span>
+                          {% endif %}
+                          <span class="cosme-vertical-video__product-copy">
+                            <span class="cosme-vertical-video__product-title">{{ demo_title | escape }}</span>
+                            <span class="cosme-vertical-video__product-price">{{ demo_price | money }}</span>
+                          </span>
+                          <span class="cosme-vertical-video__product-add" aria-hidden="true">
+                            {% render 'cosme-icon', icon: 'plus' %}
+                          </span>
+                        </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </article>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+
+        {% if show_arrows %}
+          <button
+            type="button"
+            class="cosme-vertical-video__arrow cosme-vertical-video__arrow--next"
+            data-vertical-video-next
+            aria-label="{{ 'sections.vertical_video.next' | t }}"
+          >
+            {% render 'cosme-icon', icon: 'chevron-right' %}
+          </button>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-vertical-video {
+    --vertical-video-gap: var(--grid-gap);
+    --vertical-video-visible: var(--vertical-video-mobile-cards);
+    --vertical-video-span: var(--vertical-video-visible);
+
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-vertical-video__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: var(--spacing-xl) var(--page-margin);
+  }
+
+  .cosme-vertical-video__header {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin-block-end: var(--spacing-lg);
+  }
+
+  .cosme-vertical-video--align-center .cosme-vertical-video__header {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .cosme-vertical-video__eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-vertical-video__heading {
+    margin: 0;
+    max-width: min(22ch, 100%);
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.08;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-vertical-video__categories {
+    margin-block-end: var(--spacing-lg);
+  }
+
+  .cosme-vertical-video__category-track,
+  .cosme-vertical-video__track {
+    display: flex;
+    gap: var(--vertical-video-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-vertical-video__category-track {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cosme-vertical-video__category-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cosme-vertical-video__category-item {
+    flex: 0 0 calc((100% - (var(--vertical-video-gap) * 1.4)) / 2.4);
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+
+  .cosme-vertical-video__category {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    text-decoration: none;
+    color: inherit;
+    isolation: isolate;
+  }
+
+  .cosme-vertical-video__category--static {
+    cursor: default;
+  }
+
+  .cosme-vertical-video__category-media {
+    position: relative;
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background-color: var(--color-background-2);
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-vertical-video__category-media .cosme-image,
+  .cosme-vertical-video__category-media .cosme-image__img,
+  .cosme-vertical-video__category-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .cosme-vertical-video__category-placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  /* === Плейсхолдеры для видео (демо-заглушки) === */
+  .cosme-vertical-video__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: brightness(0);
+    opacity: 0.45;
+  }
+
+  /* === Плейсхолдеры для продуктов в демо-режиме === */
+  .cosme-vertical-video__product-placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: brightness(0);
+    opacity: 0.45;
+  }
+
+  /* === Тёмная схема (color-scheme-2, т.е. Dark) === */
+  .color-scheme-2 .cosme-vertical-video__category-placeholder,
+  .color-scheme-2 .cosme-vertical-video__placeholder-svg,
+  .color-scheme-2 .cosme-vertical-video__product-placeholder {
+    filter: brightness(0) invert(1);
+    opacity: 0.45;
+  }
+  .cosme-vertical-video__category-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, color-mix(in srgb, var(--color-overlay) 42%, transparent), transparent 55%);
+    pointer-events: none;
+  }
+
+  .cosme-vertical-video__category-label {
+    position: absolute;
+    z-index: 1;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    max-width: calc(100% - var(--spacing-md));
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--radius-button);
+    background-color: transparent;
+    color: var(--color-accent-contrast);
+    font-size: 1rem;
+    line-height: 1.3;
+    letter-spacing: normal;
+    font-weight: 500;
+  }
+
+  .cosme-vertical-video__track {
+  position: relative;
+  align-items: flex-end;
+}
+
+  .cosme-vertical-video__carousel {
+    position: relative;
+    min-width: 0;
+    max-width: 100%;
+    padding-block-start: var(--spacing-md);
+  }
+
+  .cosme-vertical-video__viewport {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .cosme-vertical-video__viewport::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cosme-vertical-video__slide {
+    flex: 0 0 calc((100% - (var(--vertical-video-gap) * (var(--vertical-video-span) - 1))) / var(--vertical-video-span));
+    min-width: 0;
+    scroll-snap-align: center;
+    scroll-snap-stop: normal;
+    transform: scale(0.88);
+    transform-origin: center center;
+    transition: transform var(--animation-duration) var(--transition-easing);
+    cursor: pointer;
+  }
+
+  .cosme-vertical-video__slide.is-active {
+    transform: scale(1);
+    z-index: 1;
+    cursor: default;
+  }
+
+  .cosme-vertical-video__card {
+    display: block;
+    height: 100%;
+  }
+
+  .cosme-vertical-video__media-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .cosme-vertical-video__media-link .cosme-vertical-video__video,
+  .cosme-vertical-video__media-link .cosme-image {
+    height: 100%;
+  }
+
+  .cosme-vertical-video__media {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    height: 100%;
+    aspect-ratio: var(--vertical-video-ratio);
+    border-radius: var(--radius-card);
+    background-color: var(--color-background-2);
+  }
+
+  .cosme-vertical-video__video,
+  .cosme-vertical-video__fallback .cosme-image,
+  .cosme-vertical-video__fallback .cosme-image__img,
+  .cosme-vertical-video__media-link .cosme-image,
+  .cosme-vertical-video__media-link .cosme-image__img,
+  .cosme-vertical-video__placeholder,
+  .cosme-vertical-video__placeholder-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cosme-vertical-video__media::after {
+    content: '';
+    position: absolute;
+    z-index: 2;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 42%;
+    background: linear-gradient(to top, color-mix(in srgb, var(--color-overlay) 62%, transparent), transparent);
+    pointer-events: none;
+  }
+
+  .cosme-vertical-video__fallback {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 1;
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-vertical-video__video {
+    z-index: 0;
+  }
+
+  /* Когда видео играет, скрываем постер */
+  .cosme-vertical-video__media--playing .cosme-vertical-video__fallback {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .cosme-vertical-video__media--error .cosme-vertical-video__video,
+  .cosme-vertical-video__media--error .cosme-vertical-video__controls,
+  .cosme-vertical-video__media--error .cosme-vertical-video__media-link {
+    display: none;
+  }
+
+  .cosme-vertical-video__controls {
+    position: absolute;
+    z-index: 4;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-vertical-video__media:hover .cosme-vertical-video__controls,
+  .cosme-vertical-video__media:focus-within .cosme-vertical-video__controls,
+  .cosme-vertical-video__media--playing .cosme-vertical-video__controls,
+  .cosme-vertical-video__slide.is-active .cosme-vertical-video__controls {
+    opacity: 1;
+  }
+
+  .cosme-vertical-video__control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--color-accent-contrast);
+    background-color: color-mix(in srgb, var(--color-overlay) 35%, transparent);
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .cosme-vertical-video__control:hover {
+    background-color: color-mix(in srgb, var(--color-overlay) 55%, transparent);
+  }
+  .cosme-vertical-video__control .cosme-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-vertical-video__control .cosme-icon svg {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+  }
+
+  @media (hover: none) {
+    .cosme-vertical-video__controls {
+      opacity: 1;
+    }
+  }
+
+  .cosme-vertical-video[data-enable-animations='false'] .cosme-vertical-video__controls {
+    transition: none;
+  }
+
+  .cosme-vertical-video[data-enable-animations='false'] .cosme-vertical-video__viewport {
+    scroll-behavior: auto;
+  }
+
+  .product-bottom-wrapper {
+    position: absolute;
+    z-index: 3;
+    right: var(--spacing-sm);
+    bottom: var(--spacing-sm);
+    left: var(--spacing-sm);
+    display: flow-root;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-vertical-video__caption {
+    position: relative;
+    z-index: 3;
+    margin: 0;
+    padding: 0.35rem 0.55rem;
+    transform: translateY(-50%);
+    border-radius: var(--radius-button);
+    background-color: color-mix(in srgb, var(--color-overlay) 35%, transparent);
+    color: var(--color-accent-contrast);
+    font-size: clamp(0.8125rem, 1.4vw, 1rem);
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    pointer-events: none;
+  }
+
+  .cosme-vertical-video__product {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+
+    padding: var(--spacing-xs);
+    border-radius: calc(var(--radius-card) * 0.55);
+    background-color: color-mix(in srgb, var(--color-background) 82%, transparent);
+    color: var(--color-foreground);
+  }
+
+  .cosme-vertical-video__product--bottom-center {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .cosme-vertical-video__product--demo {
+    pointer-events: none;
+  }
+
+  .cosme-vertical-video__product-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
+    flex: 1 1 auto;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-vertical-video__product-image {
+    position: relative;
+    flex: 0 0 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    overflow: hidden;
+    border-radius: calc(var(--radius-card) * 0.4);
+    background-color: var(--color-background-2);
+  }
+
+  .cosme-vertical-video__product-image .cosme-image,
+  .cosme-vertical-video__product-image .cosme-image--ratio,
+  .cosme-vertical-video__product-image .cosme-image__img,
+  .cosme-vertical-video__product-thumb,
+  .cosme-vertical-video__product-placeholder {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cosme-vertical-video__product-copy {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .cosme-vertical-video__product-title {
+    overflow: hidden;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cosme-vertical-video__product-price,
+  .cosme-vertical-video .cosme-price {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--color-foreground);
+  }
+
+  .cosme-vertical-video__product-add {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: var(--border-width) solid color-mix(in srgb, var(--color-foreground) 45%, transparent);
+    border-radius: 50%;
+    color: var(--color-foreground);
+    background-color: color-mix(in srgb, var(--color-background) 35%, transparent);
+    text-decoration: none;
+  }
+
+  .cosme-vertical-video__arrow {
+    display: none;
+    position: absolute;
+    top: calc(50% + var(--spacing-sm));
+    z-index: 2;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--color-slider-arrows);
+    background-color: color-mix(in srgb, var(--color-background) 86%, transparent);
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+
+  .cosme-vertical-video__arrow:hover,
+  .cosme-vertical-video__arrow:focus-visible {
+    background-color: var(--color-background);
+  }
+
+  .cosme-vertical-video__arrow--prev {
+    left: var(--spacing-sm);
+  }
+
+  .cosme-vertical-video__arrow--next {
+    right: var(--spacing-sm);
+  }
+
+  .cosme-vertical-video[data-enable-animations='false'] .cosme-vertical-video__slide {
+    transition: none;
+  }
+
+  @media (min-width: 750px) {
+    .cosme-vertical-video {
+      --vertical-video-visible: 3;
+      --vertical-video-span: 2;
+    }
+
+    .cosme-vertical-video__inner {
+      padding-block: var(--spacing-section);
+    }
+
+    .cosme-vertical-video__header,
+    .cosme-vertical-video__categories {
+      margin-block-end: var(--spacing-xl);
+    }
+
+    .cosme-vertical-video__category-item {
+      flex-basis: calc((100% - (var(--vertical-video-gap) * 5)) / 6);
+    }
+
+    .cosme-vertical-video__arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cosme-vertical-video {
+      --vertical-video-visible: var(--vertical-video-desktop-cards);
+      --vertical-video-span: calc(var(--vertical-video-desktop-cards) - 1);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .cosme-vertical-video__heading {
+      font-size: clamp(2rem, 3vw, 3.25rem);
+    }
+  }
+  /* Классы для fit */
+  .cosme-vertical-video__category-image--cover,
+  .cosme-vertical-video__category-image--cover .cosme-image__img {
+    object-fit: cover;
+  }
+
+  .cosme-vertical-video__category-image--contain,
+  .cosme-vertical-video__category-image--contain .cosme-image__img {
+    object-fit: contain;
+  }
+  .cosme-vertical-video.is-jumping .cosme-vertical-video__slide {
+  transition: none;
+}
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    const initialized = new WeakSet();
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const supportsScrollEnd = 'onscrollend' in window;
+
+    const prefersReducedMotion = () => motionQuery.matches;
+
+    const allowMotion = (root) => root.getAttribute('data-enable-animations') !== 'false' && !prefersReducedMotion();
+
+    const allowAutoplay = (root) => root.getAttribute('data-autoplay') === 'true' && allowMotion(root);
+
+    const autoplayThreshold = (root) => (root.getAttribute('data-autoplay-behavior') === 'all' ? 0.35 : 0.55);
+
+    const cardFor = (video) => video.closest('[data-vertical-video-card]');
+
+    const isCloneSlide = (slide) => Boolean(slide && slide.dataset.clone === 'true');
+
+    const toggleHidden = (el, hidden) => {
+      if (!el) return;
+      if (hidden) el.setAttribute('hidden', '');
+      else el.removeAttribute('hidden');
+    };
+
+    const syncPlaybackUi = (video) => {
+      const card = cardFor(video);
+      if (!card) return;
+      const playing = !video.paused && !video.ended;
+      card.classList.toggle('cosme-vertical-video__media--playing', playing);
+      const button = card.querySelector('[data-vertical-video-playback]');
+      if (!button) return;
+      const playIcon = button.querySelector('[data-icon-play]');
+      const pauseIcon = button.querySelector('[data-icon-pause]');
+      toggleHidden(playIcon, playing);
+      toggleHidden(pauseIcon, !playing);
+      button.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      button.setAttribute(
+        'aria-label',
+        playing ? button.getAttribute('data-label-pause') : button.getAttribute('data-label-play')
+      );
+    };
+
+    const syncMuteUi = (video) => {
+      const card = cardFor(video);
+      if (!card) return;
+      const button = card.querySelector('[data-vertical-video-mute]');
+      if (!button) return;
+      const muted = Boolean(video.muted);
+      const mutedIcon = button.querySelector('[data-icon-muted]');
+      const unmutedIcon = button.querySelector('[data-icon-unmuted]');
+      toggleHidden(mutedIcon, !muted);
+      toggleHidden(unmutedIcon, muted);
+      button.setAttribute('aria-pressed', muted ? 'true' : 'false');
+      button.setAttribute(
+        'aria-label',
+        muted ? button.getAttribute('data-label-unmute') : button.getAttribute('data-label-mute')
+      );
+    };
+
+    const markFailed = (video) => {
+      video.dataset.failed = 'true';
+      const card = cardFor(video);
+      if (card) card.classList.add('cosme-vertical-video__media--error');
+      try {
+        video.pause();
+      } catch (error) {}
+    };
+
+    const safePlay = (video, { isAutoplay = false } = {}) => {
+      if (!video || video.dataset.failed === 'true' || document.hidden) return;
+      if (isAutoplay && video.dataset.userPaused === 'true') return;
+      if (!video.paused && !video.ended) return;
+
+      if (isAutoplay && video.dataset.userUnmuted !== 'true') {
+        video.muted = true;
+        video.setAttribute('muted', '');
+      }
+
+      const attempt = video.play();
+      if (!attempt || typeof attempt.catch !== 'function') return;
+
+      attempt.catch(() => {
+        if (!isAutoplay && video.dataset.userUnmuted === 'true') {
+          video.muted = true;
+          video.setAttribute('muted', '');
+          video.dataset.userUnmuted = '';
+          syncMuteUi(video);
+          const mutedAttempt = video.play();
+          if (mutedAttempt && typeof mutedAttempt.catch === 'function') {
+            mutedAttempt.catch(() => {});
+          }
+          return;
+        }
+
+        if (isAutoplay) {
+          video.muted = true;
+          video.setAttribute('muted', '');
+          const mutedAttempt = video.play();
+          if (mutedAttempt && typeof mutedAttempt.catch === 'function') {
+            mutedAttempt.catch(() => {});
+          }
+        }
+      });
+    };
+
+    const initVerticalVideo = (root) => {
+      if (!root || initialized.has(root)) return;
+      initialized.add(root);
+
+      const viewport = root.querySelector('[data-vertical-video-viewport]');
+      const track = root.querySelector('[data-vertical-video-track]');
+      const prevButton = root.querySelector('[data-vertical-video-prev]');
+      const nextButton = root.querySelector('[data-vertical-video-next]');
+      const visibleMap = new WeakMap();
+      let activeFrame = 0;
+      let playObserver;
+      let loadObserver;
+      let resizeObserver;
+      let carouselTimer;
+      let setWidth = 0;
+      let looping = false;
+      let jumping = false;
+      let scrollEndTimer = 0;
+      let originalCount = Number(root.getAttribute('data-slide-count') || 0);
+
+      const slides = () => (track ? Array.from(track.querySelectorAll('.cosme-vertical-video__slide')) : []);
+
+      const slideGap = () => {
+        if (!track) return 0;
+        return parseFloat(window.getComputedStyle(track).columnGap || window.getComputedStyle(track).gap) || 0;
+      };
+
+      const slideStep = () => {
+        const slide = track && track.querySelector('.cosme-vertical-video__slide');
+        if (!slide) return viewport ? viewport.clientWidth : 0;
+        return slide.offsetWidth + slideGap();
+      };
+
+      const measureSetWidth = () => {
+        if (!track || originalCount < 1) return 0;
+        const firstOriginal = track.children[originalCount];
+        const firstAfter = track.children[originalCount * 2];
+        if (!firstOriginal || !firstAfter) return slideStep() * originalCount;
+        return firstAfter.offsetLeft - firstOriginal.offsetLeft;
+      };
+
+      const centeredScrollLeft = (slide) => {
+        if (!viewport || !slide) return 0;
+        return slide.offsetLeft + slide.offsetWidth / 2 - viewport.clientWidth / 2;
+      };
+
+      const closestSlide = () => {
+        if (!viewport || !track) return null;
+        const center = viewport.scrollLeft + viewport.clientWidth / 2;
+        let closest = null;
+        let closestDist = Infinity;
+        slides().forEach((slide) => {
+          const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+          const dist = Math.abs(slideCenter - center);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closest = slide;
+          }
+        });
+        return closest;
+      };
+
+      const prepareClone = (node) => {
+        node.dataset.clone = 'true';
+        node.classList.remove('is-active');
+        node.setAttribute('aria-hidden', 'true');
+        node.inert = true;
+        node.querySelectorAll('a, button, video, [tabindex]').forEach((el) => {
+          el.setAttribute('tabindex', '-1');
+        });
+        return node;
+      };
+
+      const jumpTo = (left) => {
+        if (!viewport) return;
+        jumping = true;
+        root.classList.add('is-jumping');
+        const snap = viewport.style.scrollSnapType;
+        viewport.style.scrollSnapType = 'none';
+        viewport.style.scrollBehavior = 'auto';
+        viewport.scrollLeft = left;
+        void viewport.offsetWidth;
+        requestAnimationFrame(() => {
+          viewport.style.scrollSnapType = snap;
+          viewport.style.scrollBehavior = '';
+          jumping = false;
+          updateActive();
+          requestAnimationFrame(() => {
+            root.classList.remove('is-jumping');
+          });
+        });
+      };
+
+      const setupLoop = () => {
+        if (!track || !viewport || originalCount < 2) return;
+        const originals = Array.from(track.children);
+        if (!originals.length) return;
+
+        const before = document.createDocumentFragment();
+        const after = document.createDocumentFragment();
+        originals.forEach((slide) => {
+          before.appendChild(prepareClone(slide.cloneNode(true)));
+          after.appendChild(prepareClone(slide.cloneNode(true)));
+        });
+        track.insertBefore(before, track.firstChild);
+        track.appendChild(after);
+        looping = true;
+        setWidth = measureSetWidth();
+
+        const firstOriginal = track.children[originalCount];
+        if (firstOriginal) jumpTo(centeredScrollLeft(firstOriginal));
+        else viewport.scrollLeft = setWidth;
+      };
+
+      const normalizeLoop = () => {
+        if (!looping || !viewport || !track || jumping) return;
+
+        const all = slides();
+        if (!all.length) return;
+
+        const closest = closestSlide();
+        if (!closest || !isCloneSlide(closest)) return;
+
+        const cloneIndex = all.indexOf(closest);
+        const original = all[originalCount + (cloneIndex % originalCount)];
+        if (!original) return;
+
+        const delta = original.offsetLeft - closest.offsetLeft;
+        if (Math.abs(delta) < 1) return;
+
+        closest.classList.remove('is-active');
+        original.classList.add('is-active');
+        jumpTo(viewport.scrollLeft + delta);
+      };
+
+      const refreshAutoplay = () => {
+        if (!allowAutoplay(root)) {
+          videos.forEach((v) => pauseVideo(v));
+          return;
+        }
+        videos.forEach((video) => {
+          const slide = video.closest('.cosme-vertical-video__slide');
+          if (isCloneSlide(slide)) {
+            pauseVideo(video);
+            return;
+          }
+          const isActive = slide && slide.classList.contains('is-active');
+          const isVisible = visibleMap.get(video) === true;
+          const shouldPlay = isVisible && (root.dataset.autoplayBehavior !== 'viewport' || isActive);
+
+          if (shouldPlay) {
+            if (video.readyState < 2) {
+              video.addEventListener(
+                'loadedmetadata',
+                function onLoaded() {
+                  video.removeEventListener('loadedmetadata', onLoaded);
+                  const slideNow = video.closest('.cosme-vertical-video__slide');
+                  if (isCloneSlide(slideNow)) return;
+                  const isActiveNow = slideNow && slideNow.classList.contains('is-active');
+                  const isVisibleNow = visibleMap.get(video) === true;
+                  if (isVisibleNow && (root.dataset.autoplayBehavior !== 'viewport' || isActiveNow)) {
+                    safePlay(video, { isAutoplay: true });
+                  }
+                },
+                { once: true }
+              );
+              if (video.readyState >= 2) {
+                safePlay(video, { isAutoplay: true });
+              }
+            } else {
+              safePlay(video, { isAutoplay: true });
+            }
+          } else {
+            pauseVideo(video);
+          }
+        });
+      };
+
+      const updateActive = () => {
+        if (!viewport || !track) return;
+
+        const closest = closestSlide();
+        let changed = false;
+
+        slides().forEach((slide) => {
+          const shouldBeActive = slide === closest;
+          const isActive = slide.classList.contains('is-active');
+          if (shouldBeActive === isActive) return;
+          slide.classList.toggle('is-active', shouldBeActive);
+          changed = true;
+        });
+
+        if (changed) refreshAutoplay();
+      };
+
+      const scheduleActive = () => {
+        if (activeFrame || jumping) return;
+        activeFrame = requestAnimationFrame(() => {
+          activeFrame = 0;
+          updateActive();
+        });
+      };
+
+      const scrollByCard = (direction) => {
+        if (!viewport || !track) return;
+        const all = slides();
+        const current = closestSlide();
+        let index = all.indexOf(current);
+        if (index < 0) index = originalCount;
+        const next = all[index + direction];
+        if (!next) {
+          normalizeLoop();
+          return;
+        }
+        viewport.scrollTo({
+          left: centeredScrollLeft(next),
+          behavior: allowMotion(root) ? 'smooth' : 'auto',
+        });
+      };
+
+      const stopCarouselAutoplay = () => {
+        if (carouselTimer) {
+          window.clearInterval(carouselTimer);
+          carouselTimer = 0;
+        }
+      };
+
+      const startCarouselAutoplay = () => {
+        stopCarouselAutoplay();
+        if (root.getAttribute('data-carousel-autoplay') !== 'true') return;
+        if (!allowMotion(root) || document.hidden || originalCount < 2) return;
+        const delay = Number(root.getAttribute('data-carousel-autoplay-delay')) || 5000;
+        carouselTimer = window.setInterval(() => {
+          scrollByCard(1);
+        }, delay);
+      };
+
+      const resetCarouselAutoplay = () => {
+        stopCarouselAutoplay();
+        refreshAutoplay();
+        startCarouselAutoplay();
+      };
+
+      const pauseVideo = (video) => {
+        if (video.dataset.failed === 'true') return;
+        try {
+          video.pause();
+        } catch (error) {}
+      };
+
+      const videos = Array.from(root.querySelectorAll('[data-vertical-video-media]'));
+      videos.forEach((v) => visibleMap.set(v, false));
+
+      setupLoop();
+
+      if (prevButton) {
+        prevButton.addEventListener('click', () => {
+          scrollByCard(-1);
+          resetCarouselAutoplay();
+        });
+      }
+
+      if (nextButton) {
+        nextButton.addEventListener('click', () => {
+          scrollByCard(1);
+          resetCarouselAutoplay();
+        });
+      }
+
+      const activateSlide = (slide) => {
+        if (!viewport || !slide) return;
+        if (slide === closestSlide()) return;
+
+        viewport.scrollTo({
+          left: centeredScrollLeft(slide),
+          behavior: allowMotion(root) ? 'smooth' : 'auto',
+        });
+        resetCarouselAutoplay();
+      };
+
+      if (track) {
+        track.addEventListener('click', (event) => {
+          const slide = event.target.closest('.cosme-vertical-video__slide');
+          if (!slide || !track.contains(slide)) return;
+          if (event.target.closest('a[href], [data-quick-view]')) return;
+          activateSlide(slide);
+        });
+      }
+
+      if (viewport) {
+        const onScrollEnd = () => {
+          if (jumping) return;
+          normalizeLoop();
+          updateActive();
+        };
+
+        viewport.addEventListener('scroll', scheduleActive, { passive: true });
+
+        if (supportsScrollEnd) {
+          viewport.addEventListener('scrollend', onScrollEnd);
+        } else {
+          viewport.addEventListener(
+            'scroll',
+            () => {
+              if (jumping) return;
+              window.clearTimeout(scrollEndTimer);
+              scrollEndTimer = window.setTimeout(onScrollEnd, 160);
+            },
+            { passive: true }
+          );
+        }
+
+        if ('ResizeObserver' in window) {
+          let lastWidth = viewport.clientWidth;
+          resizeObserver = new ResizeObserver(() => {
+            if (looping) setWidth = measureSetWidth();
+            const width = viewport.clientWidth;
+            if (width !== lastWidth) {
+              lastWidth = width;
+              const active = closestSlide();
+              if (looping && active) jumpTo(centeredScrollLeft(active));
+            }
+            updateActive();
+          });
+          resizeObserver.observe(viewport);
+          if (track) resizeObserver.observe(track);
+        }
+
+        updateActive();
+      }
+
+      const carousel = root.querySelector('.cosme-vertical-video__carousel');
+      if (carousel) {
+        carousel.addEventListener('mouseenter', stopCarouselAutoplay);
+        carousel.addEventListener('mouseleave', startCarouselAutoplay);
+        carousel.addEventListener('touchstart', stopCarouselAutoplay, { passive: true });
+        carousel.addEventListener('touchend', resetCarouselAutoplay, { passive: true });
+      }
+
+      const bindVideo = (video) => {
+        video.muted = true;
+        video.setAttribute('muted', '');
+        video.loop = true;
+        video.playsInline = true;
+        if (video.preload !== 'metadata') video.preload = 'none';
+        syncMuteUi(video);
+        syncPlaybackUi(video);
+
+        const card = cardFor(video);
+        const muteButton = card && card.querySelector('[data-vertical-video-mute]');
+        const playbackButton = card && card.querySelector('[data-vertical-video-playback]');
+
+        video.addEventListener('loadedmetadata', () => {
+          if (video.dataset.failed === 'true') return;
+          syncPlaybackUi(video);
+          syncMuteUi(video);
+          refreshAutoplay();
+        });
+
+        video.addEventListener('play', () => {
+          if (video.dataset.failed === 'true') return;
+          syncPlaybackUi(video);
+        });
+
+        video.addEventListener('pause', () => {
+          syncPlaybackUi(video);
+        });
+
+        video.addEventListener('ended', () => {
+          if (video.loop) {
+            video.currentTime = 0;
+            if (visibleMap.get(video) && allowAutoplay(root) && video.dataset.userPaused !== 'true') {
+              safePlay(video, { isAutoplay: true });
+            }
+            return;
+          }
+          syncPlaybackUi(video);
+        });
+
+        video.addEventListener('error', () => {
+          markFailed(video);
+        });
+
+        video.querySelectorAll('source').forEach((source) => {
+          source.addEventListener('error', () => markFailed(video));
+        });
+
+        if (muteButton) {
+          muteButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (video.dataset.failed === 'true') return;
+
+            if (video.muted) {
+              video.muted = false;
+              video.removeAttribute('muted');
+              video.dataset.userUnmuted = 'true';
+              syncMuteUi(video);
+              if (!video.paused) {
+                const resume = video.play();
+                if (resume && typeof resume.catch === 'function') {
+                  resume.catch(() => {
+                    video.muted = true;
+                    video.setAttribute('muted', '');
+                    video.dataset.userUnmuted = '';
+                    syncMuteUi(video);
+                  });
+                }
+              }
+              return;
+            }
+
+            video.muted = true;
+            video.setAttribute('muted', '');
+            video.dataset.userUnmuted = '';
+            syncMuteUi(video);
+          });
+        }
+
+        if (playbackButton) {
+          playbackButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (video.dataset.failed === 'true') return;
+
+            if (video.paused) {
+              video.dataset.userPaused = '';
+              if (video.preload === 'none') video.preload = 'metadata';
+              safePlay(video, { isAutoplay: false });
+              return;
+            }
+
+            video.dataset.userPaused = 'true';
+            pauseVideo(video);
+          });
+        }
+      };
+
+      videos.forEach((video) => {
+        if (isCloneSlide(video.closest('.cosme-vertical-video__slide'))) return;
+        bindVideo(video);
+      });
+
+      if (videos.length && 'IntersectionObserver' in window) {
+        loadObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              const video = entry.target;
+              if (video.dataset.failed === 'true') return;
+              if (video.preload === 'none') video.preload = 'metadata';
+              loadObserver.unobserve(video);
+            });
+          },
+          { root: viewport || null, rootMargin: '200px 120px', threshold: 0.01 }
+        );
+
+        playObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              const video = entry.target;
+              const slide = video.closest('.cosme-vertical-video__slide');
+              if (isCloneSlide(slide)) {
+                visibleMap.set(video, false);
+                pauseVideo(video);
+                return;
+              }
+              const visible = entry.isIntersecting && entry.intersectionRatio >= autoplayThreshold(root);
+              visibleMap.set(video, visible);
+
+              if (!visible) {
+                pauseVideo(video);
+                return;
+              }
+
+              refreshAutoplay();
+            });
+          },
+          { threshold: [0.2, 0.35, 0.55, 0.75] }
+        );
+
+        videos.forEach((video) => {
+          if (isCloneSlide(video.closest('.cosme-vertical-video__slide'))) return;
+          loadObserver.observe(video);
+          playObserver.observe(video);
+        });
+      }
+
+      const onHidden = () => {
+        videos.forEach((video) => pauseVideo(video));
+        stopCarouselAutoplay();
+      };
+
+      const onVisible = () => {
+        if (allowAutoplay(root)) refreshAutoplay();
+        startCarouselAutoplay();
+      };
+
+      const onMotionChange = () => {
+        if (!allowAutoplay(root)) videos.forEach((video) => pauseVideo(video));
+        else refreshAutoplay();
+        if (allowMotion(root)) startCarouselAutoplay();
+        else stopCarouselAutoplay();
+      };
+
+      const onVisibility = () => {
+        if (document.hidden) onHidden();
+        else onVisible();
+      };
+
+      document.addEventListener('visibilitychange', onVisibility);
+
+      if (typeof motionQuery.addEventListener === 'function') {
+        motionQuery.addEventListener('change', onMotionChange);
+      } else if (typeof motionQuery.addListener === 'function') {
+        motionQuery.addListener(onMotionChange);
+      }
+
+      startCarouselAutoplay();
+      refreshAutoplay();
+
+      root._verticalVideoCleanup = () => {
+        if (activeFrame) cancelAnimationFrame(activeFrame);
+        if (scrollEndTimer) window.clearTimeout(scrollEndTimer);
+        stopCarouselAutoplay();
+        if (playObserver) playObserver.disconnect();
+        if (loadObserver) loadObserver.disconnect();
+        if (resizeObserver) resizeObserver.disconnect();
+        document.removeEventListener('visibilitychange', onVisibility);
+        if (typeof motionQuery.removeEventListener === 'function') {
+          motionQuery.removeEventListener('change', onMotionChange);
+        } else if (typeof motionQuery.removeListener === 'function') {
+          motionQuery.removeListener(onMotionChange);
+        }
+      };
+    };
+
+    const initAll = (container = document) => {
+      container.querySelectorAll('[data-vertical-video]').forEach(initVerticalVideo);
+    };
+
+    initAll();
+
+    document.addEventListener('shopify:section:load', (event) => {
+      initAll(event.target);
+    });
+
+    document.addEventListener('shopify:section:unload', (event) => {
+      event.target.querySelectorAll('[data-vertical-video]').forEach((root) => {
+        if (typeof root._verticalVideoCleanup === 'function') {
+          root._verticalVideoCleanup();
+        }
+        initialized.delete(root);
+      });
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.vertical_video.name",
+  "class": "cosme-vertical-video-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.vertical_video.settings.eyebrow",
+      "default": "DISCOVER"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.vertical_video.settings.heading",
+      "default": "Beauty in Motion"
+    },
+    {
+      "type": "header",
+      "content": "t:general.layout"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.vertical_video.settings.layout",
+      "info": "t:sections.vertical_video.settings.layout_info",
+      "options": [
+        {
+          "value": "video_collections",
+          "label": "t:sections.vertical_video.settings.layout_video_collections"
+        },
+        {
+          "value": "video_only",
+          "label": "t:sections.vertical_video.settings.layout_video_only"
+        }
+      ],
+      "default": "video_collections"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "t:sections.vertical_video.settings.heading_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "desktop_cards",
+      "label": "t:sections.vertical_video.settings.desktop_cards",
+      "info": "t:sections.vertical_video.settings.desktop_cards_info",
+      "options": [
+        { "value": "4", "label": "4" },
+        { "value": "5", "label": "5" },
+        { "value": "6", "label": "6" }
+      ],
+      "default": "5"
+    },
+    {
+      "type": "select",
+      "id": "mobile_cards",
+      "label": "t:sections.vertical_video.settings.mobile_cards",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "1.5", "label": "1.5" },
+        { "value": "2", "label": "2" }
+      ],
+      "default": "1.5"
+    },
+    {
+      "type": "select",
+      "id": "video_aspect_ratio",
+      "label": "t:sections.vertical_video.settings.video_aspect_ratio",
+      "options": [
+        { "value": "9/16", "label": "t:sections.vertical_video.settings.aspect_9_16" },
+        { "value": "4/5", "label": "t:sections.vertical_video.settings.aspect_4_5" }
+      ],
+      "default": "9/16"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_category_navigation",
+      "label": "t:sections.vertical_video.settings.show_category_navigation",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.vertical_video.settings.carousel_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "t:sections.vertical_video.settings.show_arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "carousel_autoplay",
+      "label": "t:sections.vertical_video.settings.carousel_autoplay",
+      "info": "t:sections.vertical_video.settings.carousel_autoplay_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "carousel_autoplay_delay",
+      "label": "t:sections.vertical_video.settings.carousel_autoplay_delay",
+      "min": 3000,
+      "max": 8000,
+      "step": 500,
+      "unit": "ms",
+      "default": 5000,
+      "visible_if": "{{ section.settings.carousel_autoplay }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.vertical_video.settings.product_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product",
+      "label": "t:sections.vertical_video.settings.show_product",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_image",
+      "label": "t:sections.vertical_video.settings.show_product_image",
+      "default": true,
+      "visible_if": "{{ section.settings.show_product }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.vertical_video.settings.playback_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "t:sections.vertical_video.settings.autoplay",
+      "info": "t:sections.vertical_video.settings.autoplay_info",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "autoplay_behavior",
+      "label": "t:sections.vertical_video.settings.autoplay_behavior",
+      "options": [
+        {
+          "value": "viewport",
+          "label": "t:sections.vertical_video.settings.autoplay_viewport"
+        },
+        {
+          "value": "all",
+          "label": "t:sections.vertical_video.settings.autoplay_all"
+        }
+      ],
+      "default": "viewport",
+      "visible_if": "{{ section.settings.autoplay }}"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection_link",
+      "name": "t:sections.vertical_video.blocks.collection_link.name",
+      "limit": 12,
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "t:sections.vertical_video.blocks.collection_link.label",
+          "default": "Bestsellers"
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.collection",
+          "info": "t:sections.vertical_video.blocks.collection_link.collection_info"
+        },
+        // 👇 НОВЫЕ НАСТРОЙКИ
+        {
+          "type": "header",
+          "content": "t:sections.vertical_video.blocks.collection_link.image_header"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.vertical_video.blocks.collection_link.image",
+          "info": "t:sections.vertical_video.blocks.collection_link.image_info"
+        },
+        {
+          "type": "select",
+          "id": "image_fit",
+          "label": "t:sections.vertical_video.blocks.collection_link.image_fit",
+          "options": [
+            { "value": "cover", "label": "t:options.fit.cover" },
+            { "value": "contain", "label": "t:options.fit.contain" }
+          ],
+          "default": "cover"
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "name": "t:sections.vertical_video.blocks.video.name",
+      "limit": 12,
+      "settings": [
+        {
+          "type": "video",
+          "id": "video",
+          "label": "t:sections.vertical_video.blocks.video.video"
+        },
+        {
+          "type": "image_picker",
+          "id": "poster",
+          "label": "t:sections.vertical_video.blocks.video.poster",
+          "info": "t:sections.vertical_video.blocks.video.poster_info"
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:general.product",
+          "info": "t:sections.vertical_video.blocks.video.product_info"
+        },
+        {
+          "type": "select",
+          "id": "product_position",
+          "label": "t:sections.vertical_video.blocks.video.product_position",
+          "options": [
+            {
+              "value": "bottom-left",
+              "label": "t:sections.vertical_video.blocks.video.product_position_left"
+            },
+            {
+              "value": "bottom-center",
+              "label": "t:sections.vertical_video.blocks.video.product_position_center"
+            }
+          ],
+          "default": "bottom-left"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_product",
+          "label": "t:sections.vertical_video.settings.show_product",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "custom_label",
+          "label": "t:sections.vertical_video.blocks.video.custom_label"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:labels.link",
+          "info": "t:sections.vertical_video.blocks.video.link_info"
+        },
+        {
+          "type": "text",
+          "id": "video_alt",
+          "label": "t:sections.vertical_video.blocks.video.video_alt",
+          "info": "t:sections.vertical_video.blocks.video.video_alt_info"
+        },
+        {
+          "type": "checkbox",
+          "id": "muted",
+          "label": "t:sections.vertical_video.blocks.video.muted",
+          "default": true
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.vertical_video.name",
+      "blocks": [
+        {
+          "type": "collection_link",
+          "settings": { "label": "Bestsellers" }
+        },
+        {
+          "type": "collection_link",
+          "settings": { "label": "Complexion" }
+        },
+        {
+          "type": "collection_link",
+          "settings": { "label": "Lip + Cheek" }
+        },
+        {
+          "type": "collection_link",
+          "settings": { "label": "Skincare" }
+        },
+        {
+          "type": "collection_link",
+          "settings": { "label": "Eye" }
+        },
+        {
+          "type": "collection_link",
+          "settings": { "label": "Sets" }
+        },
+        {
+          "type": "video",
+          "settings": {
+            "custom_label": "Blend once. Soft focus all day.",
+            "show_product": true,
+            "muted": true
+          }
+        },
+        {
+          "type": "video",
+          "settings": {
+            "custom_label": "One crayon, from desk to dinner.",
+            "show_product": true,
+            "muted": true
+          }
+        },
+        {
+          "type": "video",
+          "settings": {
+            "custom_label": "Skin tint that feels like skin.",
+            "show_product": true,
+            "muted": true
+          }
+        },
+        {
+          "type": "video",
+          "settings": {
+            "custom_label": "Glow that starts underneath.",
+            "show_product": true,
+            "muted": true
+          }
+        },
+        {
+          "type": "video",
+          "settings": {
+            "custom_label": "Warmth, without the powder.",
+            "show_product": true,
+            "muted": true
+          }
+        },
+        {
+          "type": "video",
+          "settings": {
+            "custom_label": "Night repair, morning skin.",
+            "show_product": true,
+            "muted": true
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

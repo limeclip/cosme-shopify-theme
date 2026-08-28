@@ -1,9 +1,29 @@
-/** Critical CSS for the theme. This file is included on every page. */
+/** Critical CSS for the Cosme theme. Loaded on every page. */
 
-/* Reset styles inspired by https://www.joshwcomeau.com/css/custom-css-reset/ */
-* {
+/*
+ * Responsive breakpoints (mobile-first, use in component stylesheets):
+ * sm — 576px
+ * md — 768px
+ * lg — 990px
+ * xl — 1200px
+ *
+ * CSS custom properties cannot be used inside @media query conditions.
+ */
+
+/* Reset — https://www.joshwcomeau.com/css/custom-css-reset/ */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+* {
   margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -27,26 +47,10 @@ svg {
   height: auto;
 }
 
-input,
-textarea,
-select {
-  font: inherit;
-  border-radius: var(--style-border-radius-inputs);
-}
-
-select {
-  background-color: var(--color-background);
-  color: currentcolor;
-}
-
-dialog {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-}
-
 p {
   text-wrap: pretty;
 }
+
 p,
 h1,
 h2,
@@ -71,47 +75,132 @@ p:empty {
   margin-block-end: 0;
 }
 
-/** Theme styles below */
+/** Document typography */
 body {
-  font-family: var(--font-primary--family);
+  font-family: var(--font-body--family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-body--weight);
+  font-style: var(--font-body--style);
+  line-height: var(--line-height-body);
+  letter-spacing: var(--letter-spacing-body);
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
 
-/** Section layout utilities */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading--family);
+  font-weight: var(--font-heading--weight);
+  font-style: var(--font-heading--style);
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-spacing-heading);
+  color: var(--color-foreground);
+}
 
-/**
- * Setup a grid that enables both full-width and constrained layouts
- * depending on the class of the child elements.
- *
- * By default, a minimum content margin is set on the left and right
- * sides of the section and the content is centered in the viewport to
- * not exceed the maximum page width.
- *
- * When a child element is given the `full-width` class, it will span
- * the entire viewport.
- */
+/** Links */
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: max(1px, calc(var(--border-width) * 0.5));
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  color: var(--color-foreground);
+}
+
+/** Form controls baseline */
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+button,
+[type='button'],
+[type='submit'],
+[type='reset'] {
+  cursor: pointer;
+  border-radius: var(--radius-button);
+}
+
+input,
+textarea,
+select {
+  color: var(--color-foreground);
+  background-color: var(--color-input-background);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-input);
+}
+
+select {
+  color: currentcolor;
+}
+
+dialog {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+/** Accessibility */
+.cosme-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/** Section layout — Shopify grid architecture */
 .shopify-section {
-  --content-width: min(
-    calc(var(--page-width) - var(--page-margin) * 2),
-    calc(100% - var(--page-margin) * 2)
-  );
   --content-margin: minmax(var(--page-margin), 1fr);
   --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
 
-  /* This is required to make <img> elements work as background images */
   position: relative;
-  grid-template-columns: var(--content-grid);
   display: grid;
+  grid-template-columns: var(--content-grid);
   width: 100%;
 }
 
-/* Child elements, by default, are constrained to the central column of the grid. */
 .shopify-section > * {
   grid-column: 2;
 }
 
-/* Child elements that use the full-width utility class span the entire viewport. */
 .shopify-section > .full-width {
   grid-column: 1 / -1;
+}
+
+.shopify-section-group-header-group:has([data-header-group][data-sticky="true"]) {
+  position: sticky;
+  top: 0;
+  z-index: 30;
 }

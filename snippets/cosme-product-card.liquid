@@ -1,0 +1,699 @@
+{% doc %}
+  Renders a reusable product card for grids and carousels.
+
+  @param {product} [product] - Product to display (omit when demo_mode is true)
+  @param {string} [class] - Additional CSS classes on the card root
+  @param {string} [layout] - Card layout: default (stacked) or editorial (title/vendor row)
+  @param {string} [aspect_ratio] - Image aspect ratio passed to cosme-image (default: 3/4)
+  @param {number} [image_width] - Maximum image width in pixels (default: 800)
+  @param {string} [sizes] - Responsive sizes attribute for the image
+  @param {string} [loading] - Image loading mode: lazy (default) or eager
+  @param {string} [fetchpriority] - When set to high, image loads eagerly
+  @param {boolean} [show_vendor] - Show vendor (default: false)
+  @param {boolean} [show_price] - Show price (default: true)
+  @param {boolean} [show_badge] - Show product badges (default: true)
+  @param {boolean} [show_secondary_image] - Crossfade to second image on hover when available (default: false)
+  @param {boolean} [show_quick_view] - Show Quick View action trigger (default: false)
+  @param {boolean} [show_add_to_cart] - Show Add to Cart for single-variant available products (default: false)
+  @param {string} [badge_text] - Optional custom badge label (shown when product is available)
+  @param {boolean} [demo_mode] - Render demo placeholder content instead of a Shopify product
+  @param {string} [demo_title] - Demo product title when demo_mode is true
+  @param {string} [demo_vendor] - Demo vendor label when demo_mode is true
+  @param {string} [demo_price] - Demo price label when demo_mode is true
+  @param {string} [demo_placeholder] - Placeholder SVG name for demo imagery
+
+  @example
+  {% render 'cosme-product-card', product: product %}
+  {% render 'cosme-product-card', product: product, layout: 'editorial', show_vendor: true, show_secondary_image: true, show_quick_view: true %}
+  {% render 'cosme-product-card', demo_mode: true, demo_title: 'Demo product', layout: 'editorial' %}
+{% enddoc %}
+
+{% liquid
+  assign card_layout = layout | default: 'default'
+  assign card_aspect_ratio = aspect_ratio | default: '3/4'
+  assign card_image_width = image_width | default: 800
+  assign card_sizes = sizes | default: '(min-width: 990px) 25vw, (min-width: 768px) 33vw, 50vw'
+  assign card_image_loading = loading | default: 'lazy'
+  assign is_demo = demo_mode | default: false
+  assign show_price_label = show_price | default: true
+  assign show_badge_label = show_badge | default: true
+  assign show_quick_view_action = show_quick_view | default: false
+  assign show_add_to_cart_action = show_add_to_cart | default: false
+
+  if fetchpriority != blank
+    assign card_image_loading = 'eager'
+  endif
+
+  assign show_vendor_label = show_vendor | default: false
+  assign show_secondary = show_secondary_image | default: false
+  assign on_sale = false
+  assign primary_image = null
+  assign secondary_image = null
+  assign primary_alt = ''
+  assign card_title = ''
+  assign card_vendor = ''
+  assign demo_placeholder_name = demo_placeholder | default: 'product-apparel-2'
+  assign can_add_to_cart = false
+  assign has_overlay_actions = false
+  assign first_available_variant = null
+
+  unless is_demo
+    if product.compare_at_price_min > product.price_min
+      assign on_sale = true
+    endif
+
+    assign primary_image = product.featured_media.preview_image | default: product.featured_image
+    assign card_title = product.title
+    assign card_vendor = product.vendor
+    assign first_available_variant = product.selected_or_first_available_variant
+
+    if show_secondary and product.images.size > 1
+      assign secondary_image = product.images[1]
+    endif
+
+    assign primary_alt = primary_image.alt | default: product.title
+
+    if show_add_to_cart_action and product.available
+      if product.has_only_default_variant
+        if first_available_variant.available
+          assign can_add_to_cart = true
+        endif
+      endif
+    endif
+
+    if show_quick_view_action
+      assign has_overlay_actions = true
+    endif
+
+    if can_add_to_cart
+      assign has_overlay_actions = true
+    endif
+  else
+    assign card_title = demo_title
+    assign card_vendor = demo_vendor
+
+    if show_quick_view_action or show_add_to_cart_action
+      assign has_overlay_actions = true
+    endif
+  endunless
+%}
+
+<article
+  class="cosme-product-card{% if card_layout == 'editorial' %} cosme-product-card--editorial{% endif %}{% if show_secondary and secondary_image %} cosme-product-card--has-secondary{% endif %}{% if has_overlay_actions %} cosme-product-card--has-actions{% endif %}{% if is_demo %} cosme-product-card--demo{% endif %}{% if class != blank %} {{ class }}{% endif %}"
+>
+  <div class="cosme-product-card__media-wrapper">
+    {% unless is_demo %}
+      {% if show_badge_label %}
+        {% if product.available == false or on_sale or badge_text != blank %}
+          <div class="cosme-product-card__badges">
+            {% if product.available == false %}
+              {% render 'cosme-product-badge', type: 'sold-out' %}
+            {% elsif badge_text != blank %}
+              {% render 'cosme-product-badge', type: 'custom', text: badge_text %}
+            {% elsif on_sale %}
+              {% render 'cosme-product-badge', type: 'sale' %}
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
+    {% endunless %}
+
+    {% if is_demo %}
+      <div class="cosme-product-card__media" aria-hidden="true">
+        <div
+          class="cosme-product-card__placeholder"
+          style="--cosme-product-card-ratio: {{ card_aspect_ratio }};"
+        >
+          {{ demo_placeholder_name | placeholder_svg_tag: 'cosme-product-card__placeholder-svg' }}
+        </div>
+      </div>
+    {% else %}
+      <a
+        href="{{ product.url }}"
+        class="cosme-product-card__media"
+        {% if primary_image == blank %}
+          aria-label="{{ product.title | escape }}"
+        {% endif %}
+      >
+        {% if primary_image %}
+          {% render 'cosme-image',
+            image: primary_image,
+            class: 'cosme-product-card__image cosme-product-card__image--primary',
+            width: card_image_width,
+            aspect_ratio: card_aspect_ratio,
+            sizes: card_sizes,
+            loading: card_image_loading,
+            fetchpriority: fetchpriority,
+            alt: primary_alt
+          %}
+
+          {% if show_secondary and secondary_image %}
+            {% render 'cosme-image',
+              image: secondary_image,
+              class: 'cosme-product-card__image cosme-product-card__image--secondary',
+              width: card_image_width,
+              aspect_ratio: card_aspect_ratio,
+              sizes: card_sizes,
+              loading: 'lazy',
+              alt: ''
+            %}
+          {% endif %}
+        {% else %}
+          <div
+            class="cosme-product-card__placeholder"
+            style="--cosme-product-card-ratio: {{ card_aspect_ratio }};"
+          >
+            {{ 'product-apparel-2' | placeholder_svg_tag: 'cosme-product-card__placeholder-svg' }}
+          </div>
+        {% endif %}
+      </a>
+    {% endif %}
+
+    {% if has_overlay_actions %}
+      <div class="cosme-product-card__overlay-actions">
+        {% if show_quick_view_action %}
+          {% if is_demo %}
+            <button
+              type="button"
+              class="cosme-product-card__action"
+              disabled
+              aria-disabled="true"
+              aria-label="{{ 'products.quick_view' | t: title: card_title }}"
+            >
+              <span class="cosme-product-card__action-icon" aria-hidden="true">
+                {% render 'cosme-icon', icon: 'plus', size: 'md' %}
+              </span>
+              <span class="cosme-product-card__action-label">
+                {{ 'products.quick_view' | t }}
+              </span>
+            </button>
+          {% else %}
+            <button
+              type="button"
+              class="cosme-product-card__action"
+              data-quick-view
+              data-product-handle="{{ product.handle }}"
+              data-product-url="{{ product.url }}"
+              aria-label="{{ 'products.quick_view' | t: title: product.title }}"
+            >
+              <span class="cosme-product-card__action-icon" aria-hidden="true">
+                {% render 'cosme-icon', icon: 'plus', size: 'md' %}
+              </span>
+              <span class="cosme-product-card__action-label">
+                {{ 'products.quick_view' | t }}
+              </span>
+            </button>
+          {% endif %}
+        {% endif %}
+
+        {% if show_add_to_cart_action %}
+          {% if is_demo %}
+            <button
+              type="button"
+              class="cosme-product-card__action"
+              disabled
+              aria-disabled="true"
+              aria-label="{{ 'products.add_to_cart' | t: title: card_title }}"
+            >
+              <span class="cosme-product-card__action-icon" aria-hidden="true">
+                {% render 'cosme-icon', icon: 'cart', size: 'md' %}
+              </span>
+              <span class="cosme-product-card__action-label">
+                {{ 'products.add_to_cart_button' | t }}
+              </span>
+            </button>
+          {% elsif can_add_to_cart %}
+            {% form 'product', product, class: 'cosme-product-card__add-form' %}
+              <input type="hidden" name="id" value="{{ first_available_variant.id }}">
+              <input type="hidden" name="quantity" value="1">
+              <button
+                type="submit"
+                class="cosme-product-card__action"
+                aria-label="{{ 'products.add_to_cart' | t: title: product.title }}"
+              >
+                <span class="cosme-product-card__action-icon" aria-hidden="true">
+                  {% render 'cosme-icon', icon: 'cart', size: 'md' %}
+                </span>
+                <span class="cosme-product-card__action-label">
+                  {{ 'products.add_to_cart_button' | t }}
+                </span>
+              </button>
+            {% endform %}
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="cosme-product-card__content">
+    {% if card_layout == 'editorial' %}
+      <div class="cosme-product-card__meta-row">
+        {% if is_demo %}
+          <p class="cosme-product-card__title cosme-product-card__title--static">{{ card_title | escape }}</p>
+        {% else %}
+          <a href="{{ product.url }}" class="cosme-product-card__title">
+            {{ card_title | escape }}
+          </a>
+        {% endif %}
+
+        {% if show_vendor_label and card_vendor != blank %}
+          <p class="cosme-product-card__vendor">{{ card_vendor | escape }}</p>
+        {% endif %}
+      </div>
+
+      {% if show_price_label %}
+        <div class="cosme-product-card__price">
+          {% if is_demo %}
+            <div class="cosme-price">
+              <span class="cosme-price__regular">{{ demo_price | escape }}</span>
+            </div>
+          {% else %}
+            {% render 'cosme-price', product: product %}
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      {% if show_vendor_label and card_vendor != blank %}
+        <p class="cosme-product-card__vendor">{{ card_vendor | escape }}</p>
+      {% endif %}
+
+      {% if is_demo %}
+        <p class="cosme-product-card__title cosme-product-card__title--static">{{ card_title | escape }}</p>
+      {% else %}
+        <a href="{{ product.url }}" class="cosme-product-card__title">
+          {{ card_title | escape }}
+        </a>
+      {% endif %}
+
+      {% if show_price_label %}
+        <div class="cosme-product-card__price">
+          {% if is_demo %}
+            <div class="cosme-price">
+              <span class="cosme-price__regular">{{ demo_price | escape }}</span>
+            </div>
+          {% else %}
+            {% render 'cosme-price', product: product %}
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</article>
+
+{% stylesheet %}
+  .cosme-product-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-product-card__media-wrapper {
+    position: relative;
+  }
+
+  .cosme-product-card__badges {
+    position: absolute;
+    top: var(--spacing-sm);
+    left: var(--spacing-sm);
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    pointer-events: none;
+  }
+
+  .cosme-product-card__media {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-product-card__media:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-product-card__image--primary,
+  .cosme-product-card__image--secondary {
+    width: 100%;
+  }
+
+  .cosme-product-card__image--primary .cosme-image__img,
+  .cosme-product-card__image--secondary .cosme-image__img {
+    object-fit: cover;
+  }
+
+  .cosme-product-card__image--primary {
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-product-card__image--secondary {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  @media (hover: hover) {
+    .cosme-product-card--has-secondary:hover .cosme-product-card__image--secondary,
+    .cosme-product-card--has-secondary:focus-within .cosme-product-card__image--secondary {
+      opacity: 1;
+    }
+
+    .cosme-product-card--has-secondary:hover .cosme-product-card__image--primary,
+    .cosme-product-card--has-secondary:focus-within .cosme-product-card__image--primary {
+      opacity: 0;
+    }
+  }
+
+  /* === ДЕЙСТВИЯ (оверлей) === */
+  .cosme-product-card__overlay-actions {
+    position: absolute;
+    right: var(--spacing-sm);
+    bottom: var(--spacing-sm);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    transition: opacity var(--transition-duration) var(--transition-easing),
+                transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-product-card__add-form {
+    margin: 0;
+  }
+
+  .cosme-product-card__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    min-width: 2.25rem;
+    padding: 0 var(--spacing-sm);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 999px;
+    background-color: color-mix(in srgb, var(--color-background) 92%, transparent);
+    color: var(--color-foreground);
+    cursor: pointer;
+    text-decoration: none;
+    overflow: hidden;
+    transition: all var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-product-card__action-icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cosme-product-card__action-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    max-width: 0;
+    padding-right: 0;
+    transition: opacity var(--transition-duration) var(--transition-easing),
+                max-width var(--transition-duration) var(--transition-easing),
+                padding var(--transition-duration) var(--transition-easing);
+  }
+
+  /* === ДЕСКТОП: анимация выезда из правого нижнего угла при hover === */
+  @media (hover: hover) and (pointer: fine) {
+    .cosme-product-card__overlay-actions {
+      opacity: 0;
+      transform: translate(calc(100% + var(--spacing-sm)), calc(100% + var(--spacing-sm))) scale(0.8);
+      pointer-events: none;
+    }
+
+    .cosme-product-card--has-actions:hover .cosme-product-card__overlay-actions,
+    .cosme-product-card--has-actions:focus-within .cosme-product-card__overlay-actions {
+      opacity: 1;
+      transform: translate(0, 0) scale(1);
+      pointer-events: auto;
+    }
+
+    .cosme-product-card__action:hover,
+    .cosme-product-card__action:focus-visible {
+      gap: var(--spacing-xs);
+      background-color: var(--color-background);
+      padding: 0 var(--spacing-md);
+      opacity: 1;
+      border-color: var(--color-border);
+      color: var(--color-accent);
+    }
+
+    .cosme-product-card__action:hover .cosme-product-card__action-label,
+    .cosme-product-card__action:focus-visible .cosme-product-card__action-label {
+      opacity: 1;
+      max-width: 10rem;
+      padding-right: 0.25rem;
+    }
+  }
+
+  /* === МОБИЛЬНЫЕ: иконки всегда видны, без анимации === */
+  @media (hover: none), (pointer: coarse) {
+    .cosme-product-card__overlay-actions {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+
+    .cosme-product-card__action {
+      gap: 0;
+      padding: 0;
+      min-width: 2.25rem;
+      width: 2.25rem;
+      justify-content: center;
+    }
+
+    .cosme-product-card__action-label {
+      display: none;
+    }
+  }
+
+  /* Отключаем анимации при reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-product-card__image--primary,
+    .cosme-product-card__image--secondary,
+    .cosme-product-card__overlay-actions,
+    .cosme-product-card__action {
+      transition: none;
+    }
+
+    .cosme-product-card--has-actions .cosme-product-card__overlay-actions {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+  }
+
+  /* === ОСТАЛЬНЫЕ СТИЛИ (без изменений) === */
+  .cosme-product-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: var(--cosme-product-card-ratio);
+    background-color: var(--color-border);
+  }
+
+  .cosme-product-card__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .cosme-product-card__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-product-card__vendor {
+    color: var(--color-muted);
+    font-size: 0.875em;
+    letter-spacing: var(--letter-spacing-body);
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-product-card__title {
+    color: var(--color-foreground);
+    font-family: var(--font-heading--family);
+    font-size: inherit;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    text-decoration: none;
+  }
+
+  .cosme-product-card__title:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-product-card__title:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-product-card__price {
+    margin-top: var(--spacing-xs);
+  }
+
+  .cosme-product-card--editorial {
+    gap: var(--spacing-md);
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__media {
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__placeholder {
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__placeholder-svg {
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__content {
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-product-card__meta-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: 400;
+    line-height: var(--line-height-body);
+    color: var(--color-heading);
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__vendor {
+    flex-shrink: 0;
+    margin: 0;
+    font-size: 0.8125rem;
+    text-align: right;
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__price {
+    margin-top: 0;
+  }
+
+  .cosme-product-card--editorial .cosme-product-card__price .cosme-price {
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+  }
+
+  .cosme-product-card__title--static {
+    margin: 0;
+    text-decoration: none;
+  }
+
+  .color-scheme-2 .cosme-product-card--editorial .cosme-product-card__placeholder-svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.15;
+  }
+{% endstylesheet %}
+{% javascript %}
+  (function() {
+    // Вешаем обработчик только один раз
+    if (!window._cosmeCartFormHandler) {
+      window._cosmeCartFormHandler = true;
+
+      document.addEventListener('submit', async function(event) {
+        const form = event.target.closest('.cosme-product-card__add-form');
+        if (!form || form.dataset.ajaxProcessed) return;
+        form.dataset.ajaxProcessed = 'true'; // чтобы не обрабатывать повторно
+
+        event.preventDefault();
+
+        const button = form.querySelector('button[type="submit"]');
+        if (!button || button.disabled) return;
+
+        // Блокируем кнопку и меняем текст
+        button.disabled = true;
+        const originalLabel = button.textContent;
+        button.textContent = 'Adding…';
+
+        const formData = new FormData(form);
+        const variantId = formData.get('id');
+        const quantity = Number(formData.get('quantity')) || 1;
+
+        try {
+          const response = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ id: Number(variantId), quantity }),
+          });
+
+          if (!response.ok) {
+            const payload = await response.json();
+            throw new Error(payload.description || 'Error adding to cart');
+          }
+
+          // --- Обновляем счётчик корзины (как в Quick View) ---
+          try {
+            const cartResponse = await fetch('/cart.js');
+            const cart = await cartResponse.json();
+
+            document.querySelectorAll('[data-header-cart-count], .cosme-header__cart-count').forEach((el) => {
+              if (cart.item_count > 0) {
+                el.textContent = cart.item_count;
+                el.hidden = false;
+              } else {
+                el.hidden = true;
+              }
+            });
+
+            // Обновляем aria-label для кнопки корзины
+            document.querySelectorAll('[data-header-cart-toggle]').forEach((toggle) => {
+              if (cart.item_count > 0) {
+                toggle.setAttribute('aria-label', `Cart, ${cart.item_count} items`);
+              } else {
+                toggle.removeAttribute('aria-label');
+              }
+            });
+
+            // Триггерим событие для других частей (если нужно)
+            document.dispatchEvent(new CustomEvent('cart:refresh'));
+          } catch (e) {
+            // Если не удалось обновить счётчик – игнорируем
+          }
+
+          // --- Открываем дровер или редиректим ---
+          const cartToggle = document.querySelector('[data-header-cart-toggle]');
+          if (cartToggle) {
+            cartToggle.click(); // открываем дровер
+          } else {
+            window.location.href = '/cart'; // редирект на страницу корзины
+          }
+
+        } catch (error) {
+          console.error('Add to cart error:', error);
+          // Можно показать уведомление об ошибке (опционально)
+        } finally {
+          // Восстанавливаем кнопку
+          button.disabled = false;
+          button.textContent = originalLabel;
+        }
+      });
+    }
+  })();
+{% endjavascript %}

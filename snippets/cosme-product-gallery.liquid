@@ -1,0 +1,1004 @@
+{% doc %}
+  Renders the product media gallery with thumbnail navigation and an optional lightbox.
+
+  @param {product} product - Product whose media is displayed
+  @param {media} [featured_media] - Currently featured media
+  @param {string} [sizes] - Sizes attribute for the featured image
+  @param {string} [layout] - `editorial` or `media_only`
+  @param {string} [thumbnail_position] - `left`, `right`, or `bottom`
+  @param {string} [aspect] - `natural`, `square`, `portrait`, or `landscape`
+  @param {string} [fit] - `contain` or `cover`
+  @param {string} [focal] - CSS object-position keyword group
+  @param {boolean} [show_thumbnails] - Show thumbnail navigation
+  @param {boolean} [show_arrows] - Show previous/next controls
+  @param {boolean} [show_media_count] - Show current media index
+  @param {boolean} [enable_zoom] - Open lightbox when the main image is clicked
+  @param {boolean} [enable_lightbox] - Enable the media lightbox
+  @param {boolean} [enable_video_controls] - Show native video controls
+
+  @example
+  {% render 'cosme-product-gallery', product: product, featured_media: variant.featured_media %}
+{% enddoc %}
+
+{% liquid
+  assign active_media = featured_media | default: product.featured_media
+  assign gallery_sizes = sizes | default: '(min-width: 990px) 50vw, 100vw'
+  assign media_count = product.media.size
+  assign gallery_layout = layout | default: 'editorial'
+  assign thumb_position = thumbnail_position | default: 'left'
+  assign image_aspect = aspect | default: 'portrait'
+  assign image_fit = fit | default: 'contain'
+  assign image_focal = focal | default: 'center'
+  assign thumbs_enabled = show_thumbnails | default: true
+  assign arrows_enabled = show_arrows | default: false
+  assign count_enabled = show_media_count | default: true
+  assign zoom_enabled = enable_zoom | default: true
+  assign lightbox_enabled = enable_lightbox | default: true
+  assign video_controls = enable_video_controls | default: true
+
+  if gallery_layout == 'media_only'
+    assign thumbs_enabled = false
+  endif
+
+  if media_count < 2
+    assign thumbs_enabled = false
+    assign arrows_enabled = false
+  endif
+
+  case image_aspect
+    when 'square'
+      assign aspect_ratio = '1 / 1'
+    when 'landscape'
+      assign aspect_ratio = '4 / 3'
+    when 'portrait'
+      assign aspect_ratio = '3 / 4'
+    else
+      assign aspect_ratio = 'auto'
+  endcase
+
+  case image_focal
+    when 'top'
+      assign object_position = 'center top'
+    when 'bottom'
+      assign object_position = 'center bottom'
+    when 'left'
+      assign object_position = 'left center'
+    when 'right'
+      assign object_position = 'right center'
+    else
+      assign object_position = 'center center'
+  endcase
+
+  assign active_index = 1
+  for media in product.media
+    if active_media and media.id == active_media.id
+      assign active_index = forloop.index
+    endif
+  endfor
+%}
+
+<div
+  class="cosme-product-gallery cosme-product-gallery--{{ thumb_position }} cosme-product-gallery--{{ image_aspect }}{% if thumbs_enabled %} cosme-product-gallery--has-thumbs{% endif %}"
+  style="
+    --gallery-aspect: {{ aspect_ratio }};
+    --gallery-fit: {{ image_fit }};
+    --gallery-focal: {{ object_position }};
+  "
+  data-product-gallery
+  data-media-count="{{ media_count }}"
+  data-enable-zoom="{{ zoom_enabled }}"
+  data-enable-lightbox="{{ lightbox_enabled }}"
+  role="region"
+  aria-label="{{ 'products.gallery.label' | t }}"
+  tabindex="0"
+>
+  {% if thumbs_enabled %}
+    <nav class="cosme-product-gallery__thumbs" data-gallery-thumbs aria-label="{{ 'products.gallery.thumbnails' | t }}">
+      {% for media in product.media %}
+        {% liquid
+          assign is_active = false
+          if active_media and media.id == active_media.id
+            assign is_active = true
+          endif
+          if active_media == blank and forloop.first
+            assign is_active = true
+          endif
+          assign thumb_alt = media.alt | default: product.title
+        %}
+        <button
+          type="button"
+          class="cosme-product-gallery__thumb{% if is_active %} is-active{% endif %}"
+          data-gallery-thumb
+          data-media-id="{{ media.id }}"
+          aria-label="{{ 'products.gallery.media' | t: number: forloop.index, total: media_count }}"
+          aria-current="{% if is_active %}true{% else %}false{% endif %}"
+        >
+          {% render 'cosme-image',
+            image: media.preview_image,
+            class: 'cosme-product-gallery__thumb-image',
+            width: 160,
+            aspect_ratio: '3/4',
+            sizes: '72px',
+            loading: 'lazy',
+            alt: thumb_alt
+          %}
+          {% if media.media_type == 'video' or media.media_type == 'external_video' %}
+            <span class="cosme-product-gallery__thumb-badge" aria-hidden="true">
+              {% render 'cosme-icon', icon: 'play', size: 'sm' %}
+            </span>
+          {% endif %}
+        </button>
+      {% endfor %}
+    </nav>
+  {% endif %}
+
+  <div class="cosme-product-gallery__stage" data-gallery-stage>
+    {% if media_count == 0 %}
+      <div class="cosme-product-gallery__placeholder">
+        {{ 'product-apparel-1' | placeholder_svg_tag: 'cosme-product-gallery__placeholder-svg' }}
+      </div>
+    {% else %}
+      {% for media in product.media %}
+        {% liquid
+          assign is_active = false
+          if active_media and media.id == active_media.id
+            assign is_active = true
+          endif
+          if active_media == blank and forloop.first
+            assign is_active = true
+          endif
+
+          assign media_loading = 'lazy'
+          assign media_fetchpriority = 'low'
+          assign media_width = 900
+          if is_active
+            assign media_loading = 'eager'
+            assign media_fetchpriority = 'high'
+            assign media_width = 1600
+          endif
+
+          assign zoom_url = ''
+          if media.preview_image
+            assign zoom_url = media.preview_image | image_url: width: 2400
+          endif
+          assign media_alt = media.alt | default: product.title
+        %}
+
+        <figure
+          class="cosme-product-gallery__media{% if is_active %} is-active{% endif %}"
+          data-gallery-media
+          data-media-id="{{ media.id }}"
+          data-media-type="{{ media.media_type }}"
+          data-zoom-src="{{ zoom_url }}"
+          data-alt="{{ media_alt | escape }}"
+        >
+          {% case media.media_type %}
+            {% when 'image' %}
+              {% if zoom_enabled %}
+                {% if lightbox_enabled %}
+                  <button
+                    type="button"
+                    class="cosme-product-gallery__zoom"
+                    data-gallery-zoom
+                    aria-label="{{ 'products.gallery.zoom' | t }}"
+                  >
+                    {% render 'cosme-image',
+                      image: media.preview_image,
+                      class: 'cosme-product-gallery__image',
+                      width: media_width,
+                      sizes: gallery_sizes,
+                      loading: media_loading,
+                      fetchpriority: media_fetchpriority,
+                      alt: media_alt
+                    %}
+                  </button>
+                {% else %}
+                  {% render 'cosme-image',
+                    image: media.preview_image,
+                    class: 'cosme-product-gallery__image',
+                    width: media_width,
+                    sizes: gallery_sizes,
+                    loading: media_loading,
+                    fetchpriority: media_fetchpriority,
+                    alt: media_alt
+                  %}
+                {% endif %}
+              {% else %}
+                {% render 'cosme-image',
+                  image: media.preview_image,
+                  class: 'cosme-product-gallery__image',
+                  width: media_width,
+                  sizes: gallery_sizes,
+                  loading: media_loading,
+                  fetchpriority: media_fetchpriority,
+                  alt: media_alt
+                %}
+              {% endif %}
+            {% when 'video' %}
+              {% if video_controls %}
+                {{
+                  media
+                  | video_tag:
+                    image_size: '900x',
+                    controls: true,
+                    preload: 'none',
+                    class: 'cosme-product-gallery__video'
+                }}
+              {% else %}
+                {{
+                  media
+                  | video_tag:
+                    image_size: '900x',
+                    controls: false,
+                    muted: true,
+                    preload: 'none',
+                    class: 'cosme-product-gallery__video'
+                }}
+              {% endif %}
+            {% when 'external_video' %}
+              {{ media | external_video_tag: class: 'cosme-product-gallery__video' }}
+            {% when 'model' %}
+              {{ media | model_viewer_tag }}
+            {% else %}
+              {{ media | media_tag }}
+          {% endcase %}
+        </figure>
+      {% endfor %}
+    {% endif %}
+
+    {% if arrows_enabled %}
+      <button
+        type="button"
+        class="cosme-product-gallery__arrow cosme-product-gallery__arrow--prev"
+        data-gallery-prev
+        aria-label="{{ 'products.gallery.previous' | t }}"
+      >
+        {% render 'cosme-icon', icon: 'chevron-left', size: 'md' %}
+      </button>
+      <button
+        type="button"
+        class="cosme-product-gallery__arrow cosme-product-gallery__arrow--next"
+        data-gallery-next
+        aria-label="{{ 'products.gallery.next' | t }}"
+      >
+        {% render 'cosme-icon', icon: 'chevron-right', size: 'md' %}
+      </button>
+    {% endif %}
+
+    {% if count_enabled %}
+      {% if media_count > 1 %}
+        <p
+          class="cosme-product-gallery__count"
+          data-gallery-count
+          data-count-template="{{ 'products.gallery.counter' | t: current: '__c__', total: '__t__' }}"
+          aria-live="polite"
+        >
+          {{ 'products.gallery.counter' | t: current: active_index, total: media_count }}
+        </p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {% if lightbox_enabled %}
+    {% if media_count > 0 %}
+      <dialog
+        class="cosme-product-gallery__lightbox"
+        data-gallery-lightbox
+        scroll-lock
+        aria-label="{{ 'products.gallery.lightbox' | t }}"
+      >
+        <button
+          type="button"
+          class="cosme-product-gallery__lightbox-close"
+          data-gallery-close
+          aria-label="{{ 'products.gallery.close' | t }}"
+        >
+          {% render 'cosme-icon', icon: 'close', size: 'md' %}
+        </button>
+
+        {% if media_count > 1 %}
+          <button
+            type="button"
+            class="cosme-product-gallery__lightbox-arrow cosme-product-gallery__lightbox-arrow--prev"
+            data-gallery-prev
+            aria-label="{{ 'products.gallery.previous' | t }}"
+          >
+            {% render 'cosme-icon', icon: 'chevron-left', size: 'lg' %}
+          </button>
+          <button
+            type="button"
+            class="cosme-product-gallery__lightbox-arrow cosme-product-gallery__lightbox-arrow--next"
+            data-gallery-next
+            aria-label="{{ 'products.gallery.next' | t }}"
+          >
+            {% render 'cosme-icon', icon: 'chevron-right', size: 'lg' %}
+          </button>
+        {% endif %}
+
+        <div class="cosme-product-gallery__lightbox-stage" data-lightbox-stage>
+          <div class="cosme-product-gallery__lightbox-track" data-lightbox-track></div>
+        </div>
+
+        {% if media_count > 1 %}
+          <div class="cosme-product-gallery__lightbox-thumbs" data-lightbox-thumbs>
+            {% for media in product.media %}
+              <button
+                type="button"
+                class="cosme-product-gallery__lightbox-thumb"
+                data-gallery-thumb
+                data-media-id="{{ media.id }}"
+                aria-label="{{ 'products.gallery.media' | t: number: forloop.index, total: media_count }}"
+              >
+                {% render 'cosme-image',
+                  image: media.preview_image,
+                  class: 'cosme-product-gallery__lightbox-thumb-image',
+                  width: 120,
+                  aspect_ratio: '1',
+                  sizes: '64px',
+                  loading: 'lazy',
+                  alt: ''
+                %}
+              </button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </dialog>
+    {% endif %}
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .cosme-product-gallery {
+    display: grid;
+    gap: var(--product-image-gap, 0.75rem);
+    min-width: 0;
+    overflow-x: clip;
+    grid-template-areas:
+      'stage'
+      'thumbs';
+  }
+
+  .cosme-product-gallery:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-product-gallery__stage {
+    position: relative;
+    grid-area: stage;
+    min-width: 0;
+    overflow: hidden;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-card);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  /* Убираем фиксированный aspect-ratio у stage, чтобы он подстраивался под изображения */
+  .cosme-product-gallery--square .cosme-product-gallery__stage,
+  .cosme-product-gallery--portrait .cosme-product-gallery__stage,
+  .cosme-product-gallery--landscape .cosme-product-gallery__stage {
+    aspect-ratio: var(--gallery-aspect);
+  }
+  .cosme-product-gallery__media {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cosme-product-gallery__media.is-active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+    z-index: 1;
+  }
+
+  .cosme-product-gallery__zoom {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
+  }
+
+  .cosme-product-gallery__image,
+  .cosme-product-gallery__zoom .cosme-image,
+  .cosme-product-gallery__zoom .cosme-image__img,
+  .cosme-product-gallery__image .cosme-image__img,
+  .cosme-product-gallery__video,
+  .cosme-product-gallery__media model-viewer,
+  .cosme-product-gallery__media iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: var(--gallery-fit, contain);
+    object-position: var(--gallery-focal, center center);
+  }
+
+  .cosme-product-gallery__placeholder {
+    aspect-ratio: 3 / 4;
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-product-gallery__placeholder-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-product-gallery__thumbs {
+    grid-area: thumbs;
+    display: flex;
+    gap: var(--product-image-gap, 0.75rem);
+    overflow-x: auto;
+    scrollbar-width: thin;
+    max-height: 5.5rem;
+  }
+
+  .cosme-product-gallery__thumb {
+    position: relative;
+    flex: 0 0 4.25rem;
+    padding: 0;
+    overflow: hidden;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-card);
+    background: transparent;
+    opacity: 0.55;
+  }
+
+  .cosme-product-gallery__thumb.is-active,
+  .cosme-product-gallery__thumb[aria-current='true'] {
+    border-color: var(--color-foreground);
+    opacity: 1;
+  }
+
+  .cosme-product-gallery__thumb:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-product-gallery__thumb-image {
+    pointer-events: none;
+  }
+
+  .cosme-product-gallery__thumb-badge {
+    position: absolute;
+    inset: auto 0.25rem 0.25rem auto;
+    display: flex;
+    color: var(--color-slider-arrows, var(--color-foreground));
+  }
+
+  .cosme-product-gallery__arrow {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-slider-arrows, var(--color-foreground));
+    transform: translateY(-50%);
+    opacity: 0.7;
+  }
+
+  .cosme-product-gallery__arrow:hover,
+  .cosme-product-gallery__arrow:focus-visible {
+    opacity: 1;
+  }
+
+  .cosme-product-gallery__arrow--prev {
+    left: 0.25rem;
+  }
+
+  .cosme-product-gallery__arrow--next {
+    right: 0.25rem;
+  }
+
+  .cosme-product-gallery__count {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 2;
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    color: var(--color-muted);
+  }
+
+  /* ===== LIGHTBOX STYLES ===== */
+  .cosme-product-gallery__lightbox {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+    width: min(100vw - 2rem, 72rem);
+    max-width: 100vw;
+    max-height: calc(100dvh - 2rem);
+    padding: var(--spacing-lg);
+    border: 0;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15);
+    transition: none;
+  }
+
+  .cosme-product-gallery__lightbox[open] {
+    animation: gallery-lightbox-in 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+
+  .cosme-product-gallery__lightbox.closing {
+    animation: gallery-lightbox-out 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+
+  @keyframes gallery-lightbox-in {
+    from {
+      transform: translate(100vw, 100vh) scale(0.5);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes gallery-lightbox-out {
+    from {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translate(100vw, 100vh) scale(0.5);
+      opacity: 0;
+    }
+  }
+
+  .cosme-product-gallery__lightbox::backdrop {
+    background-color: color-mix(in srgb, var(--color-overlay) 60%, transparent);
+    animation: gallery-backdrop-in 0.4s ease-out forwards;
+  }
+
+  .cosme-product-gallery__lightbox.closing::backdrop {
+    animation: gallery-backdrop-out 0.4s ease-out forwards;
+  }
+
+  @keyframes gallery-backdrop-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes gallery-backdrop-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .cosme-product-gallery__lightbox {
+      top: 0;
+      left: 0;
+      right: 0;
+      transform: none;
+      width: 100%;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      border-radius: 0;
+      padding: var(--spacing-md);
+    }
+    .cosme-product-gallery__lightbox[open] {
+      animation: gallery-lightbox-in-mobile 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+    .cosme-product-gallery__lightbox.closing {
+      animation: gallery-lightbox-out-mobile 0.6s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+    @keyframes gallery-lightbox-in-mobile {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    @keyframes gallery-lightbox-out-mobile {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-product-gallery__lightbox[open],
+    .cosme-product-gallery__lightbox.closing,
+    .cosme-product-gallery__lightbox::backdrop,
+    .cosme-product-gallery__lightbox.closing::backdrop,
+    .cosme-product-gallery__media {
+      animation: none;
+      transition: none;
+    }
+  }
+
+  .cosme-product-gallery__lightbox-close,
+  .cosme-product-gallery__lightbox-arrow {
+    position: absolute;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-slider-arrows, var(--color-foreground));
+  }
+
+  .cosme-product-gallery__lightbox-close {
+    top: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .cosme-product-gallery__lightbox-arrow--prev {
+    top: 50%;
+    left: 0.5rem;
+    transform: translateY(-50%);
+  }
+
+  .cosme-product-gallery__lightbox-arrow--next {
+    top: 50%;
+    right: 0.5rem;
+    transform: translateY(-50%);
+  }
+
+  .cosme-product-gallery__lightbox-stage {
+    position: relative;
+    overflow: hidden;
+    height: min(78vh, 56rem);
+    min-height: 50vh;
+  }
+
+  .cosme-product-gallery__lightbox-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 50vh;
+  }
+
+  .cosme-product-gallery__lightbox-slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 50vh;
+    max-height: 78vh;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.97);
+    transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0.6s;
+    pointer-events: none;
+  }
+
+  .cosme-product-gallery__lightbox-slide.is-active {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 0s linear 0s;
+    pointer-events: auto;
+  }
+
+  .cosme-product-gallery__lightbox-slide img,
+  .cosme-product-gallery__lightbox-slide video,
+  .cosme-product-gallery__lightbox-slide iframe,
+  .cosme-product-gallery__lightbox-slide model-viewer {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  @media (max-width: 767px) {
+    .cosme-product-gallery__lightbox-slide {
+      min-height: 40vh;
+      max-height: 70vh;
+    }
+  }
+
+  .cosme-product-gallery__lightbox-thumbs {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    overflow-x: auto;
+    margin-top: var(--spacing-md);
+  }
+
+  .cosme-product-gallery__lightbox-thumb {
+    flex: 0 0 3.5rem;
+    padding: 0;
+    overflow: hidden;
+    border: var(--border-width) solid transparent;
+    background: transparent;
+  }
+
+  .cosme-product-gallery__lightbox-thumb.is-active {
+    border-color: var(--color-foreground);
+  }
+
+  .cosme-product-gallery__lightbox-thumb:focus-visible,
+  .cosme-product-gallery__lightbox-close:focus-visible,
+  .cosme-product-gallery__lightbox-arrow:focus-visible,
+  .cosme-product-gallery__arrow:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-product-gallery--has-thumbs.cosme-product-gallery--left {
+      grid-template-columns: 4.75rem minmax(0, 1fr);
+      grid-template-areas: 'thumbs stage';
+      align-items: start;
+    }
+
+    .cosme-product-gallery--has-thumbs.cosme-product-gallery--right {
+      grid-template-columns: minmax(0, 1fr) 4.75rem;
+      grid-template-areas: 'stage thumbs';
+      align-items: start;
+    }
+
+    .cosme-product-gallery--left .cosme-product-gallery__thumbs,
+    .cosme-product-gallery--right .cosme-product-gallery__thumbs {
+      flex-direction: column;
+      overflow-x: hidden;
+      overflow-y: auto;
+      max-height: min(42rem, 78vh);
+    }
+
+    .cosme-product-gallery--left .cosme-product-gallery__thumb,
+    .cosme-product-gallery--right .cosme-product-gallery__thumb {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+
+    .cosme-product-gallery__count {
+      display: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    if (window._cosmeProductGallery) return;
+    window._cosmeProductGallery = true;
+
+    const mediaItems = (gallery) => Array.from(gallery.querySelectorAll('[data-gallery-stage] > [data-gallery-media]'));
+
+    const currentIndex = (gallery) => {
+      const items = mediaItems(gallery);
+      const active = items.findIndex((item) => item.classList.contains('is-active'));
+      return active < 0 ? 0 : active;
+    };
+
+    const pauseMedia = (gallery) => {
+      gallery.querySelectorAll('video').forEach((video) => video.pause());
+    };
+
+    const scrollThumbIntoView = (gallery, mediaId) => {
+      gallery.querySelectorAll('[data-gallery-thumbs] [data-gallery-thumb]').forEach((thumb) => {
+        if (thumb.dataset.mediaId === mediaId) {
+          thumb.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+      });
+    };
+
+    const renderLightbox = (gallery) => {
+      const lightbox = gallery.querySelector('[data-gallery-lightbox]');
+      const track = lightbox?.querySelector('[data-lightbox-track]');
+      if (!lightbox || !track) return;
+
+      if (!track.children.length) {
+        const items = mediaItems(gallery);
+        items.forEach((media) => {
+          const slide = document.createElement('div');
+          slide.className = 'cosme-product-gallery__lightbox-slide';
+
+          const type = media.dataset.mediaType;
+          if (type === 'image' && media.dataset.zoomSrc) {
+            const img = document.createElement('img');
+            img.src = media.dataset.zoomSrc;
+            img.alt = media.dataset.alt || '';
+            img.loading = 'lazy';
+            slide.appendChild(img);
+          } else {
+            const clone = media.cloneNode(true);
+            clone.hidden = false;
+            clone.querySelectorAll('[data-gallery-zoom]').forEach((btn) => {
+              const imgWrap = btn.querySelector('.cosme-image') || btn.firstElementChild;
+              if (imgWrap) btn.replaceWith(imgWrap);
+            });
+            slide.appendChild(clone);
+          }
+          track.appendChild(slide);
+        });
+      }
+
+      const activeIndex = currentIndex(gallery);
+      Array.from(track.children).forEach((slide, index) => {
+        slide.classList.toggle('is-active', index === activeIndex);
+      });
+
+      const items = mediaItems(gallery);
+      lightbox.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => {
+        const isActive = thumb.dataset.mediaId === items[activeIndex]?.dataset.mediaId;
+        thumb.classList.toggle('is-active', isActive);
+      });
+    };
+
+    const setMedia = (gallery, index) => {
+      const items = mediaItems(gallery);
+      if (!items.length) return;
+
+      const nextIndex = (index + items.length) % items.length;
+      const next = items[nextIndex];
+      pauseMedia(gallery);
+
+      items.forEach((item) => item.classList.remove('is-active'));
+      next.classList.add('is-active');
+
+      gallery.querySelectorAll('[data-gallery-thumb]').forEach((thumb) => {
+        const isActive = thumb.dataset.mediaId === next.dataset.mediaId;
+        thumb.classList.toggle('is-active', isActive);
+        thumb.setAttribute('aria-current', isActive ? 'true' : 'false');
+      });
+
+      const count = gallery.querySelector('[data-gallery-count]');
+      if (count) {
+        const template = count.dataset.countTemplate || '__c__ / __t__';
+        count.textContent = template.replace('__c__', String(nextIndex + 1)).replace('__t__', String(items.length));
+      }
+
+      scrollThumbIntoView(gallery, next.dataset.mediaId);
+
+      const lightbox = gallery.querySelector('[data-gallery-lightbox]');
+      if (lightbox && lightbox.open) renderLightbox(gallery);
+    };
+
+    const step = (gallery, delta) => setMedia(gallery, currentIndex(gallery) + delta);
+
+    const openLightbox = (gallery) => {
+      if (gallery.dataset.enableLightbox !== 'true') return;
+      const lightbox = gallery.querySelector('[data-gallery-lightbox]');
+      if (!lightbox || typeof lightbox.showModal !== 'function') return;
+      lightbox.classList.remove('closing');
+      renderLightbox(gallery);
+      if (!lightbox.open) lightbox.showModal();
+    };
+
+    const closeLightbox = (gallery) => {
+      const lightbox = gallery.querySelector('[data-gallery-lightbox]');
+      if (!lightbox || !lightbox.open) return;
+      lightbox.classList.add('closing');
+      const onAnimationEnd = () => {
+        lightbox.removeEventListener('animationend', onAnimationEnd);
+        lightbox.classList.remove('closing');
+        if (lightbox.open) lightbox.close();
+      };
+      lightbox.addEventListener('animationend', onAnimationEnd);
+      setTimeout(() => {
+        if (lightbox.open) {
+          lightbox.classList.remove('closing');
+          lightbox.close();
+        }
+      }, 700);
+    };
+
+    document.addEventListener('click', (event) => {
+      const close = event.target.closest('[data-gallery-close]');
+      if (close) {
+        const gallery = close.closest('[data-product-gallery]');
+        if (gallery) closeLightbox(gallery);
+        return;
+      }
+
+      if (event.target && event.target.matches && event.target.matches('[data-gallery-lightbox]')) {
+        event.target.close();
+        return;
+      }
+
+      const prev = event.target.closest('[data-gallery-prev]');
+      const next = event.target.closest('[data-gallery-next]');
+      if (prev || next) {
+        const gallery = event.target.closest('[data-product-gallery]');
+        if (gallery) step(gallery, prev ? -1 : 1);
+        return;
+      }
+
+      const thumb = event.target.closest('[data-gallery-thumb]');
+      if (thumb) {
+        const gallery = thumb.closest('[data-product-gallery]');
+        if (!gallery) return;
+        const items = mediaItems(gallery);
+        const index = items.findIndex((item) => item.dataset.mediaId === thumb.dataset.mediaId);
+        if (index >= 0) setMedia(gallery, index);
+        return;
+      }
+
+      const zoom = event.target.closest('[data-gallery-zoom]');
+      if (zoom) {
+        const gallery = zoom.closest('[data-product-gallery]');
+        if (gallery && gallery.dataset.enableZoom === 'true') openLightbox(gallery);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      const gallery = event.target.closest('[data-product-gallery]');
+      if (!gallery) return;
+      if (event.target.closest('video, input, textarea, select')) return;
+      if (event.key === 'Escape') {
+        closeLightbox(gallery);
+        return;
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        step(gallery, -1);
+      }
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        step(gallery, 1);
+      }
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      const stage = event.target.closest('[data-gallery-stage]');
+      if (!stage) return;
+      if (event.target.closest('video, iframe, model-viewer, button')) return;
+      stage.dataset.pointerX = String(event.clientX);
+    });
+
+    document.addEventListener('pointerup', (event) => {
+      const stage = event.target.closest('[data-gallery-stage]');
+      if (!stage || !stage.dataset.pointerX) return;
+      const gallery = stage.closest('[data-product-gallery]');
+      const delta = event.clientX - Number(stage.dataset.pointerX);
+      delete stage.dataset.pointerX;
+      if (!gallery || Math.abs(delta) < 40) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      step(gallery, delta < 0 ? 1 : -1);
+    });
+  })();
+{% endjavascript %}

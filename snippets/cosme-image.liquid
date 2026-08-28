@@ -1,0 +1,177 @@
+{% doc %}
+  Renders a responsive Shopify image with optional link wrapper.
+
+  @param {image} image - The image to render
+  @param {string} [url] - Optional link URL wrapping the image
+  @param {string} [class] - Additional CSS classes for the wrapper
+  @param {number} [width] - Maximum rendered width in pixels
+  @param {number} [height] - Rendered height in pixels (enables crop)
+  @param {string} [crop] - Crop position when height is set
+  @param {string} [alt] - Alt text override; defaults to `image.alt`
+  @param {string} [loading] - `lazy` (default) or `eager` for LCP/hero images
+  @param {string} [fetchpriority] - `high`, `low`, or `auto` for LCP hints
+  @param {string} [sizes] - Value for the `sizes` attribute on responsive images
+  @param {string} [aspect_ratio] - CSS aspect ratio for the wrapper, e.g. `3/4` or `1`
+
+  @example
+  {% render 'cosme-image', image: product.featured_image %}
+  {% render 'cosme-image', image: article.image, loading: 'eager', fetchpriority: 'high' %}
+  {% render 'cosme-image', image: product.featured_image, url: product.url, aspect_ratio: '3/4', width: 800 %}
+{% enddoc %}
+
+{% liquid
+  unless height
+    assign render_width = width | default: image.width
+  else
+    assign render_width = width | default: image.width
+  endunless
+
+  assign alt_text = alt | default: image.alt | escape
+  assign image_loading = loading | default: 'lazy'
+
+  if url
+    assign wrapper = 'a'
+  else
+    assign wrapper = 'div'
+  endif
+
+  assign image_class = 'cosme-image__img'
+  if aspect_ratio != blank
+    assign wrapper_class = 'cosme-image cosme-image--ratio'
+  else
+    assign wrapper_class = 'cosme-image'
+  endif
+%}
+
+<{{ wrapper }}
+  class="{{ wrapper_class }}{% if class != blank %} {{ class }}{% endif %}"
+  {% if aspect_ratio != blank %}
+    style="--cosme-image-ratio: {{ aspect_ratio }};"
+  {% endif %}
+  {% if url %}
+    href="{{ url }}"
+  {% endif %}
+>
+  {% if height %}
+    {% if fetchpriority != blank and sizes != blank %}
+      {{
+        image
+        | image_url: width: render_width, height: height, crop: crop
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          fetchpriority: fetchpriority,
+          sizes: sizes,
+          width: render_width,
+          height: height
+      }}
+    {% elsif fetchpriority != blank %}
+      {{
+        image
+        | image_url: width: render_width, height: height, crop: crop
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          fetchpriority: fetchpriority,
+          width: render_width,
+          height: height
+      }}
+    {% elsif sizes != blank %}
+      {{
+        image
+        | image_url: width: render_width, height: height, crop: crop
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          sizes: sizes,
+          width: render_width,
+          height: height
+      }}
+    {% else %}
+      {{
+        image
+        | image_url: width: render_width, height: height, crop: crop
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          width: render_width,
+          height: height
+      }}
+    {% endif %}
+  {% else %}
+    {% if fetchpriority != blank and sizes != blank %}
+      {{
+        image
+        | image_url: width: render_width
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          fetchpriority: fetchpriority,
+          sizes: sizes,
+          width: render_width
+      }}
+    {% elsif fetchpriority != blank %}
+      {{
+        image
+        | image_url: width: render_width
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          fetchpriority: fetchpriority,
+          width: render_width
+      }}
+    {% elsif sizes != blank %}
+      {{
+        image
+        | image_url: width: render_width
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          sizes: sizes,
+          width: render_width
+      }}
+    {% else %}
+      {{
+        image
+        | image_url: width: render_width
+        | image_tag:
+          class: image_class,
+          alt: alt_text,
+          loading: image_loading,
+          width: render_width
+      }}
+    {% endif %}
+  {% endif %}
+</{{ wrapper }}>
+
+{% stylesheet %}
+  .cosme-image {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .cosme-image--ratio {
+    aspect-ratio: var(--cosme-image-ratio);
+  }
+
+  .cosme-image--ratio .cosme-image__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cosme-image__img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+{% endstylesheet %}

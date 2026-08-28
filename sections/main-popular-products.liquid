@@ -1,0 +1,650 @@
+{% liquid
+  assign selected_collection = section.settings.collection
+  assign products_limit = section.settings.products_to_show
+  assign desktop_columns = section.settings.desktop_columns | default: 4
+  assign mobile_columns = section.settings.mobile_columns | default: 2
+  assign use_demo = true
+
+  if selected_collection != blank and selected_collection.products_count > 0
+    assign use_demo = false
+  endif
+
+  assign item_count = products_limit
+  unless use_demo
+    assign item_count = selected_collection.products_count
+    if item_count > products_limit
+      assign item_count = products_limit
+    endif
+  endunless
+
+  assign desktop_vw = 100 | divided_by: desktop_columns
+  assign mobile_vw = 100 | divided_by: mobile_columns
+  assign card_sizes = '(min-width: 990px) ' | append: desktop_vw | append: 'vw, (min-width: 768px) 33vw, ' | append: mobile_vw | append: 'vw'
+%}
+
+<section
+  id="PopularProducts-{{ section.id }}"
+  class="cosme-popular-products full-width color-{{ section.settings.color_scheme }}{% if settings.enable_animations %} cosme-popular-products--animated{% endif %}"
+  style="--popular-products-columns-desktop: {{ desktop_columns }}; --popular-products-columns-mobile: {{ mobile_columns }};"
+  data-popular-products
+  data-section-id="{{ section.id }}"
+  data-item-count="{{ item_count }}"
+  data-show-navigation="{{ section.settings.show_navigation }}"
+  data-enable-animations="{{ settings.enable_animations }}"
+  data-page-label="{{ 'sections.main_popular_products.page_status' | t }}"
+  aria-label="{{ 'sections.main_popular_products.landmark_label' | t }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-popular-products__inner">
+    <header class="cosme-popular-products__header">
+      <div class="cosme-popular-products__titles">
+        {% if section.settings.heading != blank %}
+          <h2 class="cosme-popular-products__heading">{{ section.settings.heading | escape }}</h2>
+        {% endif %}
+
+        {% if section.settings.eyebrow != blank %}
+          <p class="cosme-popular-products__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {% endif %}
+      </div>
+
+      {% if section.settings.show_navigation %}
+        <nav
+          class="cosme-popular-products__navigation"
+          aria-label="{{ 'sections.main_popular_products.navigation' | t }}"
+          data-popular-products-nav
+          hidden
+        >
+          <button
+            type="button"
+            class="cosme-popular-products__nav-button"
+            data-popular-products-prev
+            aria-label="{{ 'sections.main_popular_products.previous' | t }}"
+            disabled
+          >
+            {{ 'sections.main_popular_products.previous' | t }}
+          </button>
+          <span class="cosme-popular-products__nav-divider" aria-hidden="true">|</span>
+          <button
+            type="button"
+            class="cosme-popular-products__nav-button"
+            data-popular-products-next
+            aria-label="{{ 'sections.main_popular_products.next' | t }}"
+            disabled
+          >
+            {{ 'sections.main_popular_products.next' | t }}
+          </button>
+        </nav>
+      {% endif %}
+    </header>
+
+    <div class="cosme-popular-products__grid" data-popular-products-grid>
+      {% if use_demo %}
+        {%- for i in (1..products_limit) -%}
+          {%- liquid
+            case i
+              when 1
+                assign demo_title = 'Blemish Control Primer'
+                assign demo_vendor = 'e.l.f'
+              when 2
+                assign demo_title = 'Soothing Face Primer'
+                assign demo_vendor = 'e.l.f'
+              when 3
+                assign demo_title = 'Poreless Face Primer'
+                assign demo_vendor = 'e.l.f'
+              when 4
+                assign demo_title = 'Illuminating Face Primer'
+                assign demo_vendor = 'e.l.f'
+              when 5
+                assign demo_title = 'Face Moisturizer'
+                assign demo_vendor = 'e.l.f'
+              when 6
+                assign demo_title = 'Hydrating Eye Gel'
+                assign demo_vendor = 'Bliss'
+              when 7
+                assign demo_title = 'Daily Hydration Moisturizer'
+                assign demo_vendor = 'e.l.f'
+              when 8
+                assign demo_title = 'Miracle Leave-in'
+                assign demo_vendor = 'its a 10'
+              else
+                assign demo_title = 'Blemish Control Primer'
+                assign demo_vendor = 'e.l.f'
+            endcase
+
+            assign demo_price = '$155.00'
+            assign demo_placeholder_index = i | modulo: 6 | plus: 1
+            assign demo_placeholder = 'product-' | append: demo_placeholder_index
+
+            if i <= desktop_columns
+              assign card_loading = 'eager'
+            else
+              assign card_loading = 'lazy'
+            endif
+
+            if i == 1
+              assign card_fetchpriority = 'high'
+            else
+              assign card_fetchpriority = blank
+            endif
+          -%}
+
+          {% render 'cosme-product-card',
+            demo_mode: true,
+            demo_title: demo_title,
+            demo_vendor: demo_vendor,
+            demo_price: demo_price,
+            demo_placeholder: demo_placeholder,
+            layout: 'editorial',
+            aspect_ratio: '1/1',
+            image_width: 900,
+            sizes: card_sizes,
+            loading: card_loading,
+            fetchpriority: card_fetchpriority,
+            show_vendor: section.settings.show_vendor,
+            show_price: section.settings.show_price,
+            show_badge: section.settings.show_badge,
+            show_secondary_image: section.settings.show_secondary_image,
+            show_quick_view: section.settings.show_quick_view,
+            show_add_to_cart: section.settings.show_add_to_cart
+          %}
+        {%- endfor -%}
+      {% else %}
+        {%- for product in selected_collection.products limit: products_limit -%}
+          {%- liquid
+            if forloop.index <= desktop_columns
+              assign card_loading = 'eager'
+            else
+              assign card_loading = 'lazy'
+            endif
+
+            if forloop.first
+              assign card_fetchpriority = 'high'
+            else
+              assign card_fetchpriority = blank
+            endif
+          -%}
+
+          {% render 'cosme-product-card',
+            product: product,
+            layout: 'editorial',
+            aspect_ratio: '1/1',
+            image_width: 900,
+            sizes: card_sizes,
+            loading: card_loading,
+            fetchpriority: card_fetchpriority,
+            show_vendor: section.settings.show_vendor,
+            show_price: section.settings.show_price,
+            show_badge: section.settings.show_badge,
+            show_secondary_image: section.settings.show_secondary_image,
+            show_quick_view: section.settings.show_quick_view,
+            show_add_to_cart: section.settings.show_add_to_cart
+          %}
+        {%- endfor -%}
+      {% endif %}
+    </div>
+
+    <p class="cosme-visually-hidden" aria-live="polite" data-popular-products-live></p>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-popular-products {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-popular-products__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: var(--spacing-section) var(--page-margin);
+  }
+
+  .cosme-popular-products__header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-lg);
+    margin-block-end: var(--spacing-2xl);
+  }
+
+  .cosme-popular-products__titles {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-sm) var(--spacing-md);
+    min-width: 0;
+  }
+
+  .cosme-popular-products__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.05;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-popular-products__eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-popular-products__navigation {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+  }
+
+  .cosme-popular-products__nav-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-popular-products__nav-button:hover:not(:disabled),
+  .cosme-popular-products__nav-button:focus-visible:not(:disabled) {
+    color: var(--color-foreground);
+  }
+
+  .cosme-popular-products__nav-button:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-popular-products__nav-button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .cosme-popular-products__nav-divider {
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    line-height: 1;
+    opacity: 0.6;
+  }
+
+  .cosme-popular-products__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--popular-products-columns-mobile), minmax(0, 1fr));
+    gap: var(--spacing-xl) var(--grid-gap);
+  }
+
+  .cosme-popular-products__grid > * {
+    min-width: 0;
+  }
+
+  .cosme-popular-products .cosme-product-card__title,
+  .cosme-popular-products .cosme-product-card__vendor,
+  .cosme-popular-products .cosme-product-card__price {
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-popular-products .cosme-product-card__meta-row {
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-popular-products--enhanced.cosme-popular-products--paginated .cosme-popular-products__grid > [hidden] {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .cosme-popular-products__grid {
+      grid-template-columns: repeat(min(var(--popular-products-columns-desktop), 3), minmax(0, 1fr));
+      gap: var(--spacing-2xl) var(--grid-gap);
+    }
+  }
+
+  @media (min-width: 990px) {
+    .cosme-popular-products__grid {
+      grid-template-columns: repeat(var(--popular-products-columns-desktop), minmax(0, 1fr));
+    }
+
+    .cosme-popular-products__header {
+      margin-block-end: calc(var(--spacing-2xl) + var(--spacing-md));
+    }
+  }
+
+  @media (max-width: 767px) {
+    .cosme-popular-products__header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-md);
+      margin-block-end: var(--spacing-xl);
+    }
+
+    .cosme-popular-products__navigation {
+      align-self: flex-end;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-popular-products__nav-button {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const initialized = new WeakSet();
+
+    const initPopularProducts = (root) => {
+      if (!root || initialized.has(root)) return;
+      initialized.add(root);
+
+      const grid = root.querySelector('[data-popular-products-grid]');
+      const nav = root.querySelector('[data-popular-products-nav]');
+      const prevButton = root.querySelector('[data-popular-products-prev]');
+      const nextButton = root.querySelector('[data-popular-products-next]');
+      const liveRegion = root.querySelector('[data-popular-products-live]');
+      const items = grid ? Array.from(grid.children) : [];
+
+      if (!grid || items.length === 0) return;
+
+      let currentPage = 0;
+      const showNavigation = root.dataset.showNavigation === 'true';
+      const pageLabelTemplate = root.dataset.pageLabel || 'Page {current} of {total}';
+
+      const getDesktopColumns = () => {
+        const value = getComputedStyle(root).getPropertyValue('--popular-products-columns-desktop').trim();
+        const parsed = parseInt(value, 10);
+        return Number.isNaN(parsed) ? 4 : parsed;
+      };
+
+      const getColumnsPerView = () => {
+        if (window.matchMedia('(min-width: 990px)').matches) {
+          return getDesktopColumns();
+        }
+
+        if (window.matchMedia('(min-width: 768px)').matches) {
+          return Math.min(getDesktopColumns(), 3);
+        }
+
+        return 0;
+      };
+
+      const getItemsPerPage = () => {
+        const columns = getColumnsPerView();
+        return columns > 0 ? columns : items.length;
+      };
+
+      const getTotalPages = () => {
+        const perPage = getItemsPerPage();
+        if (perPage <= 0 || items.length <= perPage) return 1;
+        return Math.ceil(items.length / perPage);
+      };
+
+      const shouldPaginate = () => {
+        const columns = getColumnsPerView();
+        return showNavigation && columns > 0 && items.length > columns;
+      };
+
+      const formatPageLabel = (current, total) =>
+        pageLabelTemplate.replace('{current}', current).replace('{total}', total);
+
+      const announcePage = (current, total) => {
+        if (!liveRegion) return;
+        liveRegion.textContent = formatPageLabel(current, total);
+      };
+
+      const updateUI = () => {
+        const paginate = shouldPaginate();
+        const perPage = getItemsPerPage();
+        const totalPages = getTotalPages();
+
+        if (nav) {
+          nav.hidden = !paginate;
+        }
+
+        if (!paginate) {
+          items.forEach((item) => {
+            item.hidden = false;
+            item.removeAttribute('aria-hidden');
+          });
+          root.classList.remove('cosme-popular-products--paginated');
+          return;
+        }
+
+        root.classList.add('cosme-popular-products--paginated');
+
+        if (currentPage > totalPages - 1) {
+          currentPage = totalPages - 1;
+        }
+
+        if (currentPage < 0) {
+          currentPage = 0;
+        }
+
+        const start = currentPage * perPage;
+        const end = start + perPage;
+
+        items.forEach((item, index) => {
+          const isVisible = index >= start && index < end;
+          item.hidden = !isVisible;
+          item.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
+        });
+
+        if (prevButton) {
+          const isDisabled = currentPage === 0;
+          prevButton.disabled = isDisabled;
+        }
+
+        if (nextButton) {
+          const isDisabled = currentPage >= totalPages - 1;
+          nextButton.disabled = isDisabled;
+        }
+
+        announcePage(currentPage + 1, totalPages);
+      };
+
+      const goToPage = (pageIndex) => {
+        const totalPages = getTotalPages();
+        const nextPage = Math.max(0, Math.min(pageIndex, totalPages - 1));
+
+        if (nextPage === currentPage) return;
+
+        currentPage = nextPage;
+        updateUI();
+      };
+
+      if (prevButton) {
+        prevButton.addEventListener('click', () => {
+          goToPage(currentPage - 1);
+        });
+      }
+
+      if (nextButton) {
+        nextButton.addEventListener('click', () => {
+          goToPage(currentPage + 1);
+        });
+      }
+
+      const onResize = () => {
+        currentPage = 0;
+        updateUI();
+      };
+
+      window.addEventListener('resize', onResize);
+
+      root.classList.add('cosme-popular-products--enhanced');
+      updateUI();
+
+      root._popularProductsCleanup = () => {
+        window.removeEventListener('resize', onResize);
+      };
+    };
+
+    const initAll = (container = document) => {
+      container.querySelectorAll('[data-popular-products]').forEach(initPopularProducts);
+    };
+
+    initAll();
+
+    document.addEventListener('shopify:section:load', (event) => {
+      initAll(event.target);
+    });
+
+    document.addEventListener('shopify:section:unload', (event) => {
+      event.target.querySelectorAll('[data-popular-products]').forEach((root) => {
+        if (typeof root._popularProductsCleanup === 'function') {
+          root._popularProductsCleanup();
+        }
+        initialized.delete(root);
+      });
+    });
+
+    document.addEventListener('shopify:section:reorder', (event) => {
+      event.target.querySelectorAll('[data-popular-products]').forEach((root) => {
+        if (typeof root._popularProductsCleanup === 'function') {
+          root._popularProductsCleanup();
+        }
+        initialized.delete(root);
+      });
+      initAll(event.target);
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.main_popular_products.name",
+  "tag": "section",
+  "class": "cosme-popular-products-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.main_popular_products.settings.eyebrow",
+      "default": "SHOP"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.main_popular_products.settings.heading",
+      "default": "Popular"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_popular_products.settings.products_header"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "t:general.collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "label": "t:sections.main_popular_products.settings.products_to_show",
+      "min": 4,
+      "max": 16,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "t:general.layout"
+    },
+    {
+      "type": "select",
+      "id": "desktop_columns",
+      "label": "t:sections.main_popular_products.settings.desktop_columns",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" },
+        { "value": "5", "label": "5" }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "select",
+      "id": "mobile_columns",
+      "label": "t:sections.main_popular_products.settings.mobile_columns",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "2", "label": "2" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_navigation",
+      "label": "t:sections.main_popular_products.settings.show_navigation",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.main_popular_products.settings.show_vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_price",
+      "label": "t:sections.main_popular_products.settings.show_price",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_popular_products.settings.product_card_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_badge",
+      "label": "t:sections.main_popular_products.settings.show_badge",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "t:sections.main_popular_products.settings.show_secondary_image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_view",
+      "label": "t:sections.main_popular_products.settings.show_quick_view",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_add_to_cart",
+      "label": "t:sections.main_popular_products.settings.show_add_to_cart",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main_popular_products.name"
+    }
+  ]
+}
+{% endschema %}

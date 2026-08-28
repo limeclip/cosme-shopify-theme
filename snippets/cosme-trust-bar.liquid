@@ -1,0 +1,132 @@
+{% doc %}
+  Renders a compact editorial trust row.
+
+  Compatible with the Benefits visual language: small icons, heading text,
+  no cards or shadows. Empty headings are omitted.
+
+  @param {string} [item_1_icon] - First icon name
+  @param {string} [item_1_heading] - First heading
+  @param {string} [item_2_icon] - Second icon name
+  @param {string} [item_2_heading] - Second heading
+  @param {string} [item_3_icon] - Third icon name
+  @param {string} [item_3_heading] - Third heading
+
+  @example
+  {% render 'cosme-trust-bar',
+    item_1_icon: 'shipping',
+    item_1_heading: 'Free shipping',
+    item_2_icon: 'secure',
+    item_2_heading: 'Secure payment',
+    item_3_icon: 'return',
+    item_3_heading: 'Easy returns'
+  %}
+{% enddoc %}
+
+{% liquid
+  assign heading_1 = item_1_heading | strip
+  assign heading_2 = item_2_heading | strip
+  assign heading_3 = item_3_heading | strip
+  assign visible_count = 0
+
+  if heading_1 != blank
+    assign visible_count = visible_count | plus: 1
+  endif
+  if heading_2 != blank
+    assign visible_count = visible_count | plus: 1
+  endif
+  if heading_3 != blank
+    assign visible_count = visible_count | plus: 1
+  endif
+%}
+
+{% if visible_count > 0 %}
+  <ul class="cosme-trust-bar cosme-trust-bar--count-{{ visible_count }}" role="list">
+    {% if heading_1 != blank %}
+      <li class="cosme-trust-bar__item">
+        {% if item_1_icon != blank %}
+          <span class="cosme-trust-bar__icon">
+            {% render 'cosme-icon', icon: item_1_icon, size: 'sm' %}
+          </span>
+        {% endif %}
+        <span class="cosme-trust-bar__heading">{{ heading_1 | escape }}</span>
+      </li>
+    {% endif %}
+    {% if heading_2 != blank %}
+      <li class="cosme-trust-bar__item">
+        {% if item_2_icon != blank %}
+          <span class="cosme-trust-bar__icon">
+            {% render 'cosme-icon', icon: item_2_icon, size: 'sm' %}
+          </span>
+        {% endif %}
+        <span class="cosme-trust-bar__heading">{{ heading_2 | escape }}</span>
+      </li>
+    {% endif %}
+    {% if heading_3 != blank %}
+      <li class="cosme-trust-bar__item">
+        {% if item_3_icon != blank %}
+          <span class="cosme-trust-bar__icon">
+            {% render 'cosme-icon', icon: item_3_icon, size: 'sm' %}
+          </span>
+        {% endif %}
+        <span class="cosme-trust-bar__heading">{{ heading_3 | escape }}</span>
+      </li>
+    {% endif %}
+  </ul>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-trust-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .cosme-trust-bar__item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    min-height: 2.75rem;
+  }
+
+  .cosme-trust-bar__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--color-heading);
+  }
+
+  .cosme-trust-bar__heading {
+    font-family: var(--font-heading--family);
+    font-style: var(--font-heading--style);
+    font-weight: var(--font-heading--weight);
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+    overflow-wrap: break-word;
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-trust-bar {
+      grid-template-columns: repeat(var(--trust-cols, 3), minmax(0, 1fr));
+      gap: var(--spacing-md);
+    }
+
+    .cosme-trust-bar--count-1 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cosme-trust-bar--count-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cosme-trust-bar__item {
+      min-height: 0;
+    }
+  }
+{% endstylesheet %}

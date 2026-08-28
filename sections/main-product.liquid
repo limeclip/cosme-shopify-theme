@@ -1,0 +1,1750 @@
+{% liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign featured_media = product.featured_media
+
+  if current_variant
+    if current_variant.featured_media
+      assign featured_media = current_variant.featured_media
+    endif
+  endif
+
+  assign product_form_id = 'ProductForm-' | append: section.id
+  assign button_style = section.settings.button_style | default: 'primary'
+  assign info_align = section.settings.info_alignment | default: 'left'
+  assign gallery_width = section.settings.gallery_width | default: 58
+  assign gallery_spacing = section.settings.gallery_spacing | default: 48
+  assign image_spacing = section.settings.image_spacing | default: 12
+  assign content_width = section.settings.content_width | default: 'page'
+  assign info_width = section.settings.info_width | default: 440
+
+  assign on_sale = false
+  if current_variant
+    if current_variant.compare_at_price > current_variant.price
+      assign on_sale = true
+    endif
+  elsif product.compare_at_price > product.price
+    assign on_sale = true
+  endif
+
+  assign product_available = product.available
+  if current_variant
+    assign product_available = current_variant.available
+  endif
+
+  assign availability_status = ''
+  if section.settings.show_availability
+    if product_available
+      assign availability_status = 'in_stock'
+      if current_variant
+        if current_variant.inventory_management != blank
+          if current_variant.inventory_quantity > 0
+            if current_variant.inventory_quantity <= section.settings.low_stock_threshold
+              assign availability_status = 'low_stock'
+            endif
+          endif
+        endif
+      endif
+    else
+      assign availability_status = 'sold_out'
+    endif
+  endif
+
+  assign rating_number = 0
+  assign rating_count = 0
+  assign has_rating = false
+  assign rating_metafield = product.metafields.reviews.rating.value
+  assign rating_count_metafield = product.metafields.reviews.rating_count.value
+
+  if rating_count_metafield != blank
+    assign rating_count = rating_count_metafield | plus: 0
+  endif
+
+  if rating_metafield.rating
+    assign rating_number = rating_metafield.rating | plus: 0
+  elsif rating_metafield != blank
+    assign rating_number = rating_metafield | plus: 0
+  endif
+
+  if section.settings.show_rating
+    if rating_number > 0
+      assign has_rating = true
+    endif
+    if rating_count > 0
+      assign has_rating = true
+    endif
+  endif
+
+  assign show_sku = false
+  if section.settings.show_sku
+    if current_variant.sku != blank
+      assign show_sku = true
+    endif
+  endif
+
+  assign show_vendor = false
+  if section.settings.show_vendor
+    if product.vendor != blank
+      assign show_vendor = true
+    endif
+  endif
+
+  assign show_type = false
+  if section.settings.show_type
+    if product.type != blank
+      assign show_type = true
+    endif
+  endif
+
+  assign show_meta = false
+  if show_sku
+    assign show_meta = true
+  endif
+  if show_vendor
+    assign show_meta = true
+  endif
+  if show_type
+    assign show_meta = true
+  endif
+
+  assign atc_label = 'products.add_to_cart_button' | t
+  assign atc_disabled = false
+  if current_variant == blank
+    assign atc_disabled = true
+    assign atc_label = 'products.unavailable' | t
+  elsif product_available == false
+    assign atc_disabled = true
+    assign atc_label = 'products.badge.sold_out' | t
+  endif
+
+  assign max_quantity = false
+  if current_variant
+    if current_variant.inventory_management != blank
+      if current_variant.inventory_policy == 'deny'
+        if current_variant.inventory_quantity > 0
+          assign max_quantity = current_variant.inventory_quantity
+        else
+          assign max_quantity = 1
+        endif
+      endif
+    endif
+  endif
+
+  assign variant_id = ''
+  if current_variant
+    assign variant_id = current_variant.id
+  endif
+%}
+
+<section
+  id="MainProduct-{{ section.id }}"
+  class="cosme-main-product full-width color-{{ section.settings.color_scheme }} cosme-main-product--align-{{ info_align }} cosme-main-product--width-{{ content_width }}"
+  style="
+    --product-media-width: {{ gallery_width }}%;
+    --product-info-width: {{ info_width }}px;
+    --product-gallery-gap: {{ gallery_spacing }}px;
+    --product-image-gap: {{ image_spacing }}px;
+  "
+  data-main-product
+  data-section-id="{{ section.id }}"
+  data-product-url="{{ product.url }}"
+  data-product-title="{{ product.title | escape }}"
+  data-string-adding="{{ 'products.add_to_cart_adding' | t }}"
+  data-string-added="{{ 'products.add_to_cart_added' | t }}"
+  data-string-error="{{ 'products.add_to_cart_error' | t }}"
+  data-string-copied="{{ 'products.share.copied' | t }}"
+  data-string-copy-failed="{{ 'products.share.copy_failed' | t }}"
+  aria-label="{{ product.title | escape }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-main-product__inner" data-product-root>
+    <div class="cosme-main-product__media" data-product-media>
+      {% render 'cosme-product-gallery',
+        product: product,
+        featured_media: featured_media,
+        sizes: '(min-width: 990px) 50vw, 100vw',
+        layout: section.settings.gallery_layout,
+        thumbnail_position: section.settings.thumbnail_position,
+        aspect: section.settings.image_aspect,
+        fit: section.settings.image_fit,
+        focal: section.settings.image_focal,
+        show_thumbnails: section.settings.show_thumbnails,
+        show_arrows: section.settings.show_arrows,
+        show_media_count: section.settings.show_media_count,
+        enable_zoom: section.settings.enable_zoom,
+        enable_lightbox: section.settings.enable_lightbox,
+        enable_video_controls: section.settings.enable_video_controls
+      %}
+    </div>
+
+    <div class="cosme-main-product__info" data-product-info>
+      {% if section.settings.show_badges %}
+        {% if on_sale or section.settings.custom_badge != blank %}
+          <div class="cosme-main-product__badges">
+            {% if section.settings.custom_badge != blank %}
+              {% render 'cosme-product-badge', type: 'custom', text: section.settings.custom_badge %}
+            {% endif %}
+            {% if on_sale %}
+              {% render 'cosme-product-badge', type: 'sale' %}
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <h1 class="cosme-main-product__title">{{ product.title | escape }}</h1>
+
+      {% if has_rating %}
+        {% liquid
+          assign rating_display = rating_number | round: 1
+        %}
+        <div class="cosme-main-product__rating">
+          {% if section.settings.reviews_link != blank %}
+            <a class="cosme-main-product__rating-link" href="{{ section.settings.reviews_link }}">
+          {% endif %}
+          <span class="cosme-visually-hidden">
+            {{ 'products.rating.summary' | t: rating: rating_display, count: rating_count }}
+          </span>
+          <span class="cosme-main-product__stars" aria-hidden="true">
+            {% for i in (1..5) %}
+              {% liquid
+                assign star_floor = i | minus: 1
+                assign star_fill = 0
+                if rating_number >= i
+                  assign star_fill = 100
+                else
+                  if rating_number > star_floor
+                    assign star_fill = rating_number | minus: star_floor | times: 100
+                  endif
+                endif
+              %}
+              <span class="cosme-main-product__star" style="--star-fill: {{ star_fill }}%;">
+                <span class="cosme-main-product__star-base">
+                  {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+                </span>
+                <span class="cosme-main-product__star-fill">
+                  {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+                </span>
+              </span>
+            {% endfor %}
+          </span>
+          <span class="cosme-main-product__rating-text" aria-hidden="true">
+            {% if rating_count > 0 %}
+              {{ 'products.rating.count' | t: rating: rating_display, count: rating_count }}
+            {% else %}
+              {{ 'products.rating.value' | t: rating: rating_display }}
+            {% endif %}
+          </span>
+          {% if section.settings.reviews_link != blank %}
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <div class="cosme-main-product__price" data-product-price>
+        {% if current_variant %}
+          {% render 'cosme-price', variant: current_variant, show_from: false, show_unit_price: true %}
+        {% else %}
+          {% render 'cosme-price', product: product, show_unit_price: true %}
+        {% endif %}
+      </div>
+
+      {% if availability_status != blank %}
+        <p
+          class="cosme-main-product__availability cosme-main-product__availability--{{ availability_status }}"
+          data-product-availability
+        >
+          {% case availability_status %}
+            {% when 'in_stock' %}
+              {{ 'products.availability.in_stock' | t }}
+            {% when 'low_stock' %}
+              {{ 'products.availability.low_stock' | t }}
+            {% when 'sold_out' %}
+              {{ 'products.availability.sold_out' | t }}
+          {% endcase %}
+        </p>
+      {% endif %}
+
+      {% form 'product', product, id: product_form_id, class: 'cosme-product-form', data-product-form: '' %}
+        <input
+          type="hidden"
+          name="id"
+          value="{{ variant_id }}"
+          data-product-variant-id
+          {% if current_variant == blank %}
+            disabled
+          {% endif %}
+        >
+
+        {% render 'cosme-variant-picker', product: product, section_id: section.id %}
+
+        <!-- Quantity + Buy Now в одной строке -->
+        <div class="cosme-product-form__row">
+          <div class="cosme-product-form__quantity">
+            <label class="cosme-product-form__quantity-label" for="Quantity-{{ section.id }}">
+              {{ 'products.quantity' | t }}
+            </label>
+            <div class="cosme-product-form__quantity-control">
+              <button
+                type="button"
+                class="cosme-product-form__quantity-button"
+                data-quantity-decrease
+                aria-label="{{ 'products.decrease_quantity' | t }}"
+              >
+                {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+              </button>
+              <input
+                id="Quantity-{{ section.id }}"
+                class="cosme-product-form__quantity-input"
+                type="number"
+                name="quantity"
+                value="1"
+                min="1"
+                {% if max_quantity %}
+                  max="{{ max_quantity }}"
+                {% endif %}
+                inputmode="numeric"
+                data-quantity-input
+              >
+              <button
+                type="button"
+                class="cosme-product-form__quantity-button"
+                data-quantity-increase
+                aria-label="{{ 'products.increase_quantity' | t }}"
+              >
+                {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+              </button>
+            </div>
+          </div>
+
+          {% if section.settings.show_buy_it_now %}
+            <div
+              class="cosme-product-form__buy-now{% if atc_disabled %} is-disabled{% endif %}{% if section.settings.buy_now_style == 'outline' %} cosme-product-form__buy-now--outline{% endif %}"
+              data-buy-now
+            >
+              {{ form | payment_button }}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Add to Cart — на отдельной строке -->
+        <div class="cosme-product-form__actions" data-product-atc-sentinel>
+          {% render 'cosme-button',
+            label: atc_label,
+            type: 'submit',
+            style: button_style,
+            disabled: atc_disabled,
+            name: 'add',
+            class: 'cosme-product-form__submit'
+          %}
+        </div>
+
+        <p class="cosme-product-form__status" data-product-form-status aria-live="polite"></p>
+      {% endform %}
+
+      {% if section.settings.show_trust %}
+        <div class="cosme-main-product__trust">
+          {% render 'cosme-trust-bar',
+            item_1_icon: 'shipping',
+            item_1_heading: section.settings.trust_shipping,
+            item_2_icon: 'secure',
+            item_2_heading: section.settings.trust_payment,
+            item_3_icon: 'return',
+            item_3_heading: section.settings.trust_returns
+          %}
+        </div>
+      {% endif %}
+
+      {% render 'cosme-product-accordion', product: product, section: section %}
+
+      {% if show_meta %}
+        <dl class="cosme-main-product__meta">
+          {% if show_sku %}
+            <div class="cosme-main-product__meta-row">
+              <dt>{{ 'products.meta.sku' | t }}</dt>
+              <dd>{{ current_variant.sku | escape }}</dd>
+            </div>
+          {% endif %}
+          {% if show_vendor %}
+            <div class="cosme-main-product__meta-row">
+              <dt>{{ 'products.meta.vendor' | t }}</dt>
+              <dd>{{ product.vendor | escape }}</dd>
+            </div>
+          {% endif %}
+          {% if show_type %}
+            <div class="cosme-main-product__meta-row">
+              <dt>{{ 'products.meta.type' | t }}</dt>
+              <dd>{{ product.type | escape }}</dd>
+            </div>
+          {% endif %}
+        </dl>
+      {% endif %}
+
+      {% if section.settings.show_share %}
+        <div class="cosme-main-product__share">
+          <span class="cosme-main-product__share-label">{{ 'products.share.label' | t }}</span>
+          <button
+            type="button"
+            class="cosme-main-product__share-button"
+            data-product-share
+            data-share-url="{{ shop.url | append: product.url }}"
+            data-share-title="{{ product.title | escape }}"
+          >
+            {% render 'cosme-icon', icon: 'external-link', size: 'sm' %}
+            <span>{{ 'products.share.action' | t }}</span>
+          </button>
+          <span class="cosme-visually-hidden" data-share-status aria-live="polite"></span>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% liquid
+    assign sticky_enabled = section.settings.enable_sticky_atc
+    assign sticky_desktop = section.settings.sticky_atc_desktop
+    assign sticky_mobile = section.settings.sticky_atc_mobile
+    assign sticky_image = product.featured_image
+
+    if current_variant.featured_image
+      assign sticky_image = current_variant.featured_image
+    elsif featured_media.preview_image
+      assign sticky_image = featured_media.preview_image
+    endif
+  %}
+
+  {% if sticky_enabled %}
+    {% if sticky_desktop or sticky_mobile %}
+      {% render 'cosme-sticky-atc',
+        product: product,
+        current_variant: current_variant,
+        image: sticky_image,
+        product_form_id: product_form_id,
+        section_id: section.id,
+        atc_label: atc_label,
+        atc_disabled: atc_disabled,
+        button_style: button_style,
+        color_scheme: section.settings.sticky_atc_color_scheme,
+        enable_desktop: sticky_desktop,
+        enable_mobile: sticky_mobile,
+        show_image: section.settings.sticky_atc_show_image,
+        show_title: section.settings.sticky_atc_show_title,
+        show_price: section.settings.sticky_atc_show_price,
+        show_variant: section.settings.sticky_atc_show_variant
+      %}
+    {% endif %}
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .cosme-main-product {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-main-product__inner {
+    display: grid;
+    gap: var(--product-gallery-gap, 3rem);
+    width: 100%;
+    max-width: var(--content-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: var(--spacing-section) var(--page-margin);
+    overflow-x: clip;
+  }
+
+  .cosme-main-product--width-full .cosme-main-product__inner {
+    max-width: none;
+  }
+
+  .cosme-main-product__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-width: 0;
+    max-width: var(--product-info-width, none);
+  }
+
+  .cosme-main-product--align-center .cosme-main-product__info {
+    text-align: center;
+    align-items: center;
+  }
+
+  .cosme-main-product__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-main-product__title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 2.4vw, 2.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 1.15;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-main-product__rating,
+  .cosme-main-product__rating-link {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .cosme-main-product__rating-link:hover,
+  .cosme-main-product__rating-link:focus-visible {
+    color: var(--color-foreground);
+  }
+
+  .cosme-main-product__stars {
+    display: inline-flex;
+    gap: 0.125rem;
+  }
+
+  .cosme-main-product__star {
+    position: relative;
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-border);
+  }
+
+  .cosme-main-product__star .cosme-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .cosme-main-product__star-base,
+  .cosme-main-product__star-fill {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-main-product__star-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    overflow: hidden;
+    width: var(--star-fill, 0%);
+    color: var(--color-accent);
+  }
+
+  .cosme-main-product__star-fill .cosme-icon svg {
+    fill: currentcolor;
+    stroke: currentcolor;
+  }
+
+  .cosme-main-product__rating-text {
+    font-size: 0.8125rem;
+  }
+
+  .cosme-main-product__price .cosme-price {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-heading);
+  }
+
+  .cosme-main-product__price .cosme-price__compare {
+    font-size: 0.9375rem;
+    font-weight: 400;
+  }
+
+  .cosme-main-product__availability {
+    margin: 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-main-product__availability--in_stock,
+  .cosme-main-product__availability--low_stock {
+    color: var(--color-success);
+  }
+
+  .cosme-main-product__availability--sold_out {
+    color: var(--color-error);
+  }
+
+  .cosme-product-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 100%;
+  }
+
+  .cosme-variant-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-variant-picker__option {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .cosme-variant-picker__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-sm);
+    margin-block-end: var(--spacing-sm);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-variant-picker__legend-value {
+    color: var(--color-foreground);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .cosme-variant-picker__values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-variant-picker__values--swatches {
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-variant-picker__label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color var(--transition-duration) var(--transition-easing),
+      border-color var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-variant-picker__label--pill {
+    min-height: 2.5rem;
+    min-width: 2.75rem;
+    padding: 0.4rem 0.9rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-button);
+    color: var(--color-foreground);
+    background: transparent;
+  }
+
+  .cosme-variant-picker__value input:checked + .cosme-variant-picker__label--pill {
+    background-color: var(--color-foreground);
+    border-color: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .cosme-variant-picker__label--swatch {
+    padding: 0.15rem;
+    border: var(--border-width) solid transparent;
+    border-radius: 50%;
+  }
+
+  .cosme-variant-picker__value input:checked + .cosme-variant-picker__label--swatch {
+    border-color: var(--color-foreground);
+  }
+
+  .cosme-variant-picker__swatch {
+    display: block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: var(--border-width) solid var(--color-border);
+    background-color: var(--color-background-2, var(--color-background));
+    background-size: cover;
+    background-position: center;
+  }
+
+  .cosme-variant-picker__label.is-unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .cosme-variant-picker__label--pill.is-unavailable {
+    text-decoration: line-through;
+  }
+
+  .cosme-variant-picker__value input:focus-visible + .cosme-variant-picker__label {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .cosme-product-form__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: var(--spacing-sm);
+    width: 100%;
+  }
+
+  .cosme-product-form__quantity {
+    flex: 0 0 auto;
+  }
+
+  .cosme-product-form__buy-now {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .cosme-product-form__buy-now .shopify-payment-button {
+    width: 100%;
+  }
+
+  .cosme-product-form__buy-now .shopify-payment-button__button {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .cosme-product-form__quantity {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-main-product--align-center .cosme-product-form__quantity {
+    align-items: center;
+  }
+
+  .cosme-product-form__quantity-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-product-form__quantity-control {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.15rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-button);
+    background-color: var(--color-input-background, var(--color-background));
+    color: var(--color-foreground);
+  }
+
+  .cosme-product-form__quantity-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+  }
+
+  .cosme-product-form__quantity-button:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-product-form__quantity-button:focus-visible {
+    color: var(--color-accent);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-product-form__quantity-input {
+    width: 2.5rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: center;
+    appearance: textfield;
+  }
+
+  .cosme-product-form__quantity-input::-webkit-outer-spin-button,
+  .cosme-product-form__quantity-input::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  .cosme-product-form__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-product-form__actions {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .cosme-product-form__submit,
+    .cosme-product-form__buy-now {
+      flex: 1 1 0;
+    }
+  }
+
+  .cosme-product-form__submit,
+  .cosme-product-form__actions .shopify-payment-button,
+  .cosme-product-form__actions .shopify-payment-button__button {
+    width: 100%;
+  }
+
+  .cosme-product-form__buy-now.is-disabled {
+    display: none;
+  }
+  .cosme-product-form__buy-now--outline .shopify-payment-button__button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    padding-block: 0.5rem !important;
+  }
+
+  .cosme-product-form__buy-now--outline .shopify-payment-button__button {
+    background-color: transparent !important;
+    border: var(--border-width) solid var(--color-button-secondary-border, var(--color-border)) !important;
+    color: var(--color-button-secondary-label, var(--color-foreground)) !important;
+    border-radius: var(--radius-button) !important;
+    font-family: var(--font-body--family) !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.04em !important;
+    text-transform: none !important;
+  }
+
+  .cosme-product-form__buy-now--outline .shopify-payment-button__button:hover {
+    background-color: var(--color-background, transparent) !important;
+    border-color: var(--color-button-secondary-border-hover, var(--color-foreground)) !important;
+    color: var(--color-button-secondary-label-hover, var(--color-foreground)) !important;
+  }
+
+  .cosme-product-form__buy-now--outline .shopify-payment-button__button:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .shopify-payment-button__button {
+    min-height: 2.75rem;
+    border-radius: var(--radius-button) !important;
+  }
+
+  .shopify-payment-button__button--unbranded {
+    background-color: var(--color-button-secondary-background, transparent) !important;
+    border: var(--border-width) solid var(--color-border) !important;
+    color: var(--color-button-secondary-label, var(--color-foreground)) !important;
+  }
+
+  .cosme-product-form__status:empty {
+    display: none;
+  }
+
+  .cosme-product-form__status {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--color-success);
+  }
+
+  .cosme-product-form__status.is-error {
+    color: var(--color-error);
+  }
+
+  .cosme-main-product__meta {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin: 0;
+  }
+
+  .cosme-main-product__meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.8125rem;
+  }
+
+  .cosme-main-product__meta dt {
+    color: var(--color-muted);
+  }
+
+  .cosme-main-product__meta dd {
+    margin: 0;
+    color: var(--color-foreground);
+  }
+
+  .cosme-main-product__share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-main-product__share-label {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+
+  .cosme-main-product__share-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    font-size: 0.8125rem;
+  }
+
+  .cosme-main-product__share-button:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-main-product__share-button:focus-visible {
+    color: var(--color-accent);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-main-product__media {
+    min-width: 0;
+    align-self: start;
+  }
+
+  .cosme-main-product__trust {
+    width: 100%;
+  }
+
+  .cosme-main-product__trust .cosme-trust-bar {
+    grid-template-columns: repeat(3, 1fr);
+    padding-block: var(--spacing-sm);
+    /* border-block: var(--border-width) solid var(--color-border); */
+  }
+
+  .cosme-main-product__trust .cosme-trust-bar__item {
+    min-height: 2.25rem;
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-main-product__inner {
+      grid-template-columns: minmax(0, var(--product-media-width, 58%)) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .cosme-main-product__media.is-sticky {
+      position: sticky;
+      top: calc(var(--header-sticky-offset, 0px) + 20px);
+      z-index: 1;
+    }
+
+    .cosme-main-product__media.is-sticky .cosme-product-gallery--left .cosme-product-gallery__thumbs,
+    .cosme-main-product__media.is-sticky .cosme-product-gallery--right .cosme-product-gallery__thumbs {
+      max-height: calc(100dvh - var(--header-sticky-offset, 0px) - 2rem);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-main-product__info {
+      padding-block-start: 0.25rem;
+    }
+  }
+  .cosme-main-product--align-center .cosme-variant-picker__values {
+    justify-content: center;
+  }
+
+  .cosme-main-product--align-center .cosme-product-form__row {
+    justify-content: center;
+  }
+
+  .cosme-main-product--align-center .cosme-product-form__actions {
+    justify-content: center;
+  }
+  /* Мобильная версия — в столбик, на всю ширину */
+  @media screen and (max-width: 749px) {
+    .cosme-main-product__trust .cosme-trust-bar {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-xs);
+      text-align: center;
+    }
+
+    .cosme-main-product__trust .cosme-trust-bar__item {
+      min-height: auto;
+      padding-block: var(--spacing-xs);
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    if (window._cosmeMainProduct) return;
+    window._cosmeMainProduct = true;
+
+    const stringsFrom = (section) => ({
+      adding: section?.dataset.stringAdding || 'Adding…',
+      added: section?.dataset.stringAdded || 'Added to cart',
+      error: section?.dataset.stringError || 'Unable to add to cart. Please try again.',
+      copied: section?.dataset.stringCopied || 'Link copied',
+      copyFailed: section?.dataset.stringCopyFailed || 'Unable to copy link',
+    });
+
+    const parseHtml = (text) => new DOMParser().parseFromString(text, 'text/html');
+
+    const clampQuantity = (input, nextValue) => {
+      const min = Number(input.min || 1);
+      const max = input.max ? Number(input.max) : Number.POSITIVE_INFINITY;
+      return Math.min(max, Math.max(min, nextValue));
+    };
+
+    const refreshPaymentButton = () => {
+      if (window.Shopify && Shopify.PaymentButton && typeof Shopify.PaymentButton.init === 'function') {
+        Shopify.PaymentButton.init();
+      }
+    };
+
+    const replaceProductRoot = (section, html, focusId) => {
+      const doc = parseHtml(html);
+      const incoming = doc.querySelector('[data-product-root]');
+      const current = section.querySelector('[data-product-root]');
+      if (!incoming || !current) return;
+
+      const quantityInput = current.querySelector('[data-quantity-input]');
+      const quantity = quantityInput ? quantityInput.value : '1';
+
+      current.replaceWith(incoming);
+
+      const nextQuantity = incoming.querySelector('[data-quantity-input]');
+      if (nextQuantity) nextQuantity.value = clampQuantity(nextQuantity, Number(quantity) || 1);
+
+      const incomingSticky = doc.querySelector('[data-sticky-atc-inner]');
+      const currentSticky = section.querySelector('[data-sticky-atc-inner]');
+      if (incomingSticky && currentSticky) currentSticky.replaceWith(incomingSticky);
+
+      refreshPaymentButton();
+      section.dispatchEvent(new CustomEvent('cosme:product-updated', { bubbles: true }));
+
+      if (focusId) {
+        const focusTarget = incoming.querySelector(`#${CSS.escape(focusId)}`);
+        if (focusTarget) focusTarget.focus();
+      }
+    };
+
+    const updateVariant = async (section, optionInput) => {
+  const selected = Array.from(section.querySelectorAll('[data-option-value-id]:checked'))
+    .map((input) => input.dataset.optionValueId)
+    .filter(Boolean);
+
+  const productUrl = optionInput.dataset.productUrl || section.dataset.productUrl || window.location.pathname;
+  const url = new URL(productUrl, window.location.origin);
+  url.searchParams.set('section_id', section.dataset.sectionId);
+  if (selected.length) url.searchParams.set('option_values', selected.join(','));
+
+  const response = await fetch(url.toString());
+  if (!response.ok) return;
+
+  const html = await response.text();
+
+  // Если изменение пришло из sticky — не фокусируемся
+  const focusId = window._cosmeVariantFromSticky ? null : optionInput.id;
+  replaceProductRoot(section, html, focusId);
+  window._cosmeVariantFromSticky = false;
+
+  const variantInput = section.querySelector('[data-product-variant-id]');
+  const historyUrl = new URL(window.location.href);
+  if (variantInput && variantInput.value) {
+    historyUrl.searchParams.set('variant', variantInput.value);
+  } else {
+    historyUrl.searchParams.delete('variant');
+  }
+  window.history.replaceState({}, '', historyUrl.toString());
+};
+    const desktopGalleryQuery = window.matchMedia('(min-width: 768px)');
+
+    const syncStickyGallery = (section) => {
+      const media = section.querySelector('[data-product-media]');
+      const info = section.querySelector('[data-product-info]');
+      if (!media || !info) return;
+
+      const offsetRaw = getComputedStyle(document.documentElement).getPropertyValue('--header-sticky-offset').trim();
+      const offset = Number.parseFloat(offsetRaw) || 0;
+      const available = window.innerHeight - offset;
+      const shouldStick =
+        desktopGalleryQuery.matches &&
+        info.offsetHeight > media.offsetHeight &&
+        info.offsetHeight > window.innerHeight &&
+        media.offsetHeight <= available;
+
+      media.classList.toggle('is-sticky', shouldStick);
+    };
+
+    const observeStickyGallery = (section) => {
+      const media = section.querySelector('[data-product-media]');
+      const info = section.querySelector('[data-product-info]');
+      if (!media || !info) return;
+
+      section._galleryStickyResize?.disconnect();
+      section._galleryStickyIO?.disconnect();
+
+      const run = () => syncStickyGallery(section);
+      const resizeObserver = new ResizeObserver(run);
+      resizeObserver.observe(info);
+      resizeObserver.observe(media);
+      section._galleryStickyResize = resizeObserver;
+
+      const intersectionObserver = new IntersectionObserver(run, { threshold: [0, 1] });
+      intersectionObserver.observe(info);
+      section._galleryStickyIO = intersectionObserver;
+
+      if (!section._galleryStickyToggleBound) {
+        section.addEventListener(
+          'toggle',
+          (event) => {
+            if (event.target.closest('[data-product-info]')) syncStickyGallery(section);
+          },
+          true
+        );
+        section._galleryStickyToggleBound = true;
+      }
+
+      run();
+    };
+
+    const addToCart = async (form, submitButton) => {
+      const section = form.closest('[data-main-product]');
+      const strings = stringsFrom(section);
+      const statuses = [
+        form.querySelector('[data-product-form-status]'),
+        section?.querySelector('[data-sticky-atc-status]'),
+      ].filter(Boolean);
+      const buttons = Array.from(
+        new Set(
+          [
+            submitButton,
+            form.querySelector('.cosme-product-form__submit'),
+            section?.querySelector('.cosme-sticky-atc__submit'),
+          ].filter(Boolean)
+        )
+      );
+      const originalLabels = buttons.map((button) => button.textContent);
+      const originalDisabled = buttons.map((button) => button.disabled);
+      const variantInput = form.querySelector('[data-product-variant-id]');
+      const quantityInput = form.querySelector('[data-quantity-input]');
+
+      if (!variantInput || !variantInput.value || submitButton.disabled) return;
+
+      buttons.forEach((button) => {
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        button.textContent = strings.adding;
+      });
+      statuses.forEach((status) => {
+        status.textContent = '';
+        status.classList.remove('is-error');
+      });
+
+      try {
+        const response = await fetch('/cart/add.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            id: Number(variantInput.value),
+            quantity: Number(quantityInput?.value || 1),
+          }),
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.description || strings.error);
+        }
+
+        document.dispatchEvent(new CustomEvent('cart:refresh'));
+
+        const cartToggle = document.querySelector('[data-header-cart-toggle]');
+        if (cartToggle) {
+          cartToggle.click();
+        }
+
+        statuses.forEach((status) => {
+          status.textContent = strings.added;
+        });
+      } catch (error) {
+        statuses.forEach((status) => {
+          status.textContent = error.message || strings.error;
+          status.classList.add('is-error');
+        });
+      } finally {
+        buttons.forEach((button, index) => {
+          button.disabled = originalDisabled[index];
+          button.removeAttribute('aria-busy');
+          button.textContent = originalLabels[index];
+        });
+      }
+    };
+
+    const shareProduct = async (button) => {
+      const section = button.closest('[data-main-product]');
+      const strings = stringsFrom(section);
+      const url = button.dataset.shareUrl || window.location.href;
+      const title = button.dataset.shareTitle || document.title;
+      const status = button.parentElement?.querySelector('[data-share-status]');
+
+      try {
+        if (navigator.share) {
+          await navigator.share({ title, url });
+          return;
+        }
+
+        await navigator.clipboard.writeText(url);
+        if (status) status.textContent = strings.copied;
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+        if (status) status.textContent = strings.copyFailed;
+      }
+    };
+
+    document.addEventListener('change', (event) => {
+      const quantityInput = event.target.closest('[data-quantity-input]');
+      if (quantityInput) {
+        quantityInput.value = clampQuantity(quantityInput, Number(quantityInput.value || 1));
+        return;
+      }
+
+      const optionInput = event.target.closest('[data-option-value-id]');
+      const section = event.target.closest('[data-main-product]');
+      if (!optionInput || !section) return;
+      updateVariant(section, optionInput);
+    });
+
+    document.addEventListener('click', (event) => {
+      const decrease = event.target.closest('[data-quantity-decrease]');
+      const increase = event.target.closest('[data-quantity-increase]');
+      if (decrease || increase) {
+        const form = event.target.closest('[data-product-form]');
+        const input = form?.querySelector('[data-quantity-input]');
+        if (!input) return;
+        const delta = decrease ? -1 : 1;
+        input.value = clampQuantity(input, Number(input.value || 1) + delta);
+        return;
+      }
+
+      const shareButton = event.target.closest('[data-product-share]');
+      if (shareButton) shareProduct(shareButton);
+    });
+
+    document.addEventListener('submit', (event) => {
+      const form = event.target.closest('[data-product-form]');
+      if (!form) return;
+
+      const submitter = event.submitter;
+      const isAddToCart =
+        !submitter || submitter.name === 'add' || submitter.classList.contains('cosme-product-form__submit');
+      if (!isAddToCart) return;
+
+      event.preventDefault();
+      const submitButton =
+        (submitter && submitter.name === 'add' && submitter) ||
+        form.querySelector('[name="add"], .cosme-product-form__submit');
+      if (submitButton) addToCart(form, submitButton);
+    });
+
+    document.querySelectorAll('[data-main-product]').forEach(observeStickyGallery);
+
+    document.addEventListener('cosme:product-updated', (event) => {
+      const section = event.target.closest('[data-main-product]') || event.target;
+      if (section?.matches?.('[data-main-product]')) observeStickyGallery(section);
+    });
+
+    document.addEventListener('shopify:section:load', (event) => {
+      const section = event.target.querySelector('[data-main-product]');
+      if (section) observeStickyGallery(section);
+    });
+
+    desktopGalleryQuery.addEventListener('change', () => {
+      document.querySelectorAll('[data-main-product]').forEach(observeStickyGallery);
+    });
+
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('[data-main-product]').forEach(syncStickyGallery);
+    });
+  })();
+  document.addEventListener('click', function (e) {
+  const link = e.target.closest('.cosme-main-product__rating-link');
+  if (!link) return;
+  const href = link.getAttribute('href');
+  if (!href || !href.startsWith('#')) return;
+  e.preventDefault();
+
+  const tabsContainer = document.querySelector('.cosme-product-tabs');
+  if (!tabsContainer) return;
+
+  // Ищем кнопку вкладки Reviews
+  const reviewTabButton = tabsContainer.querySelector('[data-product-tab][aria-controls="ProductReviews"]');
+  if (reviewTabButton) {
+    reviewTabButton.click(); // эмулируем клик
+  }
+
+  tabsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:general.product",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_product.settings.layout_header"
+    },
+    {
+      "type": "select",
+      "id": "content_width",
+      "label": "t:sections.main_product.settings.content_width",
+      "options": [
+        { "value": "page", "label": "t:options.header_width.page_width" },
+        { "value": "full", "label": "t:options.header_width.full_width" }
+      ],
+      "default": "page"
+    },
+    {
+      "type": "range",
+      "id": "gallery_width",
+      "label": "t:sections.main_product.settings.gallery_width",
+      "min": 50,
+      "max": 65,
+      "step": 1,
+      "unit": "%",
+      "default": 58
+    },
+    {
+      "type": "range",
+      "id": "info_width",
+      "label": "t:sections.main_product.settings.info_width",
+      "min": 280,
+      "max": 560,
+      "step": 10,
+      "unit": "px",
+      "default": 440
+    },
+    {
+      "type": "select",
+      "id": "info_alignment",
+      "label": "t:sections.main_product.settings.info_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "gallery_spacing",
+      "label": "t:sections.main_product.settings.gallery_spacing",
+      "min": 16,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "image_spacing",
+      "label": "t:sections.main_product.settings.image_spacing",
+      "min": 4,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_product.settings.gallery_header"
+    },
+    {
+      "type": "select",
+      "id": "gallery_layout",
+      "label": "t:sections.main_product.settings.gallery_layout",
+      "options": [
+        { "value": "editorial", "label": "t:sections.main_product.settings.gallery_layout_editorial" },
+        { "value": "media_only", "label": "t:sections.main_product.settings.gallery_layout_media_only" }
+      ],
+      "default": "editorial"
+    },
+    {
+      "type": "select",
+      "id": "thumbnail_position",
+      "label": "t:sections.main_product.settings.thumbnail_position",
+      "options": [
+        { "value": "left", "label": "t:sections.main_product.settings.thumbnail_left" },
+        { "value": "right", "label": "t:sections.main_product.settings.thumbnail_right" },
+        { "value": "bottom", "label": "t:sections.main_product.settings.thumbnail_bottom" }
+      ],
+      "default": "left",
+      "visible_if": "{{ section.settings.gallery_layout == 'editorial' }}"
+    },
+    {
+      "type": "select",
+      "id": "image_aspect",
+      "label": "t:sections.main_product.settings.image_aspect",
+      "options": [
+        { "value": "natural", "label": "t:sections.main_product.settings.aspect_natural" },
+        { "value": "square", "label": "t:sections.main_product.settings.aspect_square" },
+        { "value": "portrait", "label": "t:sections.main_product.settings.aspect_portrait" },
+        { "value": "landscape", "label": "t:sections.main_product.settings.aspect_landscape" }
+      ],
+      "default": "portrait"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "t:sections.main_product.settings.image_fit",
+      "options": [
+        { "value": "contain", "label": "t:sections.main_product.settings.fit_contain" },
+        { "value": "cover", "label": "t:sections.main_product.settings.fit_cover" }
+      ],
+      "default": "contain"
+    },
+    {
+      "type": "select",
+      "id": "image_focal",
+      "label": "t:sections.main_product.settings.image_focal",
+      "options": [
+        { "value": "center", "label": "t:sections.main_product.settings.focal_center" },
+        { "value": "top", "label": "t:sections.main_product.settings.focal_top" },
+        { "value": "bottom", "label": "t:sections.main_product.settings.focal_bottom" },
+        { "value": "left", "label": "t:sections.main_product.settings.focal_left" },
+        { "value": "right", "label": "t:sections.main_product.settings.focal_right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_thumbnails",
+      "label": "t:sections.main_product.settings.show_thumbnails",
+      "default": true,
+      "visible_if": "{{ section.settings.gallery_layout == 'editorial' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "t:sections.main_product.settings.show_arrows",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_media_count",
+      "label": "t:sections.main_product.settings.show_media_count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_zoom",
+      "label": "t:sections.main_product.settings.enable_zoom",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_lightbox",
+      "label": "t:sections.main_product.settings.enable_lightbox",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_video_controls",
+      "label": "t:sections.main_product.settings.enable_video_controls",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_product.settings.content_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_badges",
+      "label": "t:sections.main_product.settings.show_badges",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "custom_badge",
+      "label": "t:sections.main_product.settings.custom_badge",
+      "visible_if": "{{ section.settings.show_badges }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "t:sections.main_product.settings.show_rating",
+      "default": true
+    },
+    {
+      "type": "url",
+      "id": "reviews_link",
+      "label": "t:sections.main_product.settings.reviews_link",
+      "visible_if": "{{ section.settings.show_rating }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_availability",
+      "label": "t:sections.main_product.settings.show_availability",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "low_stock_threshold",
+      "label": "t:sections.main_product.settings.low_stock_threshold",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "default": 5,
+      "visible_if": "{{ section.settings.show_availability }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_product.settings.accordion_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "t:sections.main_product.settings.show_description",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "open_first_accordion",
+      "label": "t:sections.main_product.settings.open_first_accordion",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "accordion_icon_style",
+      "label": "t:sections.product_details.settings.icon_style",
+      "options": [
+        {
+          "value": "plus_minus",
+          "label": "t:sections.product_details.settings.icon_plus"
+        },
+        {
+          "value": "chevron",
+          "label": "t:sections.product_details.settings.icon_chevron"
+        }
+      ],
+      "default": "plus_minus"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.main_product.settings.show_vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sku",
+      "label": "t:sections.main_product.settings.show_sku",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_type",
+      "label": "t:sections.main_product.settings.show_type",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_share",
+      "label": "t:sections.main_product.settings.show_share",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_product.settings.buttons_header"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:sections.main_product.settings.button_style",
+      "options": [
+        { "value": "primary", "label": "t:options.button_style.primary" },
+        { "value": "secondary", "label": "t:options.button_style.secondary" },
+        { "value": "outline", "label": "t:options.button_style.outline" }
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "select",
+      "id": "buy_now_style",
+      "label": "t:sections.main_product.settings.buy_now_style",
+      "options": [
+        { "value": "default", "label": "Default (Shopify)" },
+        { "value": "outline", "label": "Outline" }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_buy_it_now",
+      "label": "t:sections.main_product.settings.show_buy_it_now",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.product_details.settings.trust_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_trust",
+      "label": "t:sections.product_details.settings.show_trust",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "trust_shipping",
+      "label": "t:sections.product_details.settings.trust_shipping",
+      "default": "Free shipping",
+      "visible_if": "{{ section.settings.show_trust }}"
+    },
+    {
+      "type": "text",
+      "id": "trust_payment",
+      "label": "t:sections.product_details.settings.trust_payment",
+      "default": "Secure payment",
+      "visible_if": "{{ section.settings.show_trust }}"
+    },
+    {
+      "type": "text",
+      "id": "trust_returns",
+      "label": "t:sections.product_details.settings.trust_returns",
+      "default": "Easy returns",
+      "visible_if": "{{ section.settings.show_trust }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_product.settings.sticky_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_sticky_atc",
+      "label": "t:sections.main_product.settings.enable_sticky_atc",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_atc_desktop",
+      "label": "t:sections.main_product.settings.sticky_atc_desktop",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_atc_mobile",
+      "label": "t:sections.main_product.settings.sticky_atc_mobile",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_atc_show_image",
+      "label": "t:sections.main_product.settings.sticky_atc_show_image",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_atc_show_title",
+      "label": "t:sections.main_product.settings.sticky_atc_show_title",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_atc_show_price",
+      "label": "t:sections.main_product.settings.sticky_atc_show_price",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_atc_show_variant",
+      "label": "t:sections.main_product.settings.sticky_atc_show_variant",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "sticky_atc_color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.enable_sticky_atc }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "description",
+      "name": "t:sections.product_details.blocks.description.name",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "enabled",
+          "label": "t:sections.product_details.blocks.shared.enabled",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:labels.heading",
+          "default": "Description"
+        }
+      ]
+    },
+    {
+      "type": "information",
+      "name": "t:sections.product_details.blocks.information.name",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "enabled",
+          "label": "t:sections.product_details.blocks.shared.enabled",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:labels.heading",
+          "default": "Ingredients"
+        },
+        {
+          "type": "text",
+          "id": "metafield_namespace",
+          "label": "t:sections.product_details.blocks.information.namespace",
+          "info": "t:sections.product_details.blocks.information.namespace_info",
+          "default": "custom"
+        },
+        {
+          "type": "text",
+          "id": "metafield_key",
+          "label": "t:sections.product_details.blocks.information.key",
+          "info": "t:sections.product_details.blocks.information.key_info"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "t:sections.product_details.blocks.information.content",
+          "info": "t:sections.product_details.blocks.information.content_info"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

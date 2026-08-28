@@ -1,0 +1,70 @@
+{% liquid
+  assign products_limit = 8
+  assign rv_handles_string = ''
+  assign rendered_count = 0
+
+  if request.page_type == 'search'
+    assign rv_handles_string = search.terms | strip | replace: ' ', ','
+  endif
+%}
+
+<div data-recently-viewed-cards>
+  <div data-recently-viewed-grid>
+    {%- if rv_handles_string != blank -%}
+      {%- assign handle_list = rv_handles_string | split: ',' -%}
+      {%- for raw_handle in handle_list -%}
+        {%- liquid
+          if rendered_count >= products_limit
+            break
+          endif
+
+          assign viewed_handle = raw_handle | strip | url_decode
+          if viewed_handle == blank
+            continue
+          endif
+
+          assign viewed_product = all_products[viewed_handle]
+          if viewed_product == blank
+            continue
+          endif
+
+          assign rendered_count = rendered_count | plus: 1
+          if rendered_count == 1
+            assign card_loading = 'eager'
+            assign card_fetchpriority = 'high'
+          else
+            assign card_loading = 'lazy'
+            assign card_fetchpriority = blank
+          endif
+        -%}
+        {% render 'cosme-product-card',
+          product: viewed_product,
+          layout: 'editorial',
+          aspect_ratio: '1/1',
+          image_width: 900,
+          sizes: '(min-width: 990px) 25vw, (min-width: 768px) 33vw, 50vw',
+          loading: card_loading,
+          fetchpriority: card_fetchpriority,
+          show_vendor: true,
+          show_price: true,
+          show_badge: true,
+          show_secondary_image: true,
+          show_quick_view: true,
+          show_add_to_cart: true
+        %}
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "t:general.recently_viewed",
+  "tag": "div",
+  "class": "section-recently-viewed-cards",
+  "enabled_on": {
+    "templates": ["search"]
+  },
+  "settings": []
+}
+{% endschema %}

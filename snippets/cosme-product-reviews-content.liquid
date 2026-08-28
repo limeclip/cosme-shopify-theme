@@ -1,0 +1,864 @@
+{% doc %}
+  Renders product review summary, distribution, and list from product metafields.
+
+  @param {product} product - Product to read review metafields from
+  @param {string} section_id - Parent section ID
+  @param {boolean} [enable_reviews] - Whether reviews are enabled
+  @param {boolean} [allow_empty] - Show an empty message when no review data exists
+  @param {boolean} [show_heading] - Show the reviews heading
+  @param {boolean} [show_rating_summary] - Show rating score
+  @param {boolean} [show_rating_distribution] - Show star distribution
+  @param {boolean} [show_review_count] - Show review count
+  @param {boolean} [show_verified_badge] - Show verified purchase badges
+  @param {boolean} [show_review_dates] - Show review dates
+  @param {boolean} [show_review_images] - Show review images
+  @param {boolean} [show_sorting] - Show sorting controls
+  @param {boolean} [show_pagination] - Show pagination
+  @param {string} [pagination_mode] - load_more or pages
+  @param {number} [reviews_per_page] - Page size
+  @param {boolean} [show_write_review] - Show write-review trigger when app blocks exist
+  @param {string} [reviews_namespace] - Metafield namespace for the review list
+  @param {string} [reviews_list_key] - Metafield key for the review list
+  @param {boolean} [has_app_blocks] - Whether the parent section includes review app blocks
+
+  @example
+  {% render 'cosme-product-reviews-content', product: product, section_id: section.id, allow_empty: true %}
+{% enddoc %}
+
+{% liquid
+  assign reviews_enabled = false
+  if enable_reviews
+    assign reviews_enabled = true
+  endif
+
+  assign show_empty_state = false
+  if allow_empty
+    assign show_empty_state = true
+  endif
+
+  assign display_heading = true
+  if show_heading == false
+    assign display_heading = false
+  endif
+
+  assign rating_number = 0
+  assign rating_count = 0
+  assign rating_scale = 5
+  assign has_rating = false
+  assign rating_metafield = product.metafields.reviews.rating.value
+  assign rating_count_metafield = product.metafields.reviews.rating_count.value
+
+  if rating_count_metafield != blank
+    assign rating_count = rating_count_metafield | plus: 0
+  endif
+
+  if rating_metafield.rating
+    assign rating_number = rating_metafield.rating | plus: 0
+  elsif rating_metafield != blank
+    assign rating_number = rating_metafield | plus: 0
+  endif
+
+  if rating_metafield.scale_max
+    assign rating_scale = rating_metafield.scale_max | plus: 0
+  endif
+
+  if rating_number > 0
+    assign has_rating = true
+  endif
+  if rating_count > 0
+    assign has_rating = true
+  endif
+
+  assign show_summary = false
+  if show_rating_summary != false
+    if has_rating
+      assign show_summary = true
+    endif
+  endif
+
+  assign dist_5 = product.metafields.reviews.rating_count_5.value | plus: 0
+  assign dist_4 = product.metafields.reviews.rating_count_4.value | plus: 0
+  assign dist_3 = product.metafields.reviews.rating_count_3.value | plus: 0
+  assign dist_2 = product.metafields.reviews.rating_count_2.value | plus: 0
+  assign dist_1 = product.metafields.reviews.rating_count_1.value | plus: 0
+  assign dist_sum = dist_1 | plus: dist_2 | plus: dist_3 | plus: dist_4 | plus: dist_5
+  assign dist_source = product.metafields.reviews.rating_distribution.value
+
+  if dist_sum == 0
+    if dist_source != blank
+      if dist_source['5'] != blank
+        assign dist_5 = dist_source['5'] | plus: 0
+      elsif dist_source.five != blank
+        assign dist_5 = dist_source.five | plus: 0
+      endif
+      if dist_source['4'] != blank
+        assign dist_4 = dist_source['4'] | plus: 0
+      elsif dist_source.four != blank
+        assign dist_4 = dist_source.four | plus: 0
+      endif
+      if dist_source['3'] != blank
+        assign dist_3 = dist_source['3'] | plus: 0
+      elsif dist_source.three != blank
+        assign dist_3 = dist_source.three | plus: 0
+      endif
+      if dist_source['2'] != blank
+        assign dist_2 = dist_source['2'] | plus: 0
+      elsif dist_source.two != blank
+        assign dist_2 = dist_source.two | plus: 0
+      endif
+      if dist_source['1'] != blank
+        assign dist_1 = dist_source['1'] | plus: 0
+      elsif dist_source.one != blank
+        assign dist_1 = dist_source.one | plus: 0
+      endif
+      assign dist_sum = dist_1 | plus: dist_2 | plus: dist_3 | plus: dist_4 | plus: dist_5
+    endif
+  endif
+
+  assign has_distribution = false
+  if show_rating_distribution != false
+    if dist_sum > 0
+      assign has_distribution = true
+    endif
+  endif
+
+  assign dist_max = dist_1 | at_least: dist_2 | at_least: dist_3 | at_least: dist_4 | at_least: dist_5
+
+  assign list_namespace = reviews_namespace | strip
+  if list_namespace == blank
+    assign list_namespace = 'reviews'
+  endif
+  assign list_key = reviews_list_key | strip
+  assign review_entries = blank
+  assign review_entries_count = 0
+
+  if list_key != blank
+    assign list_field = product.metafields[list_namespace][list_key]
+    if list_field != blank
+      assign list_type = list_field.type | default: ''
+      if list_type == 'json'
+        assign review_entries = list_field.value
+        if review_entries.reviews
+          assign review_entries = review_entries.reviews
+        endif
+      else
+        if list_type contains 'list'
+          assign review_entries = list_field.value
+        endif
+      endif
+    endif
+  endif
+
+  if review_entries != blank
+    assign review_entries_count = review_entries.size | plus: 0
+  endif
+
+  assign has_review_items = false
+  if review_entries_count > 0
+    assign has_review_items = true
+  endif
+
+  assign show_theme_sort = false
+  if show_sorting != false
+    if has_review_items
+      assign show_theme_sort = true
+    endif
+  endif
+
+  assign show_theme_pagination = false
+  if show_pagination != false
+    if has_review_items
+      assign show_theme_pagination = true
+    endif
+  endif
+
+  assign page_size = reviews_per_page | default: 6
+  assign pager_mode = pagination_mode | default: 'load_more'
+  assign rating_display = rating_number | round: 1
+
+  assign show_write = false
+  if show_write_review != false
+    if has_app_blocks
+      assign show_write = true
+    endif
+  endif
+
+  assign show_overview = false
+  if show_summary
+    assign show_overview = true
+  endif
+  if has_distribution
+    assign show_overview = true
+  endif
+  if show_theme_sort
+    assign show_overview = true
+  endif
+  if show_write
+    assign show_overview = true
+  endif
+
+  assign has_review_data = false
+  if has_rating
+    assign has_review_data = true
+  endif
+  if has_review_items
+    assign has_review_data = true
+  endif
+  if has_app_blocks
+    assign has_review_data = true
+  endif
+%}
+
+{% if reviews_enabled %}
+  <div
+    class="cosme-reviews-content"
+    data-product-reviews
+    data-page-size="{{ page_size }}"
+    data-pagination-mode="{{ pager_mode }}"
+  >
+    {% if display_heading %}
+      <header class="cosme-reviews__intro">
+        <h2 class="cosme-reviews__heading">{{ 'products.reviews.heading' | t }}</h2>
+      </header>
+    {% endif %}
+
+    {% if has_review_data %}
+      {% if show_overview %}
+        <div class="cosme-reviews__overview">
+          <div class="cosme-reviews__summary">
+            {% if show_summary %}
+              <p class="cosme-visually-hidden">
+                {{ 'products.rating.summary' | t: rating: rating_display, count: rating_count }}
+              </p>
+              <div class="cosme-reviews__score" aria-hidden="true">
+                {% if rating_number > 0 %}
+                  <span class="cosme-reviews__score-value">{{ rating_display }}</span>
+                  <span class="cosme-reviews__score-scale">{{ 'products.reviews.out_of' | t: scale: rating_scale }}</span>
+                {% endif %}
+              </div>
+              {% if rating_number > 0 %}
+                {% render 'cosme-review-stars', rating: rating_number, class: 'cosme-reviews__summary-stars' %}
+              {% endif %}
+              {% if show_review_count != false %}
+                {% if rating_count > 0 %}
+                  <p class="cosme-reviews__count">
+                    {% if rating_count == 1 %}
+                      {{ 'products.reviews.count_one' | t: count: rating_count }}
+                    {% else %}
+                      {{ 'products.reviews.count_other' | t: count: rating_count }}
+                    {% endif %}
+                  </p>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <div class="cosme-reviews__aside">
+            {% if has_distribution %}
+              <ul class="cosme-reviews__distribution" aria-label="{{ 'products.reviews.distribution_label' | t }}">
+                {% for star in (1..5) %}
+                  {% liquid
+                    assign star_level = 6 | minus: star
+                    assign star_count = 0
+                    if star_level == 5
+                      assign star_count = dist_5
+                    elsif star_level == 4
+                      assign star_count = dist_4
+                    elsif star_level == 3
+                      assign star_count = dist_3
+                    elsif star_level == 2
+                      assign star_count = dist_2
+                    else
+                      assign star_count = dist_1
+                    endif
+                    assign bar_width = 0
+                    if dist_max > 0
+                      assign bar_width = star_count | times: 100.0 | divided_by: dist_max
+                    endif
+                  %}
+                  <li class="cosme-reviews__distribution-row">
+                    <span class="cosme-reviews__distribution-label">
+                      {{ 'products.reviews.star_level' | t: count: star_level }}
+                    </span>
+                    <span class="cosme-reviews__bar" aria-hidden="true">
+                      <span class="cosme-reviews__bar-fill" style="width: {{ bar_width }}%;"></span>
+                    </span>
+                    <span class="cosme-reviews__distribution-count">{{ star_count }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            {% if show_theme_sort %}
+              <div class="cosme-reviews__controls">
+                <label class="cosme-reviews__sort-label" for="ProductReviewsSort-{{ section_id }}">
+                  {{ 'products.reviews.sort_by' | t }}
+                </label>
+                <select
+                  id="ProductReviewsSort-{{ section_id }}"
+                  class="cosme-reviews__sort"
+                  data-reviews-sort
+                >
+                  <option value="newest">{{ 'products.reviews.sort_newest' | t }}</option>
+                  <option value="highest">{{ 'products.reviews.sort_highest' | t }}</option>
+                  <option value="lowest">{{ 'products.reviews.sort_lowest' | t }}</option>
+                </select>
+              </div>
+            {% endif %}
+
+            {% if show_write %}
+              {% liquid
+                assign write_label = 'products.reviews.write' | t
+              %}
+              {% render 'cosme-button',
+                label: write_label,
+                url: '#ProductReviewsApps',
+                style: 'primary'
+              %}
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="cosme-reviews__list-wrap">
+        {% if has_review_items %}
+          <div class="cosme-reviews__list-header">
+            <h3 class="cosme-reviews__list-heading">{{ 'products.reviews.list_heading' | t }}</h3>
+            <p
+              class="cosme-reviews__range"
+              data-reviews-range
+              data-range-template="{{ 'products.reviews.showing' | t }}"
+              hidden
+            ></p>
+          </div>
+
+          <div class="cosme-reviews__list" data-reviews-list>
+            {% for review in review_entries limit: 50 %}
+              {% render 'cosme-product-review',
+                review: review,
+                show_date: show_review_dates,
+                show_verified: show_verified_badge,
+                show_images: show_review_images
+              %}
+            {% endfor %}
+          </div>
+
+          {% if show_theme_pagination %}
+            <div class="cosme-reviews__pagination" data-reviews-pagination hidden>
+              {% if pager_mode == 'pages' %}
+                <nav class="cosme-reviews__pages" data-reviews-pages aria-label="{{ 'products.reviews.pagination_label' | t }}"></nav>
+              {% else %}
+                <button
+                  type="button"
+                  class="cosme-reviews__more"
+                  data-reviews-more
+                >
+                  {{ 'products.reviews.load_more' | t }}
+                </button>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% elsif show_empty_state %}
+      <p class="cosme-reviews__empty">{{ 'products.reviews.empty' | t }}</p>
+    {% elsif request.design_mode %}
+      <div class="cosme-reviews__empty">
+        <p>{{ 'products.reviews.empty_editor' | t }}</p>
+      </div>
+    {% endif %}
+  </div>
+{% elsif request.design_mode %}
+  <p class="cosme-reviews__empty">{{ 'products.reviews.disabled' | t }}</p>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-reviews-content {
+    min-width: 0;
+  }
+
+  .cosme-reviews__intro {
+    margin-block-end: var(--spacing-lg);
+  }
+
+  .cosme-reviews__heading,
+  .cosme-reviews__list-heading,
+  .cosme-reviews__item-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-style: var(--font-heading--style);
+    font-weight: var(--font-heading--weight);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-reviews__heading {
+    font-size: clamp(1.5rem, 2vw, 2rem);
+    line-height: 1.2;
+  }
+
+  .cosme-reviews__overview {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: var(--spacing-lg) var(--spacing-xl);
+    align-items: start;
+    padding-block-end: var(--spacing-lg);
+    margin-block-end: var(--spacing-lg);
+    border-block-end: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-reviews__summary {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-reviews__score {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-sm);
+    color: var(--color-heading);
+  }
+
+  .cosme-reviews__score-value {
+    font-family: var(--font-heading--family);
+    font-size: clamp(2.75rem, 5vw, 4rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 0.9;
+  }
+
+  .cosme-reviews__score-scale,
+  .cosme-reviews__count,
+  .cosme-reviews__date,
+  .cosme-reviews__range,
+  .cosme-reviews__sort-label,
+  .cosme-reviews__empty {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  .cosme-reviews__score-scale,
+  .cosme-reviews__count {
+    font-size: 0.9375rem;
+  }
+
+  .cosme-reviews__aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-width: 0;
+  }
+
+  .cosme-reviews__distribution {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-reviews__distribution-row {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) 2rem;
+    gap: var(--spacing-sm);
+    align-items: center;
+  }
+
+  .cosme-reviews__distribution-label,
+  .cosme-reviews__distribution-count {
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+  }
+
+  .cosme-reviews__distribution-count {
+    text-align: end;
+  }
+
+  .cosme-reviews__bar {
+    display: block;
+    width: 100%;
+    height: 0.35rem;
+    overflow: hidden;
+    background-color: var(--color-border);
+  }
+
+  .cosme-reviews__bar-fill {
+    display: block;
+    height: 100%;
+    background-color: var(--color-foreground);
+  }
+
+  .cosme-reviews__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-reviews__sort-label {
+    font-size: 0.8125rem;
+  }
+
+  .cosme-reviews__sort {
+    min-height: 2.75rem;
+    min-width: 10rem;
+    padding: 0 var(--spacing-sm);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-input);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font: inherit;
+  }
+
+  .cosme-reviews__sort:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .cosme-reviews__list-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-block-end: var(--spacing-md);
+  }
+
+  .cosme-reviews__list-heading {
+    font-size: 1rem;
+  }
+
+  .cosme-reviews__range {
+    font-size: 0.8125rem;
+  }
+
+  .cosme-reviews__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cosme-reviews__item {
+    padding-block: 1.25rem;
+    border-block-end: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-reviews__item:first-child {
+    border-block-start: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-reviews__item-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-reviews__author {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
+  }
+
+  .cosme-reviews__avatar {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: 50%;
+    background-color: var(--color-background);
+    color: var(--color-heading);
+  }
+
+  .cosme-reviews__initials {
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  .cosme-reviews__author-name {
+    margin: 0;
+    font-weight: 600;
+    color: var(--color-heading);
+  }
+
+  .cosme-reviews__date {
+    font-size: 0.8125rem;
+  }
+
+  .cosme-reviews__verified {
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-reviews__item-rating {
+    margin-block-start: 0.65rem;
+  }
+
+  .cosme-reviews__item-title {
+    margin-block-start: 0.75rem;
+    font-size: 1rem;
+  }
+
+  .cosme-reviews__item-body {
+    margin-block-start: 0.5rem;
+    max-width: 42rem;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-reviews__item-body > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-reviews__item-body > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-reviews__photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-sm) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-reviews__photo {
+    width: 4.5rem;
+    height: 4.5rem;
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-reviews__photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cosme-reviews__pagination {
+    display: flex;
+    justify-content: flex-start;
+    margin-block-start: var(--spacing-lg);
+  }
+
+  .cosme-reviews__pages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-reviews__page {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0 var(--spacing-sm);
+    border: var(--border-width) solid var(--color-border);
+    background: transparent;
+    color: var(--color-foreground);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .cosme-reviews__page[aria-current='page'] {
+    background-color: var(--color-foreground);
+    border-color: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .cosme-reviews__page:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .cosme-reviews__apps {
+    margin-block-start: var(--spacing-lg);
+  }
+
+  .cosme-reviews__app {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-reviews__app + .cosme-reviews__app {
+    margin-block-start: var(--spacing-lg);
+    padding-block-start: var(--spacing-lg);
+    border-block-start: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-reviews__empty {
+    padding-block: var(--spacing-md);
+  }
+
+  .cosme-reviews__aside .cosme-button {
+    align-self: flex-start;
+    min-height: 2.75rem;
+  }
+
+  .cosme-reviews__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-button);
+    background-color: transparent;
+    color: var(--color-foreground);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .cosme-reviews__more:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media screen and (max-width: 749px) {
+    .cosme-reviews__overview {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cosme-reviews__sort {
+      width: 100%;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    if (window._cosmeProductReviews) return;
+    window._cosmeProductReviews = true;
+
+    const getItems = (root) => Array.from(root.querySelectorAll('[data-review-item]'));
+
+    const updateRange = (root, visible, total, start) => {
+      const rangeEl = root.querySelector('[data-reviews-range]');
+      if (!rangeEl || total === 0) return;
+      const template = rangeEl.dataset.rangeTemplate || '';
+      const from = start + 1;
+      const to = start + visible;
+      rangeEl.textContent = template
+        .replace('%from%', String(from))
+        .replace('%to%', String(to))
+        .replace('%total%', String(total));
+      rangeEl.hidden = false;
+    };
+
+    const applyVisibility = (root) => {
+      const items = getItems(root);
+      const total = items.length;
+      const pageSize = Number(root.dataset.pageSize || 6);
+      const mode = root.dataset.paginationMode || 'load_more';
+      const pagination = root.querySelector('[data-reviews-pagination]');
+      let page = Number(root.dataset.page || 1);
+      const maxPage = Math.max(1, Math.ceil(total / pageSize));
+      if (page > maxPage) page = maxPage;
+      root.dataset.page = String(page);
+
+      if (mode === 'pages') {
+        const start = (page - 1) * pageSize;
+        items.forEach((item, index) => {
+          item.hidden = index < start || index >= start + pageSize;
+        });
+        updateRange(root, Math.min(pageSize, total - start), total, start);
+
+        if (pagination) {
+          const nav = pagination.querySelector('[data-reviews-pages]');
+          if (nav) {
+            nav.replaceChildren();
+            if (maxPage > 1) {
+              pagination.hidden = false;
+              for (let i = 1; i <= maxPage; i += 1) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'cosme-reviews__page';
+                button.textContent = String(i);
+                button.setAttribute('data-reviews-page', String(i));
+                if (i === page) button.setAttribute('aria-current', 'page');
+                nav.append(button);
+              }
+            } else {
+              pagination.hidden = true;
+            }
+          }
+        }
+        return;
+      }
+
+      const visibleCount = Math.min(total, page * pageSize);
+      items.forEach((item, index) => {
+        item.hidden = index >= visibleCount;
+      });
+      updateRange(root, visibleCount, total, 0);
+
+      if (pagination) {
+        const more = pagination.querySelector('[data-reviews-more]');
+        if (more) {
+          pagination.hidden = visibleCount >= total;
+        }
+      }
+    };
+
+    const sortItems = (root, value) => {
+      const list = root.querySelector('[data-reviews-list]');
+      if (!list) return;
+      const items = getItems(root);
+      items.sort((a, b) => {
+        if (value === 'highest') return Number(b.dataset.rating || 0) - Number(a.dataset.rating || 0);
+        if (value === 'lowest') return Number(a.dataset.rating || 0) - Number(b.dataset.rating || 0);
+        return String(b.dataset.date || '').localeCompare(String(a.dataset.date || ''));
+      });
+      items.forEach((item) => list.append(item));
+      root.dataset.page = '1';
+      applyVisibility(root);
+    };
+
+    const init = (root) => {
+      if (!root || root._reviewsReady) return;
+      root._reviewsReady = true;
+      root.dataset.page = '1';
+
+      applyVisibility(root);
+
+      const sort = root.querySelector('[data-reviews-sort]');
+      if (sort) {
+        sort.addEventListener('change', () => sortItems(root, sort.value));
+      }
+
+      root.addEventListener('click', (event) => {
+        const more = event.target.closest('[data-reviews-more]');
+        if (more) {
+          root.dataset.page = String(Number(root.dataset.page || 1) + 1);
+          applyVisibility(root);
+          return;
+        }
+        const pageButton = event.target.closest('[data-reviews-page]');
+        if (pageButton) {
+          root.dataset.page = pageButton.getAttribute('data-reviews-page') || '1';
+          applyVisibility(root);
+        }
+      });
+    };
+
+    const initAll = (container = document) => {
+      container.querySelectorAll('[data-product-reviews]').forEach(init);
+    };
+
+    initAll();
+
+    document.addEventListener('shopify:section:load', (event) => {
+      initAll(event.target);
+    });
+  })();
+{% endjavascript %}

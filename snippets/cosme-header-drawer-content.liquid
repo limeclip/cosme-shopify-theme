@@ -1,0 +1,381 @@
+{% doc %}
+  Renders the COSME header navigation drawer content.
+
+  Supports simple, mega menu, and mega menu with editorial image blocks.
+
+  @param {object} section - The header section object
+
+  @example
+  {% render 'cosme-header-drawer-content', section: section %}
+{% enddoc %}
+
+{% liquid
+  assign menu_style = section.settings.menu_style | default: 'mega_menu_image'
+  assign menu = section.settings.menu
+%}
+
+<div
+  class="cosme-header__drawer-panel color-{{ section.settings.menu_color_scheme }} cosme-header__drawer-panel--{{ menu_style }}"
+  data-header-drawer-panel
+>
+  <div class="cosme-header__drawer-header">
+    <p class="cosme-header__drawer-label">{{ 'header.navigation' | t }}</p>
+    <button
+      type="button"
+      class="cosme-header__drawer-close"
+      data-header-menu-close
+      aria-controls="CosmeHeaderDrawer-{{ section.id }}"
+    >
+      {% render 'cosme-icon', icon: 'close', size: 'lg' %}
+      <span class="cosme-visually-hidden">{{ 'header.close_menu' | t }}</span>
+    </button>
+  </div>
+
+  <div class="cosme-header__drawer-utilities">
+    {%- if section.settings.show_search -%}
+      <a class="cosme-header__drawer-utility" href="{{ routes.search_url }}">
+        {% render 'cosme-icon', icon: 'search', size: 'lg' %}
+        <span>{{ 'header.search' | t }}</span>
+      </a>
+    {%- endif -%}
+
+    {%- if section.settings.show_account and shop.customer_accounts_enabled -%}
+      <shopify-account
+        class="cosme-header__drawer-utility cosme-header__drawer-utility--account"
+        menu="{{ section.settings.customer_account_menu }}"
+      >
+        {% render 'cosme-icon', icon: 'account', size: 'lg' %}
+        <span>{{ 'header.account' | t }}</span>
+      </shopify-account>
+    {%- endif -%}
+  </div>
+
+  {%- if menu != blank -%}
+    {%- case menu_style -%}
+      {%- when 'simple' -%}
+        <nav class="cosme-header__drawer-nav cosme-header__drawer-nav--simple" aria-label="{{ 'header.navigation' | t }}">
+          <ul class="cosme-header__drawer-menu" role="list">
+            {%- for link in menu.links -%}
+              {%- liquid
+                assign is_active = false
+                if link.active
+                  assign is_active = true
+                endif
+                if link.child_active
+                  assign is_active = true
+                endif
+              -%}
+              <li class="cosme-header__drawer-item{% if is_active %} cosme-header__drawer-item--active{% endif %}">
+                {%- if link.links.size > 0 -%}
+                  <details class="cosme-header__drawer-details">
+                    <summary class="cosme-header__drawer-summary">
+                      <span class="cosme-header__drawer-summary-label{% if is_active %} cosme-header__drawer-summary-label--active{% endif %}">
+                        {{ link.title | escape }}
+                      </span>
+                      {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+                    </summary>
+                    <ul class="cosme-header__drawer-submenu" role="list">
+                      <li>
+                        <a
+                          href="{{ link.url }}"
+                          class="cosme-header__drawer-link cosme-header__drawer-link--child{% if link.active %} cosme-header__drawer-link--active{% endif %}"
+                          {% if link.active %}
+                            aria-current="page"
+                          {% endif %}
+                        >
+                          {{ 'header.view_all' | t: title: link.title }}
+                        </a>
+                      </li>
+                      {%- for child_link in link.links -%}
+                        <li>
+                          {%- if child_link.links.size > 0 -%}
+                            <details class="cosme-header__drawer-details cosme-header__drawer-details--nested">
+                              <summary class="cosme-header__drawer-summary cosme-header__drawer-summary--nested">
+                                <span class="cosme-header__drawer-summary-label{% if child_link.active or child_link.child_active %} cosme-header__drawer-summary-label--active{% endif %}">
+                                  {{ child_link.title | escape }}
+                                </span>
+                                {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+                              </summary>
+                              <ul class="cosme-header__drawer-submenu cosme-header__drawer-submenu--nested" role="list">
+                                <li>
+                                  <a
+                                    href="{{ child_link.url }}"
+                                    class="cosme-header__drawer-link cosme-header__drawer-link--child{% if child_link.active %} cosme-header__drawer-link--active{% endif %}"
+                                    {% if child_link.active %}
+                                      aria-current="page"
+                                    {% endif %}
+                                  >
+                                    {{ 'header.view_all' | t: title: child_link.title }}
+                                  </a>
+                                </li>
+                                {%- for grandchild_link in child_link.links -%}
+                                  <li>
+                                    <a
+                                      href="{{ grandchild_link.url }}"
+                                      class="cosme-header__drawer-link cosme-header__drawer-link--grandchild{% if grandchild_link.active %} cosme-header__drawer-link--active{% endif %}"
+                                      {% if grandchild_link.active %}
+                                        aria-current="page"
+                                      {% endif %}
+                                    >
+                                      {{ grandchild_link.title | escape }}
+                                    </a>
+                                  </li>
+                                {%- endfor -%}
+                              </ul>
+                            </details>
+                          {%- else -%}
+                            <a
+                              href="{{ child_link.url }}"
+                              class="cosme-header__drawer-link cosme-header__drawer-link--child{% if child_link.active %} cosme-header__drawer-link--active{% endif %}"
+                              {% if child_link.active %}
+                                aria-current="page"
+                              {% endif %}
+                            >
+                              {{ child_link.title | escape }}
+                            </a>
+                          {%- endif -%}
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  </details>
+                {%- else -%}
+                  <a
+                    href="{{ link.url }}"
+                    class="cosme-header__drawer-link cosme-header__drawer-link--top{% if link.active %} cosme-header__drawer-link--active{% endif %}"
+                    {% if link.active %}
+                      aria-current="page"
+                    {% endif %}
+                  >
+                    {{ link.title | escape }}
+                  </a>
+                {%- endif -%}
+              </li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+
+      {%- when 'mega_menu', 'mega_menu_image' -%}
+        <div class="cosme-header__mega" data-mega-menu>
+          <div class="cosme-header__mega-layout">
+            <div
+              class="cosme-header__mega-triggers"
+              role="tablist"
+              aria-label="{{ 'header.navigation' | t }}"
+              data-mega-triggers
+            >
+              {%- for link in menu.links -%}
+                {%- liquid
+                  assign is_active = false
+                  if link.active
+                    assign is_active = true
+                  endif
+                  if link.child_active
+                    assign is_active = true
+                  endif
+                -%}
+                <button
+                  type="button"
+                  class="cosme-header__mega-trigger{% if is_active %} cosme-header__mega-trigger--active{% endif %}"
+                  role="tab"
+                  id="CosmeMegaTab-{{ section.id }}-{{ forloop.index }}"
+                  aria-controls="CosmeMegaPanel-{{ section.id }}-{{ forloop.index }}"
+                  aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                  tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
+                  data-mega-trigger
+                  data-mega-index="{{ forloop.index }}"
+                >
+                  {{ link.title | escape }}
+                </button>
+              {%- endfor -%}
+            </div>
+
+            <div class="cosme-header__mega-panels" data-mega-panels>
+              {%- for link in menu.links -%}
+                {%- liquid
+                  assign is_active = false
+                  if link.active
+                    assign is_active = true
+                  endif
+                  if link.child_active
+                    assign is_active = true
+                  endif
+
+                  assign matched_block = nil
+                  if menu_style == 'mega_menu_image'
+                    assign link_handle = link.handle
+                    for block in section.blocks
+                      if block.type == 'mega_menu_image'
+                        assign trigger_handle = block.settings.menu_item | strip | handleize
+                        if block.settings.menu_item == link.title or trigger_handle == link_handle
+                          assign matched_block = block
+                          break
+                        endif
+                      endif
+                    endfor
+                  endif
+
+                  assign image_position = 'right'
+                  if matched_block != nil
+                    assign image_position = matched_block.settings.image_position | default: 'right'
+                  endif
+                -%}
+
+                <div
+                  class="cosme-header__mega-panel{% unless forloop.first %} cosme-header__mega-panel--hidden{% endunless %}"
+                  id="CosmeMegaPanel-{{ section.id }}-{{ forloop.index }}"
+                  role="tabpanel"
+                  aria-labelledby="CosmeMegaTab-{{ section.id }}-{{ forloop.index }}"
+                  aria-hidden="{% if forloop.first %}false{% else %}true{% endif %}"
+                  tabindex="0"
+                  data-mega-panel
+                  data-mega-index="{{ forloop.index }}"
+                >
+                  <details
+                    class="cosme-header__mega-accordion"
+                    {% if forloop.first or is_active %}
+                      open
+                    {% endif %}
+                    data-mega-accordion
+                  >
+                    <summary class="cosme-header__mega-accordion-summary">
+                      <span>{{ link.title | escape }}</span>
+                      {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+                    </summary>
+
+                    <div
+                      class="cosme-header__mega-panel-body cosme-header__mega-panel-body--image-{{ image_position }}{% if matched_block != nil and matched_block.settings.image != blank %} cosme-header__mega-panel-body--has-image{% endif %}"
+                    >
+                      <div class="cosme-header__mega-panel-main">
+                        {%- if link.links.size > 0 -%}
+                          <div
+                            class="cosme-header__mega-columns"
+                            {%- assign max_columns = 4 -%}
+                            {%- if matched_block != nil and matched_block.settings.image != blank -%}
+                              {%- assign max_columns = 3 -%}
+                            {%- endif -%}
+                            style="--mega-column-count: {{ link.links.size | at_most: max_columns }};"
+                          >
+                            {%- for child_link in link.links -%}
+                              <div class="cosme-header__mega-column">
+                                <a
+                                  href="{{ child_link.url }}"
+                                  class="cosme-header__mega-column-title{% if child_link.active or child_link.child_active %} cosme-header__mega-column-title--active{% endif %}"
+                                  {% if child_link.active %}
+                                    aria-current="page"
+                                  {% endif %}
+                                >
+                                  {{ child_link.title | escape }}
+                                </a>
+
+                                {%- if child_link.links.size > 0 -%}
+                                  <ul class="cosme-header__mega-column-links" role="list">
+                                    {%- for grandchild_link in child_link.links -%}
+                                      <li>
+                                        <a
+                                          href="{{ grandchild_link.url }}"
+                                          class="cosme-header__mega-link{% if grandchild_link.active %} cosme-header__mega-link--active{% endif %}"
+                                          {% if grandchild_link.active %}
+                                            aria-current="page"
+                                          {% endif %}
+                                        >
+                                          {{ grandchild_link.title | escape }}
+                                        </a>
+                                      </li>
+                                    {%- endfor -%}
+                                  </ul>
+                                {%- endif -%}
+                              </div>
+                            {%- endfor -%}
+                          </div>
+
+                          <a
+                            href="{{ link.url }}"
+                            class="cosme-header__mega-view-all{% if link.active %} cosme-header__mega-view-all--active{% endif %}"
+                            {% if link.active %}
+                              aria-current="page"
+                            {% endif %}
+                          >
+                            {{ 'header.view_all' | t: title: link.title }}
+                            {% render 'cosme-icon', icon: 'arrow-right', size: 'sm' %}
+                          </a>
+                        {%- else -%}
+                          <a
+                            href="{{ link.url }}"
+                            class="cosme-header__mega-single-link{% if link.active %} cosme-header__mega-single-link--active{% endif %}"
+                            {% if link.active %}
+                              aria-current="page"
+                            {% endif %}
+                          >
+                            {{ link.title | escape }}
+                            {% render 'cosme-icon', icon: 'arrow-right', size: 'sm' %}
+                          </a>
+                        {%- endif -%}
+                      </div>
+
+                      {%- if matched_block != nil and matched_block.settings.image != blank -%}
+                        {%- liquid
+                          assign editorial_url = matched_block.settings.image_link
+                          if matched_block.settings.cta_link != blank
+                            assign editorial_url = matched_block.settings.cta_link
+                          endif
+                          assign editorial_alt = matched_block.settings.image_heading | default: link.title
+                        -%}
+                        <aside
+                          class="cosme-header__mega-editorial"
+                          {{ matched_block.shopify_attributes }}
+                        >
+                          {%- if editorial_url != blank -%}
+                            <a class="cosme-header__mega-editorial-link" href="{{ editorial_url }}">
+                          {%- else -%}
+                            <div class="cosme-header__mega-editorial-link">
+                          {%- endif -%}
+
+                          <div class="cosme-header__mega-editorial-media">
+                            {% render 'cosme-image',
+                              image: matched_block.settings.image,
+                              class: 'cosme-header__mega-editorial-image',
+                              width: 800,
+                              aspect_ratio: '4 / 5',
+                              sizes: '(min-width: 990px) 20rem, 100vw',
+                              alt: editorial_alt
+                            %}
+                          </div>
+
+                          <div class="cosme-header__mega-editorial-content">
+                            {%- if matched_block.settings.image_heading != blank -%}
+                              <p class="cosme-header__mega-editorial-heading">
+                                {{ matched_block.settings.image_heading | escape }}
+                              </p>
+                            {%- endif -%}
+
+                            {%- if matched_block.settings.image_text != blank -%}
+                              <p class="cosme-header__mega-editorial-text">
+                                {{ matched_block.settings.image_text | escape }}
+                              </p>
+                            {%- endif -%}
+
+                            {%- if matched_block.settings.cta_label != blank -%}
+                              <span class="cosme-header__mega-editorial-cta">
+                                {{ matched_block.settings.cta_label | escape }}
+                                {% render 'cosme-icon', icon: 'arrow-right', size: 'sm' %}
+                              </span>
+                            {%- endif -%}
+                          </div>
+
+                          {%- if editorial_url != blank -%}
+                            </a>
+                          {%- else -%}
+                            </div>
+                          {%- endif -%}
+                        </aside>
+                      {%- endif -%}
+                    </div>
+                  </details>
+                </div>
+              {%- endfor -%}
+            </div>
+          </div>
+        </div>
+    {%- endcase -%}
+  {%- endif -%}
+</div>

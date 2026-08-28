@@ -1,0 +1,223 @@
+{% liquid
+  assign enable_reviews = false
+  if section.settings.enable_reviews
+    assign enable_reviews = true
+  endif
+
+  assign hide_on_storefront = false
+  unless enable_reviews
+    unless request.design_mode
+      assign hide_on_storefront = true
+    endunless
+  endunless
+
+  assign has_app_blocks = false
+  for block in section.blocks
+    if block.type == '@app'
+      assign has_app_blocks = true
+    endif
+  endfor
+%}
+
+<section
+  id="ProductReviewsStandalone-{{ section.id }}"
+  class="cosme-reviews full-width color-{{ section.settings.color_scheme }}"
+  aria-label="{{ 'products.reviews.landmark_label' | t }}"
+  {% if hide_on_storefront %}
+    hidden
+  {% endif %}
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-reviews__inner">
+    {% render 'cosme-product-reviews-content',
+      product: product,
+      section_id: section.id,
+      enable_reviews: enable_reviews,
+      allow_empty: true,
+      show_heading: true,
+      show_rating_summary: section.settings.show_rating_summary,
+      show_rating_distribution: section.settings.show_rating_distribution,
+      show_review_count: section.settings.show_review_count,
+      show_verified_badge: section.settings.show_verified_badge,
+      show_review_dates: section.settings.show_review_dates,
+      show_review_images: section.settings.show_review_images,
+      show_sorting: section.settings.show_sorting,
+      show_pagination: section.settings.show_pagination,
+      pagination_mode: section.settings.pagination_mode,
+      reviews_per_page: section.settings.reviews_per_page,
+      show_write_review: section.settings.show_write_review,
+      reviews_namespace: section.settings.reviews_namespace,
+      reviews_list_key: section.settings.reviews_list_key,
+      has_app_blocks: has_app_blocks
+    %}
+    {% if has_app_blocks %}
+      <div class="cosme-reviews__apps" id="ProductReviewsApps" data-reviews-apps>
+        {% for block in section.blocks %}
+          {% if block.type == '@app' %}
+            <div class="cosme-reviews__app" {{ block.shopify_attributes }}>
+              {% render block %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-reviews {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  .cosme-reviews__inner {
+    width: 100%;
+    max-width: var(--content-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: var(--spacing-section) var(--page-margin);
+  }
+
+  @media screen and (max-width: 749px) {
+    .cosme-reviews__inner {
+      padding-block: var(--spacing-lg);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.product_reviews",
+  "tag": "div",
+  "class": "section-product-reviews",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_reviews",
+      "label": "t:sections.product_reviews.settings.enable_reviews",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating_summary",
+      "label": "t:sections.product_reviews.settings.show_rating_summary",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating_distribution",
+      "label": "t:sections.product_reviews.settings.show_rating_distribution",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_review_count",
+      "label": "t:sections.product_reviews.settings.show_review_count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_verified_badge",
+      "label": "t:sections.product_reviews.settings.show_verified_badge",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_review_dates",
+      "label": "t:sections.product_reviews.settings.show_review_dates",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_review_images",
+      "label": "t:sections.product_reviews.settings.show_review_images",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sorting",
+      "label": "t:sections.product_reviews.settings.show_sorting",
+      "info": "t:sections.product_reviews.settings.show_sorting_info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "t:sections.product_reviews.settings.show_pagination",
+      "info": "t:sections.product_reviews.settings.show_pagination_info",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "pagination_mode",
+      "label": "t:sections.product_reviews.settings.pagination_mode",
+      "options": [
+        {
+          "value": "load_more",
+          "label": "t:sections.product_reviews.settings.mode_load_more"
+        },
+        {
+          "value": "pages",
+          "label": "t:sections.product_reviews.settings.mode_pages"
+        }
+      ],
+      "default": "load_more",
+      "visible_if": "{{ section.settings.show_pagination }}"
+    },
+    {
+      "type": "range",
+      "id": "reviews_per_page",
+      "label": "t:sections.product_reviews.settings.reviews_per_page",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 6,
+      "visible_if": "{{ section.settings.show_pagination }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_write_review",
+      "label": "t:sections.product_reviews.settings.show_write_review",
+      "info": "t:sections.product_reviews.settings.show_write_review_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.product_reviews.settings.data_header"
+    },
+    {
+      "type": "text",
+      "id": "reviews_namespace",
+      "label": "t:sections.product_reviews.settings.reviews_namespace",
+      "default": "reviews"
+    },
+    {
+      "type": "text",
+      "id": "reviews_list_key",
+      "label": "t:sections.product_reviews.settings.reviews_list_key",
+      "info": "t:sections.product_reviews.settings.reviews_list_key_info"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.product_reviews"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,77 @@
+{% doc %}
+  Renders a five-star rating using the theme accent color.
+
+  @param {number} rating - Rating value on a 5-star scale
+  @param {string} [class] - Additional CSS classes for the wrapper
+
+  @example
+  {% render 'cosme-review-stars', rating: 4.5 %}
+{% enddoc %}
+
+{% liquid
+  assign star_rating = rating | plus: 0
+%}
+
+<span class="cosme-review-stars{% if class != blank %} {{ class }}{% endif %}" aria-hidden="true">
+  {% for i in (1..5) %}
+    {% liquid
+      assign star_floor = i | minus: 1
+      assign star_fill = 0
+      if star_rating >= i
+        assign star_fill = 100
+      else
+        if star_rating > star_floor
+          assign star_fill = star_rating | minus: star_floor | times: 100
+        endif
+      endif
+    %}
+    <span class="cosme-review-stars__star" style="--star-fill: {{ star_fill }}%;">
+      <span class="cosme-review-stars__base">
+        {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+      </span>
+      <span class="cosme-review-stars__fill">
+        {% render 'cosme-icon', icon: 'star', size: 'sm' %}
+      </span>
+    </span>
+  {% endfor %}
+</span>
+
+{% stylesheet %}
+  .cosme-review-stars {
+    display: inline-flex;
+    gap: 0.125rem;
+  }
+
+  .cosme-review-stars__star {
+    position: relative;
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-border);
+  }
+
+  .cosme-review-stars__star .cosme-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .cosme-review-stars__base,
+  .cosme-review-stars__fill {
+    display: flex;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-review-stars__fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    overflow: hidden;
+    width: var(--star-fill, 0%);
+    color: var(--color-accent);
+  }
+
+  .cosme-review-stars__fill .cosme-icon svg {
+    fill: currentcolor;
+    stroke: currentcolor;
+  }
+{% endstylesheet %}

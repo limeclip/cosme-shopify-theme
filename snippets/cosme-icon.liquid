@@ -1,0 +1,84 @@
+{% doc %}
+  Renders an inline SVG icon from theme assets.
+
+  Icons are loaded from `assets/icon-{name}.svg` using the Skeleton inline asset
+  pattern. Unknown icon names render nothing.
+
+  Supported icons:
+  `account`, `arrow-right`, `cart`, `chevron-down`, `chevron-left`, `chevron-right`,
+  `chevron-up`, `close`, `discount`, `external-link`, `facebook`, `gift`, `instagram`,
+  `menu`, `minus`, `pause`, `pinterest`, `play`, `plus`, `return`, `search`, `secure`,
+  `shipping`, `star`, `support`, `tiktok`, `volume`, `volume-off`, `youtube`
+
+  @param {string} icon - Icon name without the `icon-` prefix or `.svg` suffix
+  @param {string} [class] - Additional CSS classes
+  @param {string} [size] - Icon size preset: `sm`, `md` (default), or `lg`
+  @param {string} [label] - Accessible name when the icon conveys meaning on its own; omit for decorative icons inside labelled controls
+
+  @example
+  {% render 'cosme-icon', icon: 'cart' %}
+  {% render 'cosme-icon', icon: 'account', label: 'Account' %}
+  {% render 'cosme-icon', icon: 'search' %}
+  {% render 'cosme-icon', icon: 'gift', size: 'lg' %}
+{% enddoc %}
+
+{% liquid
+  assign icon_size = size | default: 'md'
+  assign icon_known = false
+
+  case icon
+    when 'account', 'arrow-right', 'cart', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'close', 'discount', 'external-link', 'facebook', 'gift', 'instagram', 'menu', 'minus', 'pause', 'pinterest', 'play', 'plus', 'return', 'search', 'secure', 'shipping', 'star', 'support', 'tiktok', 'volume', 'volume-off', 'youtube'
+      assign icon_known = true
+      assign icon_asset = 'icon-' | append: icon | append: '.svg'
+  endcase
+%}
+
+{% if icon_known %}
+  <span
+    class="cosme-icon cosme-icon--{{ icon_size }}{% if class != blank %} {{ class }}{% endif %}"
+    {% if label != blank %}
+      role="img"
+      aria-label="{{ label | escape }}"
+    {% else %}
+      aria-hidden="true"
+    {% endif %}
+  >
+    {{ icon_asset | inline_asset_content }}
+  </span>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-icon {
+    --icon-stroke-width: 1.5px;
+
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    color: currentcolor;
+  }
+
+  .cosme-icon svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-icon--sm {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .cosme-icon--md {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .cosme-icon--lg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .cosme-icon--xl {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+{% endstylesheet %}

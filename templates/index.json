@@ -1,20 +1,465 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
   "sections": {
-    "main": {
-      "type": "hello-world",
-      "settings": {}
+    "main_hero": {
+      "type": "main-hero",
+      "blocks": {
+        "nav_link_1": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Primers"
+          }
+        },
+        "nav_link_2": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Night Creams"
+          }
+        },
+        "nav_link_3": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Moisturizers"
+          }
+        },
+        "nav_link_4": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Day Creams"
+          }
+        },
+        "slide_1": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Limited edition",
+            "heading": "Illuminating Face Primer",
+            "button_label": "Shop Now",
+            "image_alt": "Illuminating Face Primer"
+          }
+        },
+        "slide_2": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "New Arrival",
+            "heading": "Hydrating Serum",
+            "button_label": "Explore",
+            "image_alt": "Hydrating Serum"
+          }
+        },
+        "slide_3": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Best Seller",
+            "heading": "Firming Cream",
+            "button_label": "Shop",
+            "image_alt": "Firming Cream"
+          }
+        },
+        "slide_4": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "Featured",
+            "heading": "Brightening Mask",
+            "button_label": "Learn More",
+            "image_alt": "Brightening Mask"
+          }
+        }
+      },
+      "block_order": [
+        "nav_link_1",
+        "nav_link_2",
+        "nav_link_3",
+        "nav_link_4",
+        "slide_1",
+        "slide_2",
+        "slide_3",
+        "slide_4"
+      ],
+      "settings": {
+        "layout": "editorial",
+        "hero_height": "large",
+        "content_alignment": "default",
+        "nav_heading": "Shop",
+        "color_scheme": "scheme-1",
+        "autoplay": true,
+        "autoplay_interval": "5",
+        "show_navigation_arrows": false,
+        "show_slide_numbers": true,
+        "show_pagination": true
+      }
+    },
+    "collections_editorial": {
+      "type": "main-collections-editorial",
+      "blocks": {
+        "collection_1": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Outdoors",
+            "link_label": "Shop Outdoors"
+          }
+        },
+        "collection_2": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Indoors",
+            "link_label": "Shop Indoors"
+          }
+        },
+        "collection_3": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Essentials",
+            "link_label": "Shop Essentials"
+          }
+        },
+        "collection_4": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "New Arrivals",
+            "link_label": "Shop New Arrivals"
+          }
+        }
+      },
+      "block_order": [
+        "collection_1",
+        "collection_2",
+        "collection_3",
+        "collection_4"
+      ],
+      "settings": {
+        "layout": "editorial",
+        "image_aspect_ratio": "landscape",
+        "image_fit": "cover",
+        "color_scheme": "scheme-1",
+        "show_card_numbers": true,
+        "show_navigation": true,
+        "enable_carousel": true,
+        "autoplay": false,
+        "autoplay_interval": "5",
+        "show_arrows": false,
+        "show_pagination": false
+      }
+    },
+    "popular_products": {
+      "type": "main-popular-products",
+      "settings": {
+        "eyebrow": "SHOP",
+        "heading": "Popular",
+        "products_to_show": 8,
+        "desktop_columns": "4",
+        "mobile_columns": "2",
+        "show_navigation": true,
+        "show_vendor": true,
+        "show_price": true,
+        "show_badge": true,
+        "show_secondary_image": true,
+        "show_quick_view": true,
+        "show_add_to_cart": true,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "vertical_video": {
+      "type": "vertical-video",
+      "blocks": {
+        "category_1": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Bestsellers"
+          }
+        },
+        "category_2": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Complexion"
+          }
+        },
+        "category_3": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Lip + Cheek"
+          }
+        },
+        "category_4": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Skincare"
+          }
+        },
+        "category_5": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Eye"
+          }
+        },
+        "category_6": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Sets"
+          }
+        },
+        "video_1": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Blend once. Soft focus all day.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_2": {
+          "type": "video",
+          "settings": {
+            "custom_label": "One crayon, from desk to dinner.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_3": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Skin tint that feels like skin.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_4": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Glow that starts underneath.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_5": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Warmth, without the powder.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_6": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Night repair, morning skin.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        }
+      },
+      "block_order": [
+        "category_1",
+        "category_2",
+        "category_3",
+        "category_4",
+        "category_5",
+        "category_6",
+        "video_1",
+        "video_2",
+        "video_3",
+        "video_4",
+        "video_5",
+        "video_6"
+      ],
+      "settings": {
+        "eyebrow": "DISCOVER",
+        "heading": "Beauty in Motion",
+        "layout": "video_collections",
+        "heading_alignment": "center",
+        "desktop_cards": "5",
+        "mobile_cards": "1.5",
+        "video_aspect_ratio": "9/16",
+        "show_category_navigation": true,
+        "show_arrows": true,
+        "carousel_autoplay": false,
+        "carousel_autoplay_delay": 5000,
+        "show_product": true,
+        "show_product_image": true,
+        "autoplay": true,
+        "autoplay_behavior": "viewport",
+        "color_scheme": "scheme-1"
+      }
+    },
+    "testimonials": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_1": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The texture feels incredibly luxurious on the skin. It has become the one product I reach for every morning.",
+            "author_name": "Emma R.",
+            "author_location": "New York",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_2": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Quietly beautiful, and now part of my every morning.",
+            "author_name": "Sofia M.",
+            "author_location": "London",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_3": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "I love how lightweight it feels, and the glow looks like my own skin. It is quietly beautiful.",
+            "author_name": "Olivia K.",
+            "author_location": "Sydney",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_4": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The packaging is as considered as the formula. Everything about it feels calm and elevated, from the first touch of the texture to the way it sits on the skin through the day.",
+            "author_name": "Maya L.",
+            "author_location": "Toronto",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_5": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "A true everyday essential.",
+            "author_name": "Nora P.",
+            "author_location": "Copenhagen",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_1",
+        "testimonial_2",
+        "testimonial_3",
+        "testimonial_4",
+        "testimonial_5"
+      ],
+      "settings": {
+        "eyebrow": "TESTIMONIALS",
+        "heading": "Loved by our customers",
+        "description": "Real experiences from people who use our products every day.",
+        "heading_alignment": "left",
+        "show_rating_summary": true,
+        "rating": 4.9,
+        "review_count": 120,
+        "rating_label": "Based on 120+ reviews",
+        "desktop_cards": "3",
+        "tablet_cards": "2",
+        "show_arrows": true,
+        "autoplay": false,
+        "autoplay_interval": 5000,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "editorial_cta": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "THE EVERYDAY EDIT",
+        "heading": "Make space for your ritual.",
+        "description": "Thoughtfully selected essentials designed to become part of your everyday.",
+        "primary_button_label": "Shop essentials",
+        "primary_button_link": "/collections/all",
+        "secondary_button_label": "Explore collections",
+        "secondary_button_link": "/collections",
+        "layout": "image_left",
+        "content_alignment": "center",
+        "section_height": "large",
+        "content_width": 420,
+        "image_position": "center",
+        "image_width": 58,
+        "image_fit": "contain",
+        "image_focal_position": "center",
+        "color_scheme": "scheme-1",
+        "show_border": false,
+        "border_width": 1,
+        "section_spacing": "medium"
+      }
+    },
+    "benefits": {
+      "type": "benefits",
+      "blocks": {
+        "benefit_1": {
+          "type": "benefit",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Free shipping",
+            "description": "On orders over $75"
+          }
+        },
+        "benefit_2": {
+          "type": "benefit",
+          "settings": {
+            "icon": "return",
+            "heading": "Easy returns",
+            "description": "30-day hassle-free returns"
+          }
+        },
+        "benefit_3": {
+          "type": "benefit",
+          "settings": {
+            "icon": "secure",
+            "heading": "Secure checkout",
+            "description": "Safe and secure payments"
+          }
+        },
+        "benefit_4": {
+          "type": "benefit",
+          "settings": {
+            "icon": "support",
+            "heading": "Customer care",
+            "description": "We're here whenever you need us"
+          }
+        }
+      },
+      "block_order": [
+        "benefit_1",
+        "benefit_2",
+        "benefit_3",
+        "benefit_4"
+      ],
+      "settings": {
+        "columns": "auto",
+        "alignment": "center",
+        "show_dividers": true,
+        "section_spacing": "medium",
+        "icon_size": 20,
+        "icon_position": "top",
+        "color_scheme": "scheme-1"
+      }
     }
   },
   "order": [
-    "main"
+    "main_hero",
+    "collections_editorial",
+    "popular_products",
+    "vertical_video",
+    "testimonials",
+    "editorial_cta",
+    "benefits"
   ]
 }

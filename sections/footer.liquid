@@ -1,56 +1,1209 @@
-<footer>
-  <div class="footer__copyright">
-    &copy;
-    {{ 'now' | date: '%Y' }}
-    {{ shop.name | link_to: routes.root_url }}, {{ powered_by_link }}
-  </div>
+{%- liquid
+  assign enable_footer = section.settings.enable_footer
+  assign density = section.settings.density | default: 'default'
+  assign brand_description = section.settings.brand_description
+  assign shop_menu = section.settings.shop_menu
+  assign shop_heading = section.settings.shop_menu_heading
+  assign care_menu = section.settings.care_menu
+  assign care_heading = section.settings.care_menu_heading
+  assign enable_newsletter = section.settings.enable_newsletter
+  assign show_social = section.settings.show_social
+  assign social_style = section.settings.social_style | default: 'icons'
+  assign show_payment_icons = section.settings.show_payment_icons
+  assign show_copyright = section.settings.show_copyright
+  assign show_policy_links = section.settings.show_policy_links
+  assign copyright_year = 'now' | date: '%Y'
 
-  <div class="footer__links">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+  assign has_social_links = false
+  if show_social
+    if settings.social_instagram != blank
+      assign has_social_links = true
+    elsif settings.social_facebook != blank
+      assign has_social_links = true
+    elsif settings.social_tiktok != blank
+      assign has_social_links = true
+    elsif settings.social_youtube != blank
+      assign has_social_links = true
+    elsif settings.social_pinterest != blank
+      assign has_social_links = true
+    endif
+  endif
 
-  <div class="footer__payment">
-    {% if section.settings.show_payment_icons %}
-      {% for type in shop.enabled_payment_types %}
-        {{ type | payment_type_svg_tag }}
-      {% endfor %}
-    {% endif %}
-  </div>
-</footer>
+  assign show_shop_menu = false
+  if shop_menu != blank
+    if shop_menu.links.size > 0
+      assign show_shop_menu = true
+    endif
+  endif
+
+  assign show_care_menu = false
+  if care_menu != blank
+    if care_menu.links.size > 0
+      assign show_care_menu = true
+    endif
+  endif
+
+  assign show_privacy = false
+  if shop.privacy_policy != blank
+    if shop.privacy_policy.url != blank
+      assign show_privacy = true
+    endif
+  endif
+
+  assign show_terms = false
+  if shop.terms_of_service != blank
+    if shop.terms_of_service.url != blank
+      assign show_terms = true
+    endif
+  endif
+
+  assign show_refund = false
+  if shop.refund_policy != blank
+    if shop.refund_policy.url != blank
+      assign show_refund = true
+    endif
+  endif
+
+  assign show_shipping = false
+  if shop.shipping_policy != blank
+    if shop.shipping_policy.url != blank
+      assign show_shipping = true
+    endif
+  endif
+
+  assign has_policies = false
+  if show_policy_links
+    if show_privacy
+      assign has_policies = true
+    elsif show_terms
+      assign has_policies = true
+    elsif show_refund
+      assign has_policies = true
+    elsif show_shipping
+      assign has_policies = true
+    endif
+  endif
+
+  assign has_payments = false
+  if show_payment_icons
+    if shop.enabled_payment_types.size > 0
+      assign has_payments = true
+    endif
+  endif
+
+  assign show_bottom = false
+  if show_copyright
+    assign show_bottom = true
+  elsif has_policies
+    assign show_bottom = true
+  elsif has_payments
+    assign show_bottom = true
+  endif
+
+  assign newsletter_heading = section.settings.newsletter_heading
+  assign newsletter_description = section.settings.newsletter_description
+  assign newsletter_placeholder = section.settings.newsletter_placeholder
+  assign newsletter_button_label = section.settings.newsletter_button_label
+  if newsletter_button_label == blank
+    assign newsletter_button_label = 'footer.newsletter.submit' | t
+  endif
+  assign newsletter_email_label = 'footer.newsletter.email_label' | t
+  assign newsletter_form_id = 'FooterNewsletter-' | append: section.id
+  assign newsletter_email_id = 'FooterNewsletterEmail-' | append: section.id
+  assign newsletter_success_id = 'FooterNewsletterSuccess-' | append: section.id
+  assign shop_heading_id = 'FooterShopHeading-' | append: section.id
+  assign care_heading_id = 'FooterCareHeading-' | append: section.id
+  assign footer_cols = 4
+  if enable_newsletter == false
+    assign footer_cols = 3
+  endif
+  assign footer_cols = 1
+  if show_shop_menu
+    assign footer_cols = footer_cols | plus: 1
+  endif
+  if show_care_menu
+    assign footer_cols = footer_cols | plus: 1
+  endif
+  if enable_newsletter
+    assign footer_cols = footer_cols | plus: 1
+  endif
+-%}
+
+{%- if enable_footer -%}
+  <footer
+    class="cosme-footer full-width color-{{ section.settings.color_scheme }} cosme-footer--density-{{ density }} cosme-footer--cols-{{ footer_cols }}{% if settings.enable_animations %} cosme-footer--animated{% endif %}"
+    {{ section.shopify_attributes }}
+  >
+    <div class="cosme-footer__inner">
+      <div class="cosme-footer__grid">
+        <div class="cosme-footer__brand-group">
+          <div class="cosme-footer__brand">
+            <a
+              class="cosme-footer__logo"
+              href="{{ routes.root_url }}"
+              {%- if settings.logo != blank -%}
+                style="--cosme-footer-logo-width: {{ settings.logo_width }}px;"
+              {%- endif -%}
+            >
+              {%- if settings.logo != blank -%}
+                {%- capture footer_logo_sizes -%}{{ settings.logo_width }}px{%- endcapture -%}
+                {{
+                  settings.logo
+                  | image_url: width: 600
+                  | image_tag:
+                    class: 'cosme-footer__logo-image',
+                    widths: '120, 180, 240, 360, 480, 600',
+                    sizes: footer_logo_sizes,
+                    width: settings.logo_width,
+                    alt: shop.name,
+                    loading: 'lazy'
+                }}
+              {%- else -%}
+                <span class="cosme-footer__logo-text">{{ shop.name | escape }}</span>
+              {%- endif -%}
+            </a>
+
+            {%- if brand_description != blank -%}
+              <p class="cosme-footer__brand-text">{{ brand_description | escape }}</p>
+            {%- endif -%}
+          </div>
+
+          {%- if has_social_links -%}
+            <nav
+              class="cosme-footer__social cosme-footer__social--{{ social_style }}"
+              aria-label="{{ 'footer.social_links' | t }}"
+            >
+              <ul class="cosme-footer__social-list" role="list">
+                {%- if settings.social_instagram != blank -%}
+                  <li>
+                    <a
+                      class="cosme-footer__social-link"
+                      href="{{ settings.social_instagram }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="{{ 'footer.social_instagram' | t }}"
+                    >
+                      {%- if social_style == 'icons' -%}
+                        {% render 'cosme-icon', icon: 'instagram' %}
+                        <span class="cosme-visually-hidden">{{ 'footer.social_instagram' | t }}</span>
+                      {%- else -%}
+                        {{ 'footer.social_instagram' | t }}
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if settings.social_facebook != blank -%}
+                  <li>
+                    <a
+                      class="cosme-footer__social-link"
+                      href="{{ settings.social_facebook }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="{{ 'footer.social_facebook' | t }}"
+                    >
+                      {%- if social_style == 'icons' -%}
+                        {% render 'cosme-icon', icon: 'facebook' %}
+                        <span class="cosme-visually-hidden">{{ 'footer.social_facebook' | t }}</span>
+                      {%- else -%}
+                        {{ 'footer.social_facebook' | t }}
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if settings.social_tiktok != blank -%}
+                  <li>
+                    <a
+                      class="cosme-footer__social-link"
+                      href="{{ settings.social_tiktok }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="{{ 'footer.social_tiktok' | t }}"
+                    >
+                      {%- if social_style == 'icons' -%}
+                        {% render 'cosme-icon', icon: 'tiktok' %}
+                        <span class="cosme-visually-hidden">{{ 'footer.social_tiktok' | t }}</span>
+                      {%- else -%}
+                        {{ 'footer.social_tiktok' | t }}
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if settings.social_youtube != blank -%}
+                  <li>
+                    <a
+                      class="cosme-footer__social-link"
+                      href="{{ settings.social_youtube }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="{{ 'footer.social_youtube' | t }}"
+                    >
+                      {%- if social_style == 'icons' -%}
+                        {% render 'cosme-icon', icon: 'youtube' %}
+                        <span class="cosme-visually-hidden">{{ 'footer.social_youtube' | t }}</span>
+                      {%- else -%}
+                        {{ 'footer.social_youtube' | t }}
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if settings.social_pinterest != blank -%}
+                  <li>
+                    <a
+                      class="cosme-footer__social-link"
+                      href="{{ settings.social_pinterest }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="{{ 'footer.social_pinterest' | t }}"
+                    >
+                      {%- if social_style == 'icons' -%}
+                        {% render 'cosme-icon', icon: 'pinterest' %}
+                        <span class="cosme-visually-hidden">{{ 'footer.social_pinterest' | t }}</span>
+                      {%- else -%}
+                        {{ 'footer.social_pinterest' | t }}
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endif -%}
+              </ul>
+            </nav>
+          {%- endif -%}
+        </div>
+
+        {%- if show_shop_menu -%}
+          <nav
+            class="cosme-footer__menu cosme-footer__menu--shop"
+            aria-labelledby="{{ shop_heading_id }}"
+          >
+            <details class="cosme-footer__accordion">
+              <summary class="cosme-footer__accordion-summary">
+                <h2 class="cosme-footer__heading" id="{{ shop_heading_id }}">
+                  {%- if shop_heading != blank -%}
+                    {{ shop_heading | escape }}
+                  {%- else -%}
+                    {{ 'footer.shop' | t }}
+                  {%- endif -%}
+                </h2>
+                <span class="cosme-footer__accordion-icon">
+                  {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+                </span>
+              </summary>
+              <ul class="cosme-footer__menu-list" role="list">
+                {%- for link in shop_menu.links -%}
+                  <li>
+                    <a
+                      href="{{ link.url }}"
+                      class="cosme-footer__menu-link{% if link.active %} cosme-footer__menu-link--active{% endif %}"
+                      {% if link.active %}
+                        aria-current="page"
+                      {% endif %}
+                    >
+                      {{ link.title | escape }}
+                    </a>
+                    {%- if link.links.size > 0 -%}
+                      <ul class="cosme-footer__menu-list cosme-footer__menu-list--nested" role="list">
+                        {%- for child_link in link.links -%}
+                          <li>
+                            <a
+                              href="{{ child_link.url }}"
+                              class="cosme-footer__menu-link{% if child_link.active %} cosme-footer__menu-link--active{% endif %}"
+                              {% if child_link.active %}
+                                aria-current="page"
+                              {% endif %}
+                            >
+                              {{ child_link.title | escape }}
+                            </a>
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </details>
+          </nav>
+        {%- endif -%}
+
+        {%- if show_care_menu -%}
+          <nav
+            class="cosme-footer__menu cosme-footer__menu--care"
+            aria-labelledby="{{ care_heading_id }}"
+          >
+            <details class="cosme-footer__accordion">
+              <summary class="cosme-footer__accordion-summary">
+                <h2 class="cosme-footer__heading" id="{{ care_heading_id }}">
+                  {%- if care_heading != blank -%}
+                    {{ care_heading | escape }}
+                  {%- else -%}
+                    {{ 'footer.customer_care' | t }}
+                  {%- endif -%}
+                </h2>
+                <span class="cosme-footer__accordion-icon">
+                  {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+                </span>
+              </summary>
+              <ul class="cosme-footer__menu-list" role="list">
+                {%- for link in care_menu.links -%}
+                  <li>
+                    <a
+                      href="{{ link.url }}"
+                      class="cosme-footer__menu-link{% if link.active %} cosme-footer__menu-link--active{% endif %}"
+                      {% if link.active %}
+                        aria-current="page"
+                      {% endif %}
+                    >
+                      {{ link.title | escape }}
+                    </a>
+                    {%- if link.links.size > 0 -%}
+                      <ul class="cosme-footer__menu-list cosme-footer__menu-list--nested" role="list">
+                        {%- for child_link in link.links -%}
+                          <li>
+                            <a
+                              href="{{ child_link.url }}"
+                              class="cosme-footer__menu-link{% if child_link.active %} cosme-footer__menu-link--active{% endif %}"
+                              {% if child_link.active %}
+                                aria-current="page"
+                              {% endif %}
+                            >
+                              {{ child_link.title | escape }}
+                            </a>
+                          </li>
+                        {%- endfor -%}
+                      </ul>
+                    {%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </details>
+          </nav>
+        {%- endif -%}
+
+        {%- if enable_newsletter -%}
+          <div class="cosme-footer__newsletter">
+            {%- if newsletter_heading != blank -%}
+              <h2 class="cosme-footer__heading cosme-footer__heading--newsletter">{{ newsletter_heading | escape }}</h2>
+            {%- endif -%}
+
+            {%- if newsletter_description != blank -%}
+              <p class="cosme-footer__newsletter-text">{{ newsletter_description | escape }}</p>
+            {%- endif -%}
+
+            {% form 'customer', id: newsletter_form_id, class: 'cosme-footer__newsletter-form' %}
+              <input type="hidden" name="contact[tags]" value="newsletter">
+              <input type="hidden" name="customer[accepts_marketing]" value="true">
+
+              {%- liquid
+                assign newsletter_error = blank
+                assign newsletter_posted = false
+                if form.posted_successfully?
+                  assign newsletter_posted = true
+                endif
+                if form.errors
+                  assign newsletter_error = 'footer.newsletter.error' | t
+                endif
+              -%}
+
+              {%- if newsletter_posted -%}
+                <p
+                  class="cosme-footer__newsletter-status cosme-footer__newsletter-status--success"
+                  id="{{ newsletter_success_id }}"
+                  role="status"
+                  aria-live="polite"
+                  tabindex="-1"
+                >
+                  {{ 'footer.newsletter.success' | t }}
+                </p>
+              {%- endif -%}
+
+              {% render 'cosme-form-field',
+                label: newsletter_email_label,
+                id: newsletter_email_id,
+                name: 'contact[email]',
+                type: 'email',
+                value: form.email,
+                required: true,
+                placeholder: newsletter_placeholder,
+                autocomplete: 'email',
+                error: newsletter_error,
+                class: 'cosme-footer__newsletter-field'
+              %}
+
+              {% render 'cosme-button',
+                label: newsletter_button_label,
+                type: 'submit',
+                style: 'outline',
+                class: 'cosme-footer__newsletter-submit'
+              %}
+            {% endform %}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {%- if show_bottom -%}
+        <div class="cosme-footer__bottom">
+          {%- if show_copyright -%}
+            <p class="cosme-footer__copyright">
+              {{ 'footer.copyright' | t: year: copyright_year, shop_name: shop.name }}
+            </p>
+          {%- endif -%}
+
+          {%- if has_policies -%}
+            <nav class="cosme-footer__policies" aria-label="{{ 'footer.policies' | t }}">
+              <ul class="cosme-footer__policies-list" role="list">
+                {%- if show_privacy -%}
+                  <li>
+                    <a class="cosme-footer__policy-link" href="{{ shop.privacy_policy.url }}">
+                      {{ shop.privacy_policy.title | escape }}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if show_terms -%}
+                  <li>
+                    <a class="cosme-footer__policy-link" href="{{ shop.terms_of_service.url }}">
+                      {{ shop.terms_of_service.title | escape }}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if show_refund -%}
+                  <li>
+                    <a class="cosme-footer__policy-link" href="{{ shop.refund_policy.url }}">
+                      {{ shop.refund_policy.title | escape }}
+                    </a>
+                  </li>
+                {%- endif -%}
+                {%- if show_shipping -%}
+                  <li>
+                    <a class="cosme-footer__policy-link" href="{{ shop.shipping_policy.url }}">
+                      {{ shop.shipping_policy.title | escape }}
+                    </a>
+                  </li>
+                {%- endif -%}
+              </ul>
+            </nav>
+          {%- endif -%}
+
+          {%- if has_payments -%}
+            <div class="cosme-footer__payment" aria-label="{{ 'footer.payment_methods' | t }}">
+              <ul class="cosme-footer__payment-list" role="list">
+                {%- for type in shop.enabled_payment_types -%}
+                  <li class="cosme-footer__payment-item">
+                    {{ type | payment_type_svg_tag: class: 'cosme-footer__payment-icon' }}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </footer>
+{%- endif -%}
 
 {% stylesheet %}
-  footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
+  .cosme-footer {
+    margin-top: auto;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border-top: var(--border-width) solid var(--color-border);
+    overflow-x: clip;
   }
-  footer a {
+
+  .cosme-footer__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-footer--density-compact .cosme-footer__inner {
+    padding-block: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .cosme-footer--density-default .cosme-footer__inner {
+    padding-block: var(--spacing-2xl) var(--spacing-xl);
+  }
+
+  .cosme-footer--density-spacious .cosme-footer__inner {
+    padding-block: var(--spacing-section) var(--spacing-2xl);
+  }
+
+  .cosme-footer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-xl);
+  }
+
+  .cosme-footer--density-compact .cosme-footer__grid {
+    gap: var(--spacing-lg);
+  }
+
+  .cosme-footer--density-spacious .cosme-footer__grid {
+    gap: var(--spacing-2xl);
+  }
+
+  .cosme-footer__brand-group {
+    display: contents;
+  }
+
+  .cosme-footer__brand {
+    display: grid;
+    gap: var(--spacing-md);
+    align-content: start;
+    order: 1;
+    min-width: 0;
+  }
+
+  .cosme-footer__logo {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    color: var(--color-heading, var(--color-foreground));
     text-decoration: none;
+  }
+
+  .cosme-footer__logo:hover,
+  .cosme-footer__logo:focus-visible {
+    color: var(--color-heading, var(--color-foreground));
+    opacity: 0.72;
+  }
+
+  .cosme-footer__logo-image {
+    width: var(--cosme-footer-logo-width, 7.5rem);
+    max-width: min(100%, 9.5rem);
+    height: auto;
+  }
+
+  .cosme-footer__logo-text {
+    font-family: var(--font-heading--family);
+    font-size: 1.375rem;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+
+  .cosme-footer__brand-text,
+  .cosme-footer__newsletter-text {
+    margin: 0;
+    max-width: 22rem;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-footer__heading {
+    margin: 0;
+    color: var(--color-heading, var(--color-foreground));
+    font-family: var(--font-heading--family);
+    font-size: 0.75rem;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .cosme-footer__heading--newsletter {
+    max-width: 18rem;
+    font-size: 1.5rem;
+    letter-spacing: var(--letter-spacing-heading);
+    text-transform: none;
+  }
+
+  .cosme-footer__menu {
+    min-width: 0;
+  }
+
+  .cosme-footer__menu--shop {
+    order: 3;
+  }
+
+  .cosme-footer__menu--care {
+    order: 4;
+  }
+
+  .cosme-footer__accordion {
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-footer__menu--care .cosme-footer__accordion {
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-footer__accordion-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    min-height: 3rem;
+    padding-block: var(--spacing-md);
+    cursor: pointer;
+    list-style: none;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-footer__accordion-summary .cosme-footer__heading {
+    display: block;
+    min-width: 0;
+  }
+
+  .cosme-footer__accordion-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cosme-footer__accordion-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--color-muted);
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-footer__accordion[open] .cosme-footer__accordion-icon {
+    transform: rotate(180deg);
+  }
+
+  .cosme-footer__menu-list {
+    display: grid;
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding: 0 0 var(--spacing-lg);
+    list-style: none;
+  }
+
+  .cosme-footer__menu-list--nested {
+    padding: var(--spacing-sm) 0 0 var(--spacing-md);
+  }
+
+  .cosme-footer__menu-link,
+  .cosme-footer__policy-link {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    color: var(--color-muted);
+    text-decoration: none;
+    background-image: linear-gradient(currentcolor, currentcolor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0 1px;
+  }
+
+  .cosme-footer__menu-link {
+    min-height: 2.75rem;
+  }
+
+  .cosme-footer__menu-link--active {
+    color: var(--color-foreground);
+    background-size: 100% 1px;
+  }
+
+  .cosme-footer__newsletter {
+    display: grid;
+    gap: var(--spacing-md);
+    align-content: start;
+    order: 2;
+    min-width: 0;
+  }
+
+  .cosme-footer__newsletter-form {
+    display: grid;
+    gap: var(--spacing-md);
+    min-width: 0;
+  }
+
+  .cosme-footer__newsletter-field .cosme-form-field__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .cosme-footer__newsletter-field .cosme-form-field__control {
+    padding-inline: 0;
+    color: var(--color-foreground);
+    background-color: transparent;
+    border: 0;
+    border-bottom: var(--border-width) solid var(--color-input-border, var(--color-border));
+    border-radius: 0;
+  }
+
+  .cosme-footer__newsletter-field .cosme-form-field__control::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+
+  .cosme-footer__newsletter-field .cosme-form-field__control:hover {
+    border-bottom-color: var(--color-input-border-hover, var(--color-foreground));
+  }
+
+  .cosme-footer__newsletter-field .cosme-form-field__control:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+    border-bottom-color: var(--color-accent);
+    box-shadow: none;
+  }
+
+  .cosme-footer__newsletter-field.cosme-form-field--error .cosme-form-field__control {
+    border-bottom-color: var(--color-error);
+    box-shadow: none;
+  }
+
+  .cosme-footer__newsletter-status {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-footer__newsletter-status--success {
+    color: var(--color-success);
+  }
+
+  .cosme-footer__newsletter-submit {
+    width: fit-content;
+    min-height: 2.5rem;
+    justify-self: start;
+    padding-inline: 0;
+    text-underline-offset: 0.2em;
+  }
+
+  .cosme-footer__social {
+    order: 5;
+    min-width: 0;
+  }
+
+  .cosme-footer__social-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-footer__social--labels .cosme-footer__social-list {
+    gap: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .cosme-footer__social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .cosme-footer__social--labels .cosme-footer__social-link {
+    min-width: 0;
+    padding-inline: var(--spacing-xs);
+  }
+
+  .cosme-footer__menu-link:hover,
+  .cosme-footer__menu-link:focus-visible,
+  .cosme-footer__policy-link:hover,
+  .cosme-footer__policy-link:focus-visible {
+    color: var(--color-foreground);
+    background-size: 100% 1px;
+  }
+
+  .cosme-footer__social-link:hover,
+  .cosme-footer__social-link:focus-visible {
     color: var(--color-foreground);
   }
-  footer .footer__links,
-  footer .footer__payment {
+
+  .cosme-footer--animated .cosme-footer__logo,
+  .cosme-footer--animated .cosme-footer__menu-link,
+  .cosme-footer--animated .cosme-footer__social-link,
+  .cosme-footer--animated .cosme-footer__policy-link,
+  .cosme-footer--animated .cosme-footer__accordion-icon,
+  .cosme-footer--animated .cosme-footer__newsletter-field .cosme-form-field__control {
+    transition: color var(--transition-duration) var(--transition-easing),
+      opacity var(--transition-duration) var(--transition-easing),
+      background-size var(--transition-duration) var(--transition-easing),
+      border-color var(--transition-duration) var(--transition-easing),
+      transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-footer__bottom {
+    display: grid;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-footer--density-compact .cosme-footer__bottom {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+  }
+
+  .cosme-footer--density-spacious .cosme-footer__bottom {
+    margin-top: var(--spacing-2xl);
+    padding-top: var(--spacing-xl);
+  }
+
+  .cosme-footer__payment {
+    order: 1;
+  }
+
+  .cosme-footer__copyright {
+    order: 2;
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    color: var(--color-muted);
+  }
+
+  .cosme-footer__policies {
+    order: 3;
+  }
+
+  .cosme-footer__policies-list,
+  .cosme-footer__payment-list {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-footer__policy-link {
+    min-height: 2.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  .cosme-footer__payment-icon {
+    display: block;
+    width: auto;
+    height: 1.25rem;
+    opacity: 0.72;
+  }
+
+  @media (min-width: 768px) {
+    .cosme-footer__brand-group {
+      display: grid;
+      gap: var(--spacing-lg);
+      align-content: start;
+    }
+
+    .cosme-footer__grid {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      column-gap: var(--spacing-2xl);
+      row-gap: var(--spacing-2xl);
+    }
+
+    .cosme-footer__brand,
+    .cosme-footer__newsletter,
+    .cosme-footer__menu--shop,
+    .cosme-footer__menu--care,
+    .cosme-footer__social {
+      order: 0;
+    }
+
+    .cosme-footer__accordion,
+    .cosme-footer__menu--care .cosme-footer__accordion {
+      border: 0;
+    }
+
+    .cosme-footer__accordion-summary {
+      pointer-events: none;
+      min-height: auto;
+      padding-block: 0;
+      margin-bottom: var(--spacing-md);
+      cursor: default;
+    }
+
+    .cosme-footer__accordion-icon {
+      display: none;
+    }
+
+    .cosme-footer__accordion::details-content {
+      display: block;
+      content-visibility: visible;
+    }
+
+    .cosme-footer__accordion > .cosme-footer__menu-list,
+    .cosme-footer__accordion:not([open]) > .cosme-footer__menu-list {
+      display: grid;
+      gap: var(--spacing-sm);
+      padding-bottom: 0;
+    }
+
+    .cosme-footer__menu-link {
+      min-height: 0;
+      padding-block: var(--spacing-xs);
+    }
+
+    .cosme-footer__newsletter-form {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      column-gap: var(--spacing-lg);
+    }
+
+    .cosme-footer__newsletter-status,
+    .cosme-footer__newsletter-field .cosme-form-field__error {
+      grid-column: 1 / -1;
+    }
+
+    .cosme-footer__newsletter-field {
+      grid-column: 1;
+    }
+
+    .cosme-footer__bottom {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+
+    .cosme-footer__copyright,
+    .cosme-footer__policies,
+    .cosme-footer__payment {
+      order: 0;
+    }
+
+    .cosme-footer__policies {
+      grid-column: 1 / -1;
+    }
+
+    .cosme-footer__payment {
+      justify-self: end;
+    }
+
+    .cosme-footer__policy-link {
+      min-height: 0;
+      padding-block: var(--spacing-xs);
+    }
+  }
+
+  @media (min-width: 990px) {
+    .cosme-footer--cols-1 .cosme-footer__grid {
+      grid-template-columns: minmax(0, 1fr);
+      column-gap: var(--spacing-xl);
+      row-gap: var(--spacing-xl);
+      align-items: start;
+    }
+
+    .cosme-footer--cols-2 .cosme-footer__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: var(--spacing-xl);
+      row-gap: var(--spacing-xl);
+      align-items: start;
+    }
+
+    .cosme-footer--cols-3 .cosme-footer__grid {
+      grid-template-columns: minmax(11rem, 1.2fr) minmax(8rem, 1fr) minmax(8rem, 1fr);
+      column-gap: var(--spacing-xl);
+      row-gap: var(--spacing-xl);
+      align-items: start;
+    }
+
+    .cosme-footer--cols-4 .cosme-footer__grid {
+      grid-template-columns: minmax(11rem, 1.35fr) minmax(8rem, 0.9fr) minmax(8rem, 0.9fr) minmax(14rem, 1.45fr);
+      column-gap: var(--spacing-xl);
+      row-gap: var(--spacing-xl);
+      align-items: start;
+    }
+
+    .cosme-footer__heading--newsletter {
+      font-size: 1.75rem;
+    }
+
+    .cosme-footer__bottom {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      column-gap: var(--spacing-lg);
+    }
+
+    .cosme-footer__policies {
+      grid-column: auto;
+      justify-self: center;
+    }
+
+    .cosme-footer__payment {
+      justify-self: end;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .cosme-footer__grid {
+      column-gap: var(--spacing-2xl);
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.footer",
+  "enabled_on": {
+    "groups": ["footer"]
+  },
   "settings": [
     {
+      "type": "checkbox",
+      "id": "enable_footer",
+      "label": "t:sections.footer.settings.enable_footer",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "density",
+      "label": "t:sections.footer.settings.density",
+      "options": [
+        {
+          "value": "compact",
+          "label": "t:options.density.compact"
+        },
+        {
+          "value": "default",
+          "label": "t:options.density.default"
+        },
+        {
+          "value": "spacious",
+          "label": "t:options.density.spacious"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.brand_header"
+    },
+    {
+      "type": "textarea",
+      "id": "brand_description",
+      "label": "t:sections.footer.settings.brand_description",
+      "default": "Quiet formulas and considered rituals for skin that prefers less, done well."
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.menus_header"
+    },
+    {
+      "type": "text",
+      "id": "shop_menu_heading",
+      "label": "t:sections.footer.settings.shop_menu_heading",
+      "default": "Shop"
+    },
+    {
       "type": "link_list",
-      "id": "menu",
-      "label": "t:labels.menu"
+      "id": "shop_menu",
+      "label": "t:sections.footer.settings.shop_menu",
+      "default": "footer"
+    },
+    {
+      "type": "text",
+      "id": "care_menu_heading",
+      "label": "t:sections.footer.settings.care_menu_heading",
+      "default": "Customer care"
+    },
+    {
+      "type": "link_list",
+      "id": "care_menu",
+      "label": "t:sections.footer.settings.care_menu",
+      "default": "footer"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.newsletter_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_newsletter",
+      "label": "t:sections.footer.settings.enable_newsletter",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "t:sections.footer.settings.newsletter_heading",
+      "default": "Stay in the ritual",
+      "visible_if": "{{ section.settings.enable_newsletter }}"
+    },
+    {
+      "type": "textarea",
+      "id": "newsletter_description",
+      "label": "t:sections.footer.settings.newsletter_description",
+      "default": "New arrivals, editorial notes, and considered offers — never noise.",
+      "visible_if": "{{ section.settings.enable_newsletter }}"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_placeholder",
+      "label": "t:sections.footer.settings.newsletter_placeholder",
+      "default": "Email address",
+      "visible_if": "{{ section.settings.enable_newsletter }}"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_button_label",
+      "label": "t:sections.footer.settings.newsletter_button_label",
+      "default": "Subscribe",
+      "visible_if": "{{ section.settings.enable_newsletter }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.social_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social",
+      "label": "t:sections.footer.settings.show_social",
+      "info": "t:sections.footer.settings.show_social_info",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "social_style",
+      "label": "t:sections.footer.settings.social_style",
+      "options": [
+        {
+          "value": "icons",
+          "label": "t:options.social_style.icons"
+        },
+        {
+          "value": "labels",
+          "label": "t:options.social_style.labels"
+        }
+      ],
+      "default": "icons",
+      "visible_if": "{{ section.settings.show_social }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.bottom_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_copyright",
+      "label": "t:sections.footer.settings.show_copyright",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_policy_links",
+      "label": "t:labels.show_policy_links",
+      "default": true
     },
     {
       "type": "checkbox",
       "id": "show_payment_icons",
       "label": "t:labels.show_payment_icons",
       "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.footer"
     }
   ]
 }

@@ -14,7 +14,23 @@
     "footer": {
       "type": "footer",
       "settings": {
-        "menu": "",
+        "enable_footer": true,
+        "color_scheme": "scheme-1",
+        "density": "default",
+        "brand_description": "Quiet formulas and considered rituals for skin that prefers less, done well.",
+        "shop_menu_heading": "Shop",
+        "shop_menu": "main-menu",
+        "care_menu_heading": "Customer care",
+        "care_menu": "footer",
+        "enable_newsletter": true,
+        "newsletter_heading": "Stay in the ritual",
+        "newsletter_description": "New arrivals, editorial notes, and considered offers — never noise.",
+        "newsletter_placeholder": "Email address",
+        "newsletter_button_label": "Subscribe",
+        "show_social": true,
+        "social_style": "icons",
+        "show_copyright": true,
+        "show_policy_links": true,
         "show_payment_icons": true
       }
     }

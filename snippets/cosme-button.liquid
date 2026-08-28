@@ -1,0 +1,149 @@
+{% doc %}
+  Renders a button or link styled with Cosme design tokens.
+
+  @param {string} label - Visible button text
+  @param {string} [url] - Renders an `<a>` when provided; otherwise a `<button>`
+  @param {string} [type] - Button type attribute: `button`, `submit`, or `reset` (default: `button`)
+  @param {string} [style] - Visual style: `primary` (default), `secondary`, or `tertiary`
+  @param {boolean} [disabled] - Disables interaction
+  @param {string} [class] - Additional CSS classes
+  @param {string} [name] - Button `name` attribute for forms
+  @param {string} [form] - Optional form id this button submits
+  @param {string} [aria_label] - Optional accessible name
+
+  @example
+  {% render 'cosme-button', label: 'Shop now', url: collection.url, style: 'primary' %}
+  {% render 'cosme-button', label: 'Add to cart', type: 'submit', style: 'primary' %}
+  {% render 'cosme-button', label: 'Learn more', url: page.url, style: 'tertiary' %}
+{% enddoc %}
+
+{% liquid
+  assign button_style = style | default: 'primary'
+  assign button_type = type | default: 'button'
+  assign is_disabled = disabled | default: false
+%}
+
+{% if url != blank and is_disabled == false %}
+  <a
+    href="{{ url }}"
+    class="cosme-button cosme-button--{{ button_style }}{% if class != blank %} {{ class }}{% endif %}"
+  >
+    {{ label | escape }}
+  </a>
+{% elsif url != blank and is_disabled %}
+  <a
+    class="cosme-button cosme-button--{{ button_style }} cosme-button--disabled{% if class != blank %} {{ class }}{% endif %}"
+    role="link"
+    aria-disabled="true"
+    tabindex="-1"
+  >
+    {{ label | escape }}
+  </a>
+{% else %}
+  <button
+    type="{{ button_type }}"
+    class="cosme-button cosme-button--{{ button_style }}{% if class != blank %} {{ class }}{% endif %}"
+    {% if is_disabled %}
+      disabled
+    {% endif %}
+    {% if name != blank %}
+      name="{{ name | escape }}"
+    {% endif %}
+    {% if form != blank %}
+      form="{{ form }}"
+    {% endif %}
+    {% if aria_label != blank %}
+      aria-label="{{ aria_label | escape }}"
+    {% endif %}
+  >
+    {{ label | escape }}
+  </button>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    min-height: 2.75rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-button);
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--transition-duration) var(--transition-easing),
+      border-color var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing);
+  }
+
+  /* -------- Primary button -------- */
+  .cosme-button--primary {
+    background-color: var(--color-button-primary-background, var(--color-accent));
+    border-color: var(--color-button-primary-background, var(--color-accent));
+    color: var(--color-button-primary-label, var(--color-accent-contrast));
+  }
+
+  .cosme-button--primary:hover {
+    background-color: var(--color-button-primary-background-hover, var(--color-foreground));
+    border-color: var(--color-button-primary-background-hover, var(--color-foreground));
+    color: var(--color-button-primary-label-hover, var(--color-background));
+  }
+
+  /* -------- Secondary button -------- */
+  .cosme-button--secondary {
+    background-color: var(--color-button-secondary-background, transparent);
+    border-color: var(--color-button-secondary-background, var(--color-border));
+    color: var(--color-button-secondary-label, var(--color-foreground));
+  }
+
+  .cosme-button--secondary:hover {
+    background-color: var(--color-button-secondary-background-hover, transparent);
+    border-color: var(--color-button-secondary-background-hover, var(--color-foreground));
+    color: var(--color-button-secondary-label-hover, var(--color-foreground));
+  }
+
+  /* -------- Tertiary button (text link) -------- */
+  .cosme-button--tertiary {
+    min-height: auto;
+    padding: 0;
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--color-button-tertiary-label, var(--color-accent));
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .cosme-button--tertiary:hover {
+    color: var(--color-button-tertiary-label-hover, var(--color-foreground));
+  }
+
+  .cosme-button--disabled,
+  .cosme-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .cosme-button:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  /* -------- Outline button (transparent, border only) -------- */
+.cosme-button--outline {
+  background-color: transparent;
+  border-color: var(--color-button-secondary-background, var(--color-border));
+  color: var(--color-button-secondary-label, var(--color-foreground));
+}
+
+.cosme-button--outline:hover {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-button-primary-label-hover, var(--color-background));
+}
+{% endstylesheet %}

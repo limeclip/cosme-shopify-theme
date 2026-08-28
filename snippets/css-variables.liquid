@@ -1,18 +1,167 @@
 {% style %}
-  {% # Loads all font variantions with display: swap %}
   {{ settings.type_primary_font | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'weight', 'bold' | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
   {{ settings.type_primary_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
 
+  {{ settings.type_heading_font | font_face: font_display: 'swap' }}
+  {{ settings.type_heading_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+
+  {%- assign active_scheme_id = settings.color_scheme | default: 'scheme-1' -%}
+  {%- assign active_scheme = nil -%}
+  {%- for scheme in settings.color_schemes -%}
+    {%- if scheme.id == active_scheme_id -%}
+      {%- assign active_scheme = scheme -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if active_scheme == nil -%}
+    {%- assign active_scheme = settings.color_schemes.first -%}
+  {%- endif -%}
+
   :root {
-    --font-primary--family: {{ settings.type_primary_font.family }}, {{ settings.type_primary_font.fallback_families }};
-    --font-primary--style: {{ settings.type_primary_font.style }};
-    --font-primary--weight: {{ settings.type_primary_font.weight }};
+    --color-background: {{ active_scheme.settings.background }};
+    --color-foreground: {{ active_scheme.settings.foreground }};
+    --color-muted: {{ active_scheme.settings.muted_foreground }};
+    --color-accent: {{ active_scheme.settings.accent }};
+    --color-accent-contrast: {{ active_scheme.settings.accent_contrast }};
+    --color-border: {{ active_scheme.settings.border }};
+    --color-input-background: {{ active_scheme.settings.input_background }};
+    --color-overlay: {{ active_scheme.settings.overlay }};
+    --color-sale: {{ active_scheme.settings.sale }};
+    --color-success: {{ active_scheme.settings.success }};
+    --color-error: {{ active_scheme.settings.error }};
+
+    /* Новые переменные */
+    --color-heading: {{ active_scheme.settings.heading }};
+    --color-background-2: {{ active_scheme.settings.background_2 }};
+    --color-background-gradient: {{ active_scheme.settings.background_gradient }};
+
+    --color-button-primary-label: {{ active_scheme.settings.button_primary_label }};
+    --color-button-primary-label-hover: {{ active_scheme.settings.button_primary_label_hover }};
+    --color-button-primary-background: {{ active_scheme.settings.button_primary_background }};
+    --color-button-primary-background-hover: {{ active_scheme.settings.button_primary_background_hover }};
+
+    --color-button-secondary-label: {{ active_scheme.settings.button_secondary_label }};
+    --color-button-secondary-label-hover: {{ active_scheme.settings.button_secondary_label_hover }};
+    --color-button-secondary-background: {{ active_scheme.settings.button_secondary_background }};
+    --color-button-secondary-background-hover: {{ active_scheme.settings.button_secondary_background_hover }};
+
+    --color-button-tertiary-label: {{ active_scheme.settings.button_tertiary_label }};
+    --color-button-tertiary-label-hover: {{ active_scheme.settings.button_tertiary_label_hover }};
+
+    --color-input-label: {{ active_scheme.settings.input_label }};
+    --color-input-border: {{ active_scheme.settings.input_border }};
+    --color-input-background-hover: {{ active_scheme.settings.input_background_hover }};
+    --color-input-label-hover: {{ active_scheme.settings.input_label_hover }};
+    --color-input-border-hover: {{ active_scheme.settings.input_border_hover }};
+
+    --color-badge-text: {{ active_scheme.settings.badge_text }};
+    --color-badge-background: {{ active_scheme.settings.badge_background }};
+
+    --color-slider-arrows: {{ active_scheme.settings.slider_arrows }};
+  }
+
+  {%- for scheme in settings.color_schemes -%}
+    .color-{{ scheme.id }} {
+      --color-background: {{ scheme.settings.background }};
+      --color-foreground: {{ scheme.settings.foreground }};
+      --color-muted: {{ scheme.settings.muted_foreground }};
+      --color-accent: {{ scheme.settings.accent }};
+      --color-accent-contrast: {{ scheme.settings.accent_contrast }};
+      --color-border: {{ scheme.settings.border }};
+      --color-input-background: {{ scheme.settings.input_background }};
+      --color-overlay: {{ scheme.settings.overlay }};
+      --color-sale: {{ scheme.settings.sale }};
+      --color-success: {{ scheme.settings.success }};
+      --color-error: {{ scheme.settings.error }};
+
+      /* Новые переменные */
+      --color-heading: {{ scheme.settings.heading }};
+      --color-background-2: {{ scheme.settings.background_2 }};
+      --color-background-gradient: {{ scheme.settings.background_gradient }};
+
+      --color-button-primary-label: {{ scheme.settings.button_primary_label }};
+      --color-button-primary-label-hover: {{ scheme.settings.button_primary_label_hover }};
+      --color-button-primary-background: {{ scheme.settings.button_primary_background }};
+      --color-button-primary-background-hover: {{ scheme.settings.button_primary_background_hover }};
+
+      --color-button-secondary-label: {{ scheme.settings.button_secondary_label }};
+      --color-button-secondary-label-hover: {{ scheme.settings.button_secondary_label_hover }};
+      --color-button-secondary-background: {{ scheme.settings.button_secondary_background }};
+      --color-button-secondary-background-hover: {{ scheme.settings.button_secondary_background_hover }};
+
+      --color-button-tertiary-label: {{ scheme.settings.button_tertiary_label }};
+      --color-button-tertiary-label-hover: {{ scheme.settings.button_tertiary_label_hover }};
+
+      --color-input-label: {{ scheme.settings.input_label }};
+      --color-input-border: {{ scheme.settings.input_border }};
+      --color-input-background-hover: {{ scheme.settings.input_background_hover }};
+      --color-input-label-hover: {{ scheme.settings.input_label_hover }};
+      --color-input-border-hover: {{ scheme.settings.input_border_hover }};
+
+      --color-badge-text: {{ scheme.settings.badge_text }};
+      --color-badge-background: {{ scheme.settings.badge_background }};
+
+      --color-slider-arrows: {{ scheme.settings.slider_arrows }};
+    }
+  {%- endfor -%}
+
+  :root {
+    /* Typography */
+    --font-body--family: {{ settings.type_primary_font.family }}, {{ settings.type_primary_font.fallback_families }};
+    --font-body--style: {{ settings.type_primary_font.style }};
+    --font-body--weight: {{ settings.type_primary_font.weight }};
+    --font-heading--family: {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    --font-heading--style: {{ settings.type_heading_font.style }};
+    --font-heading--weight: {{ settings.type_heading_font.weight }};
+    --font-size-base: {{ settings.base_font_size }}px;
+    --line-height-body: 1.6;
+    --line-height-heading: 1.2;
+    --letter-spacing-body: 0;
+    --letter-spacing-heading: -0.02em;
+
+    /* Skeleton legacy aliases */
+    --font-primary--family: var(--font-body--family);
+    --font-primary--style: var(--font-body--style);
+    --font-primary--weight: var(--font-body--weight);
+
+    --overlay-opacity: 0.5;
+
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2.5rem;
+    --spacing-2xl: 4rem;
+    --spacing-section: {{ settings.section_spacing }}px;
+
+    /* Layout */
     --page-width: {{ settings.max_page_width }};
     --page-margin: {{ settings.min_page_margin }}px;
-    --color-background: {{ settings.background_color }};
-    --color-foreground: {{ settings.foreground_color }};
-    --style-border-radius-inputs: {{ settings.input_corner_radius }}px;
+    --content-width: min(
+      calc(var(--page-width) - var(--page-margin) * 2),
+      calc(100% - var(--page-margin) * 2)
+    );
+    --grid-gap: {{ settings.grid_gap }}px;
+
+    /* Components */
+    --radius-button: {{ settings.button_corner_radius }}px;
+    --radius-input: {{ settings.input_corner_radius }}px;
+    --radius-card: {{ settings.card_corner_radius }}px;
+    --border-width: {{ settings.border_width }}px;
+    --focus-ring-width: {{ settings.focus_ring_width }}px;
+
+    /* Skeleton legacy alias */
+    --style-border-radius-inputs: var(--radius-input);
+
+    /* Motion */
+    --transition-duration: 200ms;
+    --transition-easing: ease;
+    --animation-duration: 400ms;
+
+    --header-sticky-offset: 0px;
   }
 {% endstyle %}

@@ -1,0 +1,229 @@
+{% doc %}
+  Renders a single product review from provider or metafield data.
+
+  Empty fields are omitted. This snippet does not invent review content.
+
+  @param {object} review - Review object from a metafield list, JSON, or metaobject
+  @param {boolean} [show_date] - Show the review date when present
+  @param {boolean} [show_verified] - Show a verified-purchase indicator when present
+  @param {boolean} [show_images] - Show review images when present
+  @param {string} [class] - Additional CSS classes
+
+  @example
+  {% render 'cosme-product-review', review: review, show_date: true %}
+{% enddoc %}
+
+{% liquid
+  assign show_review_date = show_date | default: true
+  assign show_review_verified = show_verified | default: true
+  assign show_review_images = show_images | default: true
+
+  assign author_name = ''
+  if review.author.value
+    assign author_name = review.author.value
+  elsif review.reviewer.value
+    assign author_name = review.reviewer.value
+  elsif review.name.value
+    assign author_name = review.name.value
+  elsif review.author
+    assign author_name = review.author
+  elsif review.reviewer
+    assign author_name = review.reviewer
+  elsif review.name
+    assign author_name = review.name
+  endif
+  assign author_name = author_name | strip
+
+  assign review_title = ''
+  if review.title.value
+    assign review_title = review.title.value
+  elsif review.heading.value
+    assign review_title = review.heading.value
+  elsif review.title
+    assign review_title = review.title
+  elsif review.heading
+    assign review_title = review.heading
+  endif
+  assign review_title = review_title | strip
+
+  assign review_body = ''
+  if review.body
+    assign review_body = review.body | metafield_tag
+  endif
+  if review_body == blank
+    if review.content
+      assign review_body = review.content | metafield_tag
+    endif
+  endif
+  if review_body == blank
+    if review.body.value
+      assign review_body = review.body.value | escape | newline_to_br
+    elsif review.content.value
+      assign review_body = review.content.value | escape | newline_to_br
+    elsif review.body
+      assign review_body = review.body | escape | newline_to_br
+    elsif review.content
+      assign review_body = review.content | escape | newline_to_br
+    endif
+  endif
+
+  assign item_rating = 0
+  if review.rating.value.rating
+    assign item_rating = review.rating.value.rating | plus: 0
+  elsif review.rating.rating
+    assign item_rating = review.rating.rating | plus: 0
+  elsif review.rating.value
+    assign item_rating = review.rating.value | plus: 0
+  elsif review.score.value
+    assign item_rating = review.score.value | plus: 0
+  elsif review.rating
+    assign item_rating = review.rating | plus: 0
+  elsif review.score
+    assign item_rating = review.score | plus: 0
+  endif
+
+  assign review_date = blank
+  if review.created_at.value
+    assign review_date = review.created_at.value
+  elsif review.published_at.value
+    assign review_date = review.published_at.value
+  elsif review.date.value
+    assign review_date = review.date.value
+  elsif review.created_at
+    assign review_date = review.created_at
+  elsif review.published_at
+    assign review_date = review.published_at
+  elsif review.date
+    assign review_date = review.date
+  endif
+
+  assign review_date_stamp = ''
+  if review_date != blank
+    assign review_date_stamp = review_date | date: '%Y-%m-%d'
+  endif
+
+  assign is_verified = false
+  if show_review_verified
+    if review.verified_purchase.value == true
+      assign is_verified = true
+    elsif review.verified.value == true
+      assign is_verified = true
+    elsif review.verified_purchase == true
+      assign is_verified = true
+    elsif review.verified == true
+      assign is_verified = true
+    endif
+  endif
+
+  assign review_image = blank
+  assign review_images = blank
+  if show_review_images
+    if review.images.value
+      assign review_images = review.images.value
+    elsif review.photos.value
+      assign review_images = review.photos.value
+    elsif review.image.value
+      assign review_image = review.image.value
+    elsif review.photo.value
+      assign review_image = review.photo.value
+    elsif review.images
+      assign review_images = review.images
+    elsif review.image
+      assign review_image = review.image
+    endif
+  endif
+
+  assign initials = ''
+  if author_name != blank
+    assign name_parts = author_name | split: ' '
+    assign initials = name_parts.first | slice: 0
+    if name_parts.size > 1
+      assign last_initial = name_parts.last | slice: 0
+      assign initials = initials | append: last_initial
+    endif
+    assign initials = initials | upcase
+  endif
+
+  assign has_review_content = false
+  if author_name != blank
+    assign has_review_content = true
+  endif
+  if review_title != blank
+    assign has_review_content = true
+  endif
+  if review_body != blank
+    assign has_review_content = true
+  endif
+  if item_rating > 0
+    assign has_review_content = true
+  endif
+%}
+
+{% if has_review_content %}
+  <article
+    class="cosme-reviews__item{% if class != blank %} {{ class }}{% endif %}"
+    data-review-item
+    data-rating="{{ item_rating }}"
+    data-date="{{ review_date_stamp | escape }}"
+  >
+    <div class="cosme-reviews__item-header">
+      <div class="cosme-reviews__author">
+        <div class="cosme-reviews__avatar" aria-hidden="true">
+          {% if initials != blank %}
+            <span class="cosme-reviews__initials">{{ initials | escape }}</span>
+          {% endif %}
+        </div>
+        <div class="cosme-reviews__author-copy">
+          {% if author_name != blank %}
+            <p class="cosme-reviews__author-name">{{ author_name | escape }}</p>
+          {% endif %}
+          {% if show_review_date %}
+            {% if review_date != blank %}
+              <p class="cosme-reviews__date">
+                {{ review_date | time_tag: format: 'abbreviated_date' }}
+              </p>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+      {% if is_verified %}
+        <span class="cosme-reviews__verified">{{ 'products.reviews.verified' | t }}</span>
+      {% endif %}
+    </div>
+
+    {% if item_rating > 0 %}
+      <div class="cosme-reviews__item-rating">
+        <span class="cosme-visually-hidden">
+          {{ 'products.reviews.rating_stars' | t: rating: item_rating }}
+        </span>
+        {% render 'cosme-review-stars', rating: item_rating %}
+      </div>
+    {% endif %}
+
+    {% if review_title != blank %}
+      <h3 class="cosme-reviews__item-title">{{ review_title | escape }}</h3>
+    {% endif %}
+
+    {% if review_body != blank %}
+      <div class="cosme-reviews__item-body">{{ review_body }}</div>
+    {% endif %}
+
+    {% if review_images != blank %}
+      <ul class="cosme-reviews__photos">
+        {% for photo in review_images limit: 4 %}
+          {% if photo %}
+            <li class="cosme-reviews__photo">
+              {{ photo | image_url: width: 240 | image_tag: loading: 'lazy', widths: '120, 240', sizes: '72px' }}
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    {% elsif review_image != blank %}
+      <div class="cosme-reviews__photos">
+        <div class="cosme-reviews__photo">
+          {{ review_image | image_url: width: 240 | image_tag: loading: 'lazy', widths: '120, 240', sizes: '72px' }}
+        </div>
+      </div>
+    {% endif %}
+  </article>
+{% endif %}

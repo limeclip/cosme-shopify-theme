@@ -1,0 +1,1399 @@
+{% liquid
+  assign collection_blocks = section.blocks | where: 'type', 'collection'
+  assign block_count = collection_blocks.size
+  assign desktop_columns = section.settings.desktop_columns | default: 2
+  
+
+  assign layout_class = 'cosme-collections-editorial--editorial'
+  if section.settings.layout == 'editorial_compact'
+    assign layout_class = 'cosme-collections-editorial--editorial-compact'
+  endif
+
+  case section.settings.image_aspect_ratio
+    when 'portrait'
+      assign aspect_ratio = '3/4'
+    when 'landscape'
+      assign aspect_ratio = '4/3'
+    when 'square'
+      assign aspect_ratio = '1/1'
+    else
+      assign aspect_ratio = blank
+  endcase
+
+  assign image_fit = section.settings.image_fit | default: 'cover'
+
+  assign carousel_enabled = section.settings.enable_carousel
+  if block_count <= 2
+    assign carousel_enabled = false
+  endif
+
+  assign autoplay_enabled = section.settings.autoplay
+  if block_count <= 1
+    assign autoplay_enabled = false
+  endif
+  if carousel_enabled == false
+    assign autoplay_enabled = false
+  endif
+
+  assign show_navigation = section.settings.show_navigation
+  if block_count <= 1
+    assign show_navigation = false
+  endif
+%}
+
+<section
+  id="CollectionsEditorial-{{ section.id }}"
+  class="cosme-collections-editorial full-width color-{{ section.settings.color_scheme }} {{ layout_class }}{% if carousel_enabled %} cosme-collections-editorial--carousel{% else %} cosme-collections-editorial--static{% endif %}{% unless section.settings.show_card_numbers %} cosme-collections-editorial--hide-numbers{% endunless %}"
+  data-collections-editorial
+  data-section-id="{{ section.id }}"
+  data-block-count="{{ block_count }}"
+  data-carousel="{{ carousel_enabled }}"
+  data-autoplay="{{ autoplay_enabled }}"
+  data-autoplay-interval="{{ section.settings.autoplay_interval }}"
+  data-show-arrows="{{ section.settings.show_arrows }}"
+  data-enable-animations="{{ settings.enable_animations }}"
+  data-show-pagination="{{ section.settings.show_pagination }}"
+  data-show-navigation="{{ show_navigation }}"
+  data-desktop-columns="{{ desktop_columns }}"
+style="--desktop-columns: {{ desktop_columns }};"
+  {% if carousel_enabled %}
+    aria-roledescription="carousel"
+    aria-label="{{ 'sections.main_collections_editorial.landmark_label' | t }}"
+    tabindex="0"
+  {% endif %}
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-collections-editorial__inner">
+    {% if section.settings.heading != blank %}
+      <header class="cosme-collections-editorial__header">
+        <h2 class="cosme-collections-editorial__heading">{{ section.settings.heading | escape }}</h2>
+      </header>
+    {% endif %}
+
+    <div class="cosme-collections-editorial__body">
+      <div
+        class="cosme-collections-editorial__viewport"
+        {% if carousel_enabled %}
+          data-collections-editorial-viewport
+        {% endif %}
+      >
+        <div
+          class="cosme-collections-editorial__track"
+          {% if carousel_enabled %}
+            data-collections-editorial-track
+          {% endif %}
+        >
+          {%- for block in collection_blocks -%}
+            {%- liquid
+              assign selected_collection = block.settings.collection
+              assign card_image = block.settings.image
+              if card_image == blank and selected_collection != blank
+                assign card_image = selected_collection.featured_image
+              endif
+
+              assign card_title = block.settings.title
+              if card_title == blank and selected_collection != blank
+                assign card_title = selected_collection.title
+              endif
+
+              assign card_url = selected_collection.url
+
+              assign card_eyebrow = block.settings.eyebrow
+
+              assign card_link_label = block.settings.link_label
+              if card_link_label == blank and card_title != blank
+                assign card_link_label = 'sections.main_collections_editorial.shop_link' | t: title: card_title
+              endif
+
+              assign image_position = block.settings.image_position | default: 'center'
+              assign placeholder_name = 'collection-' | append: forloop.index
+
+              if forloop.index <= 2
+                assign card_loading = 'eager'
+                assign card_fetchpriority = 'high'
+              else
+                assign card_loading = 'lazy'
+                assign card_fetchpriority = blank
+              endif
+
+              if block.settings.image_alt != blank
+                assign card_alt = block.settings.image_alt
+              elsif card_title != blank
+                assign card_alt = card_title
+              else
+                assign card_alt = ''
+              endif
+            -%}
+
+            <article
+              class="cosme-collections-editorial__card"
+              {% if carousel_enabled %}
+                data-collections-editorial-card
+                data-card-index="{{ forloop.index0 }}"
+                role="group"
+                aria-roledescription="slide"
+                aria-label="{{ 'sections.main_collections_editorial.slide_label' | t: number: forloop.index, total: block_count }}"
+              {% endif %}
+              {{ block.shopify_attributes }}
+            >
+              <div
+                class="cosme-collections-editorial__media cosme-collections-editorial__media--{{ image_position }} cosme-collections-editorial__media--fit-{{ image_fit }}"
+              >
+                {% if card_url != blank %}
+                  <a
+                    href="{{ card_url }}"
+                    class="cosme-collections-editorial__media-link"
+                    aria-label="{{ card_title | escape }}"
+                  >
+                {% endif %}
+                {% if card_image != blank %}
+                  {% render 'cosme-image',
+                    image: card_image,
+                    alt: card_alt,
+                    class: 'cosme-collections-editorial__image',
+                    width: 1400,
+                    loading: card_loading,
+                    fetchpriority: card_fetchpriority,
+                    sizes: '(min-width: 990px) 45vw, 88vw',
+                    aspect_ratio: aspect_ratio
+                  %}
+                {% else %}
+                  <div
+                    class="cosme-collections-editorial__placeholder{% if aspect_ratio != blank %} cosme-collections-editorial__placeholder--ratio{% endif %}"
+                    {% if aspect_ratio != blank %}
+                      style="--cosme-image-ratio: {{ aspect_ratio }};"
+                    {% endif %}
+                    {% if card_alt != blank %}
+                      role="img"
+                      aria-label="{{ card_alt | escape }}"
+                    {% else %}
+                      aria-hidden="true"
+                    {% endif %}
+                  >
+                    {{ placeholder_name | placeholder_svg_tag: 'cosme-collections-editorial__placeholder-svg' }}
+                  </div>
+                {% endif %}
+                {% if card_url != blank %}
+                  </a>
+                {% endif %}
+              </div>
+
+              <div class="cosme-collections-editorial__content">
+                <div class="cosme-collections-editorial__content-top">
+                  <div class="cosme-collections-editorial__titles">
+                    {% if card_title != blank %}
+                      <h3
+                        class="cosme-collections-editorial__title"
+                        style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.heading_color }}{% else %}var(--color-heading){% endif %};"
+                      >
+                        {{ card_title | escape }}
+                      </h3>
+                    {% endif %}
+
+                    {% if card_eyebrow != blank %}
+                      <p
+                        class="cosme-collections-editorial__eyebrow"
+                        style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.eyebrow_color }}{% else %}var(--color-muted){% endif %};"
+                      >
+                        {{ card_eyebrow | escape }}
+                      </p>
+                    {% endif %}
+                  </div>
+
+                  {% if section.settings.show_card_numbers %}
+                    <p class="cosme-collections-editorial__number" aria-hidden="true">{{ forloop.index }}.1</p>
+                  {% endif %}
+                </div>
+
+                {% if card_link_label != blank %}
+                  <div class="cosme-collections-editorial__link-wrap">
+                    {% if card_url != blank %}
+                      <a
+                        class="cosme-collections-editorial__link"
+                        href="{{ card_url }}"
+                        style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.link_color }}{% else %}var(--color-foreground){% endif %};"
+                      >
+                        {{ card_link_label | escape }}
+                      </a>
+                    {% else %}
+                      <span class="cosme-collections-editorial__link cosme-collections-editorial__link--static">
+                        {{ card_link_label | escape }}
+                      </span>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            </article>
+          {%- endfor -%}
+        </div>
+      </div>
+
+      {% if carousel_enabled and show_navigation %}
+        <nav
+          class="cosme-collections-editorial__navigation"
+          aria-label="{{ 'sections.main_collections_editorial.navigation' | t }}"
+          data-collections-editorial-nav-container
+        >
+          <ul class="cosme-collections-editorial__navigation-list" data-collections-editorial-nav-list></ul>
+        </nav>
+      {% endif %}
+    </div>
+
+    {% if carousel_enabled and block_count > 2 %}
+      <div class="cosme-collections-editorial__controls">
+        <button
+          type="button"
+          class="cosme-collections-editorial__arrow cosme-collections-editorial__arrow--prev{% unless section.settings.show_arrows %} cosme-collections-editorial__arrow--hidden{% endunless %}"
+          data-collections-editorial-prev
+          aria-label="{{ 'sections.main_collections_editorial.previous' | t }}"
+        >
+          {% if section.settings.show_arrows %}
+            {% render 'cosme-icon', icon: 'chevron-left' %}
+          {% else %}
+            <span class="cosme-visually-hidden">{{ 'sections.main_collections_editorial.previous' | t }}</span>
+          {% endif %}
+        </button>
+
+        {% if section.settings.show_pagination %}
+          <div
+            class="cosme-collections-editorial__pagination"
+            role="group"
+            aria-label="{{ 'sections.main_collections_editorial.pagination' | t }}"
+            data-collections-editorial-pagination
+          ></div>
+        {% endif %}
+
+        <button
+          type="button"
+          class="cosme-collections-editorial__arrow cosme-collections-editorial__arrow--next{% unless section.settings.show_arrows %} cosme-collections-editorial__arrow--hidden{% endunless %}"
+          data-collections-editorial-next
+          aria-label="{{ 'sections.main_collections_editorial.next' | t }}"
+        >
+          {% if section.settings.show_arrows %}
+            {% render 'cosme-icon', icon: 'chevron-right' %}
+          {% else %}
+            <span class="cosme-visually-hidden">{{ 'sections.main_collections_editorial.next' | t }}</span>
+          {% endif %}
+        </button>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if carousel_enabled %}
+    <p class="cosme-visually-hidden" aria-live="polite" data-collections-editorial-live></p>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  /* === ВСЕ СТИЛИ ОСТАЮТСЯ ТЕМИ ЖЕ, КАК В ПРЕДЫДУЩЕЙ ВЕРСИИ === */
+  .cosme-collections-editorial {
+    background-color: var(--color-background-2);
+    color: var(--color-foreground);
+  }
+
+  .cosme-collections-editorial:focus {
+    outline: none;
+  }
+
+  .cosme-collections-editorial:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-collections-editorial__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: var(--spacing-section) var(--page-margin);
+  }
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__inner {
+    padding-block: calc(var(--spacing-section) * 0.75);
+  }
+
+  .cosme-collections-editorial__header {
+    margin-block-end: var(--spacing-xl);
+  }
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__header {
+    margin-block-end: var(--spacing-lg);
+  }
+
+  .cosme-collections-editorial__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 2.4vw, 2.25rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-collections-editorial__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--spacing-lg);
+    align-items: start;
+  }
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__body {
+    gap: var(--spacing-md);
+  }
+
+  .cosme-collections-editorial__viewport {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .cosme-collections-editorial--static .cosme-collections-editorial__viewport {
+    overflow: visible;
+  }
+  .cosme-collections-editorial__track {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  touch-action: pan-y;
+}
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__track {
+    gap: calc(var(--grid-gap) * 0.75);
+  }
+
+  .cosme-collections-editorial--carousel .cosme-collections-editorial__track {
+  display: flex;
+  gap: var(--grid-gap);
+  will-change: transform;
+  touch-action: pan-y;
+}
+
+  .cosme-collections-editorial--carousel.cosme-collections-editorial[data-enable-animations='true']
+    .cosme-collections-editorial__track {
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-collections-editorial__track {
+      transition: none !important;
+    }
+  }
+
+  .cosme-collections-editorial--carousel .cosme-collections-editorial__card {
+  flex: 0 0 calc((100% - (var(--grid-gap) * (var(--desktop-columns, 2) - 1))) / var(--desktop-columns, 2));
+  min-width: 0;
+}
+  .cosme-collections-editorial__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cosme-collections-editorial__media {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-collections-editorial__media-link {
+    display: block;
+    width: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-collections-editorial__image.cosme-image {
+    width: 100%;
+  }
+
+  .cosme-collections-editorial__media--fit-cover .cosme-image__img,
+  .cosme-collections-editorial__media--fit-cover .cosme-collections-editorial__placeholder-svg {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-collections-editorial__media--fit-contain .cosme-image__img,
+  .cosme-collections-editorial__media--fit-contain .cosme-collections-editorial__placeholder-svg {
+    object-fit: contain;
+    width: 100%;
+    height: auto;
+  }
+
+  .cosme-collections-editorial__media--top .cosme-image__img {
+    object-position: top center;
+  }
+
+  .cosme-collections-editorial__media--bottom .cosme-image__img {
+    object-position: bottom center;
+  }
+
+  .cosme-collections-editorial__media--left .cosme-image__img {
+    object-position: center left;
+  }
+
+  .cosme-collections-editorial__media--right .cosme-image__img {
+    object-position: center right;
+  }
+
+  .cosme-collections-editorial__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    color: var(--color-muted);
+    background-color: var(--color-background, var(--color-background-2));
+  }
+
+  .cosme-collections-editorial__placeholder--ratio {
+    aspect-ratio: var(--cosme-image-ratio);
+  }
+
+  .cosme-collections-editorial__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .cosme-collections-editorial.color-scheme-2 .cosme-collections-editorial__placeholder-svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.25;
+  }
+
+  .cosme-collections-editorial__content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--spacing-lg);
+    pointer-events: none;
+  }
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__content {
+    padding: var(--spacing-md);
+  }
+
+  .cosme-collections-editorial__content-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-collections-editorial__titles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    max-width: 56ch;
+  }
+
+  .cosme-collections-editorial__title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    font-weight: var(--font-heading--weight);
+    line-height: 1.15;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__title {
+    font-size: clamp(1.25rem, 2vw, 1.625rem);
+  }
+
+  .cosme-collections-editorial__eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-collections-editorial--hide-numbers .cosme-collections-editorial__number {
+    display: none;
+  }
+
+  .cosme-collections-editorial__number {
+    margin: 0;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+
+  .cosme-collections-editorial__link-wrap {
+    display: flex;
+    justify-content: flex-end;
+    pointer-events: auto;
+  }
+
+  .cosme-collections-editorial__link {
+    display: inline-block;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--color-foreground);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-collections-editorial__link:hover,
+  .cosme-collections-editorial__link:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-collections-editorial__link--static {
+    cursor: default;
+    text-decoration: underline;
+  }
+
+  .cosme-collections-editorial__navigation {
+    padding-block-start: var(--spacing-sm);
+  }
+
+  .cosme-collections-editorial__navigation-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-collections-editorial__navigation-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 0.75rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-collections-editorial__navigation-item:hover,
+  .cosme-collections-editorial__navigation-item:focus-visible,
+  .cosme-collections-editorial__navigation-item.is-active {
+    color: var(--color-foreground);
+  }
+
+  .cosme-collections-editorial__navigation-item:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-collections-editorial__navigation-marker {
+    opacity: 0.45;
+  }
+
+  .cosme-collections-editorial__navigation-item.is-active .cosme-collections-editorial__navigation-marker {
+    opacity: 1;
+  }
+
+  .cosme-collections-editorial__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-block-start: var(--spacing-lg);
+  }
+
+  .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__controls {
+    margin-block-start: var(--spacing-md);
+  }
+
+  .cosme-collections-editorial__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-collections-editorial__pagination-dot {
+    display: block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border: var(--border-width) solid var(--color-slider-arrows, var(--color-foreground));
+    border-radius: 50%;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color var(--transition-duration) var(--transition-easing),
+      border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-collections-editorial__pagination-dot.is-active {
+    background-color: var(--color-slider-arrows, var(--color-foreground));
+  }
+
+  .cosme-collections-editorial__pagination-dot:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-collections-editorial__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-slider-arrows, var(--color-foreground));
+    cursor: pointer;
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-collections-editorial__arrow:hover,
+  .cosme-collections-editorial__arrow:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-collections-editorial__arrow:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-collections-editorial__arrow--hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 989px) {
+    .cosme-collections-editorial__body {
+      grid-template-columns: 1fr;
+    }
+
+    .cosme-collections-editorial__navigation {
+      display: none;
+    }
+
+    .cosme-collections-editorial--static .cosme-collections-editorial__track {
+      grid-template-columns: 1fr;
+    }
+
+    .cosme-collections-editorial--carousel .cosme-collections-editorial__card {
+      flex: 0 0 100%;
+    }
+
+    .cosme-collections-editorial__content {
+      padding: var(--spacing-md);
+    }
+
+    .cosme-collections-editorial__titles {
+      max-width: 54ch;
+    }
+  }
+  @media (min-width: 990px) {
+  .cosme-collections-editorial__track {
+    grid-template-columns: repeat(var(--desktop-columns, 2), minmax(0, 1fr));
+  }
+
+  .cosme-collections-editorial--carousel .cosme-collections-editorial__card {
+    flex: 0 0 calc((100% - (var(--grid-gap) * (var(--desktop-columns, 2) - 1))) / var(--desktop-columns, 2));
+  }
+}
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const initialized = new WeakSet();
+
+    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const getSlidesPerView = (root) => {
+  const isDesktop = window.matchMedia('(min-width: 990px)').matches;
+  if (isDesktop) {
+    const columns = parseInt(root.dataset.desktopColumns, 10) || 2;
+    return columns;
+  }
+  return 1;
+};
+
+    const buildNavigation = (root, currentPage, totalPages) => {
+      const navContainer = root.querySelector('[data-collections-editorial-nav-container]');
+      const navList = root.querySelector('[data-collections-editorial-nav-list]');
+      if (!navContainer || !navList) return;
+
+      navList.innerHTML = '';
+      for (let i = 0; i < totalPages; i++) {
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'cosme-collections-editorial__navigation-item' + (i === currentPage ? ' is-active' : '');
+        button.dataset.collectionsEditorialNav = i;
+        button.setAttribute('aria-label', `Page ${i + 1} of ${totalPages}`);
+        if (i === currentPage) button.setAttribute('aria-current', 'true');
+        button.innerHTML = `<span class="cosme-collections-editorial__navigation-marker" aria-hidden="true">|</span><span class="cosme-collections-editorial__navigation-label">1.${
+          i + 1
+        }</span>`;
+        button.addEventListener('click', () => {
+          const targetIndex = i * getSlidesPerView(root);
+          goToIndex(root, targetIndex);
+        });
+        li.appendChild(button);
+        navList.appendChild(li);
+      }
+    };
+
+    const buildPagination = (root, currentPage, totalPages) => {
+      const pagination = root.querySelector('[data-collections-editorial-pagination]');
+      if (!pagination) return;
+
+      pagination.innerHTML = '';
+      for (let i = 0; i < totalPages; i++) {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'cosme-collections-editorial__pagination-dot' + (i === currentPage ? ' is-active' : '');
+        dot.dataset.collectionsEditorialPage = i;
+        dot.setAttribute('aria-label', `Page ${i + 1} of ${totalPages}`);
+        if (i === currentPage) dot.setAttribute('aria-current', 'true');
+        dot.addEventListener('click', () => {
+          const targetIndex = i * getSlidesPerView(root);
+          goToIndex(root, targetIndex);
+        });
+        pagination.appendChild(dot);
+      }
+    };
+
+    const initCollectionsEditorial = (root) => {
+      if (!root || initialized.has(root)) return;
+      if (root.dataset.carousel !== 'true') return;
+
+      initialized.add(root);
+
+      const blockCount = parseInt(root.dataset.blockCount, 10) || 0;
+      const track = root.querySelector('[data-collections-editorial-track]');
+      const cards = Array.from(root.querySelectorAll('[data-collections-editorial-card]'));
+      const prevButton = root.querySelector('[data-collections-editorial-prev]');
+      const nextButton = root.querySelector('[data-collections-editorial-next]');
+      const liveRegion = root.querySelector('[data-collections-editorial-live]');
+      const showNav = root.dataset.showNavigation === 'true';
+      const showPagination = root.dataset.showPagination === 'true';
+
+      if (!track || cards.length === 0) return;
+
+      let currentIndex = 0;
+      let autoplayTimer = null;
+      let isDragging = false;
+      let hasDragged = false;
+      let dragStartX = 0;
+      let dragDelta = 0;
+
+      const animationsEnabled = root.dataset.enableAnimations === 'true';
+      const canAnimate = animationsEnabled && !prefersReducedMotion();
+
+      const listeners = [];
+
+      const addListener = (target, event, handler, options) => {
+        target.addEventListener(event, handler, options);
+        listeners.push({ target, event, handler, options });
+      };
+
+      const getSlides = () => getSlidesPerView(root);
+      const getMaxIndex = () => Math.max(0, blockCount - 1);
+      const getTotalPages = () => Math.ceil(blockCount / getSlides());
+      const getCurrentPage = () => Math.floor(currentIndex / getSlides());
+
+      const updateTransform = (animate = true) => {
+        const card = cards[0];
+        if (!card) return;
+        const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 0;
+        const cardWidth = card.offsetWidth;
+        const offset = currentIndex * (cardWidth + gap);
+        if (!animate || !canAnimate) {
+          track.style.transition = 'none';
+        } else {
+          track.style.transition = '';
+        }
+        track.style.transform = `translateX(-${offset}px)`;
+      };
+
+      const syncUI = () => {
+        const page = getCurrentPage();
+        const total = getTotalPages();
+
+        if (showNav) {
+          const navItems = Array.from(root.querySelectorAll('[data-collections-editorial-nav]'));
+          navItems.forEach((item, idx) => {
+            const isActive = idx === page;
+            item.classList.toggle('is-active', isActive);
+            if (isActive) {
+              item.setAttribute('aria-current', 'true');
+            } else {
+              item.removeAttribute('aria-current');
+            }
+          });
+        }
+
+        if (showPagination) {
+          const dots = Array.from(root.querySelectorAll('[data-collections-editorial-page]'));
+          dots.forEach((dot, idx) => {
+            const isActive = idx === page;
+            dot.classList.toggle('is-active', isActive);
+            if (isActive) {
+              dot.setAttribute('aria-current', 'true');
+            } else {
+              dot.removeAttribute('aria-current');
+            }
+          });
+        }
+
+        announceSlide();
+      };
+
+      const announceSlide = () => {
+        if (!liveRegion) return;
+        const firstCardIndex = currentIndex;
+        const visibleCards = cards.slice(firstCardIndex, firstCardIndex + getSlides());
+        const labels = visibleCards.map((card) => card.getAttribute('aria-label')).filter(Boolean);
+        liveRegion.textContent = labels.join(', ') || '';
+      };
+
+      const stopAutoplay = () => {
+        if (autoplayTimer) {
+          clearInterval(autoplayTimer);
+          autoplayTimer = null;
+        }
+      };
+
+      const startAutoplay = () => {
+        stopAutoplay();
+        const should = () => {
+          if (root.dataset.autoplay !== 'true') return false;
+          if (prefersReducedMotion()) return false;
+          if (!animationsEnabled) return false;
+          return blockCount > getSlides();
+        };
+        if (!should()) return;
+        const interval = (parseInt(root.dataset.autoplayInterval, 10) || 5) * 1000;
+        autoplayTimer = setInterval(() => {
+          goToIndex(currentIndex + getSlides(), true);
+        }, interval);
+      };
+
+      const goToIndex = (index, fromAutoplay = false) => {
+        const maxIndex = getMaxIndex();
+        let normalizedIndex = index;
+        if (normalizedIndex > maxIndex) {
+          normalizedIndex = 0;
+        } else if (normalizedIndex < 0) {
+          normalizedIndex = maxIndex;
+        }
+        if (normalizedIndex === currentIndex) return;
+        currentIndex = normalizedIndex;
+        updateTransform(true);
+        syncUI();
+        if (!fromAutoplay) {
+          stopAutoplay();
+          startAutoplay();
+        }
+      };
+
+      // Rebuild nav and pagination
+      const rebuildUI = () => {
+        const total = getTotalPages();
+        const page = getCurrentPage();
+        if (showNav) {
+          buildNavigation(root, page, total);
+          // Attach events to new nav items
+          root.querySelectorAll('[data-collections-editorial-nav]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const pageIndex = parseInt(btn.dataset.collectionsEditorialNav, 10);
+              goToIndex(pageIndex * getSlides());
+            });
+          });
+        }
+        if (showPagination) {
+          buildPagination(root, page, total);
+          root.querySelectorAll('[data-collections-editorial-page]').forEach((dot) => {
+            dot.addEventListener('click', () => {
+              const pageIndex = parseInt(dot.dataset.collectionsEditorialPage, 10);
+              goToIndex(pageIndex * getSlides());
+            });
+          });
+        }
+        syncUI();
+      };
+
+      rebuildUI();
+
+      addListener(window, 'resize', () => {
+        // Пересчитываем всё при ресайзе
+        const max = getMaxIndex();
+        if (currentIndex > max) {
+          currentIndex = max;
+        }
+        rebuildUI();
+        updateTransform(false);
+        syncUI();
+        stopAutoplay();
+        startAutoplay();
+      });
+
+      // Arrows
+      addListener(prevButton, 'click', () => goToIndex(currentIndex - getSlides()));
+      addListener(nextButton, 'click', () => goToIndex(currentIndex + getSlides()));
+
+      // Keyboard
+      addListener(root, 'keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          goToIndex(currentIndex - getSlides());
+        }
+        if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          goToIndex(currentIndex + getSlides());
+        }
+      });
+
+      // Autoplay pause on hover
+      addListener(root, 'mouseenter', stopAutoplay);
+      addListener(root, 'mouseleave', startAutoplay);
+
+      // Visibility change
+      addListener(document, 'visibilitychange', () => {
+        if (document.hidden) {
+          stopAutoplay();
+        } else {
+          startAutoplay();
+        }
+      });
+
+      // Reduced motion
+      const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      addListener(reducedMotionQuery, 'change', () => {
+        stopAutoplay();
+        startAutoplay();
+      });
+
+      // Touch / pointer drag
+      const onPointerDown = (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+        isDragging = true;
+        hasDragged = false;
+        dragStartX = event.clientX;
+        dragDelta = 0;
+
+        stopAutoplay();
+      };
+
+      const onPointerMove = (event) => {
+        if (!isDragging) return;
+
+        dragDelta = event.clientX - dragStartX;
+
+        // Only take pointer capture after an actual horizontal drag starts.
+        if (Math.abs(dragDelta) > 8) {
+          hasDragged = true;
+          track.setPointerCapture?.(event.pointerId);
+        }
+      };
+
+      const onPointerUp = (event) => {
+        if (!isDragging) return;
+
+        const threshold = 40;
+        const wasDragged = hasDragged;
+
+        isDragging = false;
+
+        if (track.hasPointerCapture?.(event.pointerId)) {
+          track.releasePointerCapture?.(event.pointerId);
+        }
+
+        if (dragDelta < -threshold) {
+          goToIndex(currentIndex + getSlides());
+        } else if (dragDelta > threshold) {
+          goToIndex(currentIndex - getSlides());
+        } else {
+          startAutoplay();
+        }
+
+        // Keep the information for the click handler.
+        if (wasDragged) {
+          requestAnimationFrame(() => {
+            hasDragged = false;
+          });
+        }
+      };
+
+      const onClick = (event) => {
+        // A real drag must never activate a collection link.
+        if (hasDragged) {
+          event.preventDefault();
+          event.stopPropagation();
+          hasDragged = false;
+        }
+      };
+
+      addListener(track, 'pointerdown', onPointerDown);
+      addListener(track, 'pointermove', onPointerMove);
+      addListener(track, 'pointerup', onPointerUp);
+      addListener(track, 'pointercancel', onPointerUp);
+      addListener(track, 'click', onClick, true);
+
+      // Initial setup
+      updateTransform(false);
+      syncUI();
+      startAutoplay();
+
+      root._collectionsEditorialCleanup = () => {
+        stopAutoplay();
+        listeners.forEach(({ target, event, handler, options }) => {
+          target.removeEventListener(event, handler, options);
+        });
+      };
+    };
+
+    const initAll = (container = document) => {
+      container.querySelectorAll('[data-collections-editorial]').forEach(initCollectionsEditorial);
+    };
+
+    initAll();
+
+    document.addEventListener('shopify:section:load', (event) => initAll(event.target));
+    document.addEventListener('shopify:section:unload', (event) => {
+      event.target.querySelectorAll('[data-collections-editorial]').forEach((root) => {
+        if (typeof root._collectionsEditorialCleanup === 'function') {
+          root._collectionsEditorialCleanup();
+        }
+        initialized.delete(root);
+      });
+    });
+    document.addEventListener('shopify:section:reorder', (event) => {
+      event.target.querySelectorAll('[data-collections-editorial]').forEach((root) => {
+        if (typeof root._collectionsEditorialCleanup === 'function') {
+          root._collectionsEditorialCleanup();
+        }
+        initialized.delete(root);
+      });
+      initAll(event.target);
+    });
+    document.addEventListener('shopify:section:select', (event) => initAll(event.target));
+    document.addEventListener('shopify:section:deselect', (event) => {
+      event.target.querySelectorAll('[data-collections-editorial]').forEach((root) => {
+        if (typeof root._collectionsEditorialCleanup === 'function') {
+          root._collectionsEditorialCleanup();
+        }
+        initialized.delete(root);
+      });
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.main_collections_editorial.name",
+  "tag": "section",
+  "class": "cosme-collections-editorial-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.main_collections_editorial.settings.heading"
+    },
+    {
+      "type": "header",
+      "content": "t:general.layout"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.main_collections_editorial.settings.layout",
+      "options": [
+        {
+          "value": "editorial",
+          "label": "t:sections.main_collections_editorial.settings.layout_editorial"
+        },
+        {
+          "value": "editorial_compact",
+          "label": "t:sections.main_collections_editorial.settings.layout_editorial_compact"
+        }
+      ],
+      "default": "editorial"
+    },
+    {
+      "type": "select",
+      "id": "image_aspect_ratio",
+      "label": "t:sections.main_collections_editorial.settings.image_aspect_ratio",
+      "options": [
+        {
+          "value": "portrait",
+          "label": "t:sections.main_collections_editorial.settings.image_aspect_ratio_portrait"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.main_collections_editorial.settings.image_aspect_ratio_landscape"
+        },
+        {
+          "value": "square",
+          "label": "t:sections.main_collections_editorial.settings.image_aspect_ratio_square"
+        },
+        {
+          "value": "auto",
+          "label": "t:sections.main_collections_editorial.settings.image_aspect_ratio_auto"
+        }
+      ],
+      "default": "landscape"
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "t:sections.main_collections_editorial.settings.image_fit",
+      "options": [
+        {
+          "value": "cover",
+          "label": "t:sections.main_collections_editorial.settings.image_fit_cover"
+        },
+        {
+          "value": "contain",
+          "label": "t:sections.main_collections_editorial.settings.image_fit_contain"
+        }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "select",
+      "id": "desktop_columns",
+      "label": "t:sections.main_collections_editorial.settings.desktop_columns",
+      "options": [
+        { "value": "2", "label": "t:sections.main_collections_editorial.settings.desktop_columns_2" },
+        { "value": "3", "label": "t:sections.main_collections_editorial.settings.desktop_columns_3" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_collections_editorial.settings.slider_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_card_numbers",
+      "label": "t:sections.main_collections_editorial.settings.show_card_numbers",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_navigation",
+      "label": "t:sections.main_collections_editorial.settings.show_navigation",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_carousel",
+      "label": "t:sections.main_collections_editorial.settings.enable_carousel",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "t:sections.main_collections_editorial.settings.autoplay",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "autoplay_interval",
+      "label": "t:sections.main_collections_editorial.settings.autoplay_interval",
+      "options": [
+        { "value": "3", "label": "t:sections.main_collections_editorial.settings.autoplay_interval_3" },
+        { "value": "4", "label": "t:sections.main_collections_editorial.settings.autoplay_interval_4" },
+        { "value": "5", "label": "t:sections.main_collections_editorial.settings.autoplay_interval_5" },
+        { "value": "6", "label": "t:sections.main_collections_editorial.settings.autoplay_interval_6" },
+        { "value": "8", "label": "t:sections.main_collections_editorial.settings.autoplay_interval_8" }
+      ],
+      "default": "5"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_arrows",
+      "label": "t:sections.main_collections_editorial.settings.show_arrows",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pagination",
+      "label": "t:sections.main_collections_editorial.settings.show_pagination",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_collections_editorial.settings.typography_header"
+    },
+    {
+      "type": "select",
+      "id": "text_color_source",
+      "label": "t:sections.main_collections_editorial.settings.text_color_source",
+      "options": [
+        { "value": "scheme", "label": "t:sections.main_collections_editorial.settings.text_color_source_scheme" },
+        { "value": "custom", "label": "t:sections.main_collections_editorial.settings.text_color_source_custom" }
+      ],
+      "default": "scheme"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "t:sections.main_collections_editorial.settings.heading_color",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "color",
+      "id": "eyebrow_color",
+      "label": "t:sections.main_collections_editorial.settings.eyebrow_color",
+      "default": "#6B6B6B"
+    },
+    {
+      "type": "color",
+      "id": "link_color",
+      "label": "t:sections.main_collections_editorial.settings.link_color",
+      "default": "#1A1A1A"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "t:sections.main_collections_editorial.blocks.collection.name",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.collection"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.main_collections_editorial.blocks.collection.image_header"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:labels.image"
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "t:sections.main_collections_editorial.blocks.collection.image_alt",
+          "info": "t:sections.main_collections_editorial.blocks.collection.image_alt_info"
+        },
+        {
+          "type": "select",
+          "id": "image_position",
+          "label": "t:sections.main_collections_editorial.blocks.collection.image_focal_position",
+          "options": [
+            {
+              "value": "center",
+              "label": "t:options.alignment.center"
+            },
+            {
+              "value": "top",
+              "label": "t:sections.main_collections_editorial.blocks.collection.image_position_top"
+            },
+            {
+              "value": "bottom",
+              "label": "t:sections.main_collections_editorial.blocks.collection.image_position_bottom"
+            },
+            {
+              "value": "left",
+              "label": "t:options.alignment.left"
+            },
+            {
+              "value": "right",
+              "label": "t:options.alignment.right"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "header",
+          "content": "t:general.content"
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "t:sections.main_collections_editorial.blocks.collection.eyebrow",
+          "default": "SHOP"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:labels.heading"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "t:labels.link_label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.main_collections_editorial.name",
+      "blocks": [
+        {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Outdoors",
+            "link_label": "Shop Outdoors"
+          }
+        },
+        {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Indoors",
+            "link_label": "Shop Indoors"
+          }
+        },
+        {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Essentials",
+            "link_label": "Shop Essentials"
+          }
+        },
+        {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "New Arrivals",
+            "link_label": "Shop New Arrivals"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

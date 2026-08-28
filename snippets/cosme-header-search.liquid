@@ -1,0 +1,67 @@
+{% doc %}
+  Renders the COSME header search overlay.
+
+  @param {object} section - The header section object
+  @param {boolean} use_predictive - Whether to enable predictive search suggestions
+
+  @example
+  {% render 'cosme-header-search', section: section, use_predictive: true %}
+{% enddoc %}
+
+<dialog
+  class="cosme-header__search-dialog"
+  id="CosmeHeaderSearch-{{ section.id }}"
+  data-header-search-dialog
+  scroll-lock
+  aria-label="{{ 'search.title' | t }}"
+>
+  <div class="cosme-header__search-panel color-{{ section.settings.color_scheme }}">
+    <div class="cosme-header__search-header">
+      <h2 class="cosme-header__search-title">{{ 'search.title' | t }}</h2>
+      <button
+        type="button"
+        class="cosme-header__search-close"
+        data-header-search-close
+        aria-controls="CosmeHeaderSearch-{{ section.id }}"
+      >
+        {% render 'cosme-icon', icon: 'close', size: 'lg' %}
+        <span class="cosme-visually-hidden">{{ 'search.close' | t }}</span>
+      </button>
+    </div>
+
+    <form
+      class="cosme-header__search-form"
+      action="{{ routes.search_url }}"
+      method="get"
+      role="search"
+      data-header-search-form
+    >
+      {%- assign search_field_id = 'CosmeHeaderSearchInput-' | append: section.id -%}
+      {%- assign search_label = 'search.title' | t -%}
+      {%- assign search_placeholder = 'search.placeholder_short' | t -%}
+      {% render 'cosme-form-field',
+        label: search_label,
+        id: search_field_id,
+        name: 'q',
+        type: 'search',
+        placeholder: search_placeholder,
+        autocomplete: 'off',
+        class: 'cosme-header__search-field'
+      %}
+
+      <button type="submit" class="cosme-visually-hidden">{{ 'search.submit' | t }}</button>
+    </form>
+
+    {%- if use_predictive -%}
+      <div
+        class="cosme-header__search-results"
+        data-header-search-results
+        data-empty-text="{{ 'search.no_suggestions' | t | escape }}"
+        role="listbox"
+        aria-label="{{ 'search.suggestions' | t }}"
+        hidden
+      ></div>
+      <p class="cosme-header__search-status cosme-visually-hidden" data-header-search-status role="status" aria-live="polite"></p>
+    {%- endif -%}
+  </div>
+</dialog>

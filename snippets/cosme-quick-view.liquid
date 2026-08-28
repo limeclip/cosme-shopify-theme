@@ -1,0 +1,1406 @@
+{% doc %}
+  Global Quick View dialog for product cards.
+
+  Loaded once in the theme layout. Opens from `[data-quick-view]` triggers on
+  `cosme-product-card`, fetches `/products/{handle}.js` on demand, and adds to
+  cart via `/cart/add.js`.
+
+  @example
+  {% render 'cosme-quick-view' %}
+{% enddoc %}
+
+<dialog
+  class="cosme-quick-view color-{{ settings.color_scheme }}{% if settings.enable_animations %} cosme-quick-view--animated{% endif %}"
+  data-cosme-quick-view
+  data-enable-animations="{{ settings.enable_animations }}"
+  data-currency="{{ shop.currency }}"
+  data-cart-type="{{ settings.cart_type }}"
+  data-quick-view-enabled="{{ settings.quick_view_enabled }}"
+  data-quick-view-autoplay="{{ settings.quick_view_autoplay }}"
+  data-quick-view-delay="{{ settings.quick_view_autoplay_delay | default: 4000 }}"
+  data-quick-view-show-arrows="{{ settings.quick_view_show_arrows }}"
+  data-quick-view-show-dots="{{ settings.quick_view_show_dots }}"
+  data-quick-view-show-description="{{ settings.quick_view_show_description }}"
+  data-quick-view-show-buy-now="{{ settings.quick_view_show_buy_now }}"
+  aria-labelledby="CosmeQuickViewTitle"
+>
+  <div class="cosme-quick-view__panel">
+    <header class="cosme-quick-view__header">
+      <h2 class="cosme-quick-view__heading" id="CosmeQuickViewTitle" data-cosme-quick-view-title>
+        {{ 'products.quick_view_dialog' | t }}
+      </h2>
+      <button
+        type="button"
+        class="cosme-quick-view__close"
+        data-cosme-quick-view-close
+        aria-label="{{ 'products.quick_view_close' | t }}"
+      >
+        {% render 'cosme-icon', icon: 'close', size: 'md' %}
+      </button>
+    </header>
+
+    <div class="cosme-quick-view__body" data-cosme-quick-view-body></div>
+  </div>
+
+  <p class="cosme-visually-hidden" aria-live="polite" data-cosme-quick-view-live></p>
+</dialog>
+
+<script type="application/json" data-cosme-quick-view-config>
+  {
+    "moneyFormat": {{ shop.money_format | json }},
+    "enableAnimations": {{ settings.enable_animations | json }},
+    "strings": {
+      "dialogTitle": {{ 'products.quick_view_dialog' | t | json }},
+      "loading": {{ 'products.quick_view_loading' | t | json }},
+      "error": {{ 'products.quick_view_error' | t | json }},
+      "addSuccess": {{ 'products.quick_view_add_success' | t | json }},
+      "addError": {{ 'products.quick_view_add_error' | t | json }},
+      "viewProduct": {{ 'products.view_product' | t | json }},
+      "addToCart": {{ 'products.add_to_cart_button' | t | json }},
+      "buyNow": {{ 'products.buy_now' | t | json }},
+      "soldOut": {{ 'products.badge.sold_out' | t | json }},
+      "sale": {{ 'products.badge.sale' | t | json }},
+      "unavailable": {{ 'products.unavailable' | t | json }},
+      "variantUnavailable": {{ 'products.variant_unavailable' | t | json }},
+      "quantity": {{ 'products.quantity' | t | json }},
+      "decreaseQuantity": {{ 'products.decrease_quantity' | t | json }},
+      "increaseQuantity": {{ 'products.increase_quantity' | t | json }},
+      "regularPrice": {{ 'products.price.regular' | t | json }},
+      "salePrice": {{ 'products.price.sale' | t | json }},
+      "cartCount": {{ 'header.cart_count' | t | json }}
+    }
+  }
+</script>
+
+<template data-cosme-quick-view-icon="minus">
+  {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+</template>
+<template data-cosme-quick-view-icon="plus">
+  {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+</template>
+<template data-cosme-quick-view-icon="chevron-down">
+  {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+</template>
+<template data-cosme-quick-view-icon="chevron-left">
+  {% render 'cosme-icon', icon: 'chevron-left', size: 'md' %}
+</template>
+<template data-cosme-quick-view-icon="chevron-right">
+  {% render 'cosme-icon', icon: 'chevron-right', size: 'md' %}
+</template>
+
+{% stylesheet %}
+  /* === ДИАЛОГ: по центру === */
+  .cosme-quick-view {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    width: min(100vw - 2rem, 56rem);
+    max-height: calc(100dvh - 2rem);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    overflow: hidden;
+  }
+
+  .cosme-quick-view::backdrop {
+    background-color: color-mix(
+      in srgb,
+      var(--color-overlay, #000) calc(var(--overlay-opacity, 0.4) * 100%),
+      transparent
+    );
+  }
+
+  /* === АНИМАЦИЯ ВЫЕЗДА === */
+  @keyframes cosme-quick-view-slide-from-right {
+    from {
+      transform: translate(100vw, 100vh);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%);
+      opacity: 1;
+    }
+  }
+  .cosme-quick-view--animated[open] {
+    animation: cosme-quick-view-slide-from-right 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  @keyframes cosme-quick-view-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .cosme-quick-view--animated[open]::backdrop {
+    animation: cosme-quick-view-fade-in var(--transition-duration, 0.3s) var(--transition-easing, ease-out);
+  }
+  @keyframes cosme-quick-view-slide-out {
+    from {
+      transform: translate(-50%, -50%);
+      opacity: 1;
+    }
+    to {
+      transform: translate(100vw, 100vh);
+      opacity: 0;
+    }
+  }
+  .cosme-quick-view--animated.cosme-quick-view--closing[open] {
+    animation: cosme-quick-view-slide-out 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  }
+
+  /* === ВНУТРЕННЯЯ ПАНЕЛЬ === */
+  .cosme-quick-view__panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 2rem);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  .cosme-quick-view__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+    flex-shrink: 0;
+  }
+  .cosme-quick-view__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: 1rem;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    color: var(--color-heading);
+  }
+  .cosme-quick-view__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .cosme-quick-view__close:hover,
+  .cosme-quick-view__close:focus-visible {
+    color: var(--color-accent);
+  }
+  .cosme-quick-view__close:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-quick-view__body {
+    overflow: auto;
+    padding: var(--spacing-lg);
+  }
+  .cosme-quick-view__loading,
+  .cosme-quick-view__error {
+    margin: 0;
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+    color: var(--color-muted);
+  }
+  .cosme-quick-view__error {
+    color: var(--color-error, var(--color-foreground));
+  }
+
+  .cosme-quick-view__layout {
+    display: grid;
+    gap: var(--spacing-xl);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 768px) {
+    .cosme-quick-view__layout {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+
+  /* === НОВАЯ КАРУСЕЛЬ: изображение, под ним стрелки + точки === */
+  .cosme-quick-view__media {
+    background-color: var(--color-background), var(--color-background-2);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm); /* отступ между картинкой и контролами */
+  }
+
+  .cosme-quick-view__slider {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .cosme-quick-view__slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity var(--transition-duration, 0.3s) var(--transition-easing, ease);
+    pointer-events: none;
+  }
+  .cosme-quick-view__slide.is-active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .cosme-quick-view__slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Контейнер для стрелок и точек (в одну линию) */
+  .cosme-quick-view__controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    padding: 0 var(--spacing-sm);
+    min-height: 2.5rem; /* чтобы не прыгало */
+  }
+
+  /* Кнопки-стрелки — без фона, только иконки */
+  .cosme-quick-view__slider-prev,
+  .cosme-quick-view__slider-next {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    cursor: pointer;
+    transition: color var(--transition-duration) var(--transition-easing),
+      opacity var(--transition-duration) var(--transition-easing);
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+  .cosme-quick-view__slider-prev:hover,
+  .cosme-quick-view__slider-next:hover {
+    color: var(--color-accent);
+    opacity: 1;
+  }
+  .cosme-quick-view__slider-prev:focus-visible,
+  .cosme-quick-view__slider-next:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  .cosme-quick-view__slider-prev svg,
+  .cosme-quick-view__slider-next svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke: currentColor;
+  }
+
+  /* Точки — по центру, между стрелками */
+  .cosme-quick-view__dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    flex: 1 1 auto;
+  }
+
+  .cosme-quick-view__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    border: var(--border-width) solid var(--color-border);
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    transition: background-color var(--transition-duration) var(--transition-easing),
+      border-color var(--transition-duration) var(--transition-easing);
+    flex-shrink: 0;
+  }
+  .cosme-quick-view__dot.is-active {
+    background-color: var(--color-foreground);
+    border-color: var(--color-foreground);
+  }
+  .cosme-quick-view__dot:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* === Детали товара (без изменений) === */
+  .cosme-quick-view__details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  .cosme-quick-view__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+  .cosme-quick-view__product-title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.25rem, 2vw, 1.5rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    color: var(--color-heading);
+  }
+  .cosme-quick-view__vendor {
+    margin: 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+  .cosme-quick-view__price .cosme-price__regular {
+    font-size: 1rem;
+  }
+  .cosme-quick-view__description {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+  .cosme-quick-view__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+  }
+  .cosme-quick-view__options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  .cosme-quick-view__option {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  .cosme-quick-view__option-label {
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--color-foreground);
+  }
+  .cosme-quick-view__option-select-wrap {
+    position: relative;
+  }
+  .cosme-quick-view__option-select {
+    appearance: none;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: var(--spacing-sm) calc(var(--spacing-lg) + 1rem) var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-input);
+    background-color: var(--color-input-background, var(--color-background));
+    color: var(--color-foreground);
+    font: inherit;
+    line-height: 1.4;
+  }
+  .cosme-quick-view__option-select:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-border);
+    outline-offset: 2px;
+  }
+  .cosme-quick-view__option-select[aria-invalid='true'] {
+    border-color: var(--color-error, var(--color-accent));
+  }
+  .cosme-quick-view__option-icon {
+    position: absolute;
+    top: 50%;
+    right: var(--spacing-md);
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--color-muted);
+  }
+  .cosme-quick-view__option-message {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--color-error, var(--color-accent));
+  }
+
+  .cosme-quick-view__quantity-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+  .cosme-quick-view__quantity {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+  }
+  .cosme-quick-view__quantity-label {
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--color-foreground);
+  }
+  .cosme-quick-view__quantity-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-input);
+    overflow: hidden;
+  }
+  .cosme-quick-view__quantity-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    cursor: pointer;
+  }
+  .cosme-quick-view__quantity-btn:hover,
+  .cosme-quick-view__quantity-btn:focus-visible {
+    color: var(--color-accent);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+  .cosme-quick-view__quantity-btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: -2px;
+  }
+  .cosme-quick-view__quantity-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .cosme-quick-view__quantity-input {
+    width: 3rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-inline: var(--border-width) solid var(--color-border);
+    background: transparent;
+    color: var(--color-foreground);
+    font: inherit;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .cosme-quick-view__quantity-input::-webkit-outer-spin-button,
+  .cosme-quick-view__quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .cosme-quick-view__quantity-input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: -2px;
+  }
+
+  .cosme-quick-view__buy-now {
+    flex: 1 1 auto;
+    min-width: 8rem;
+  }
+  .cosme-quick-view__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-top: var(--spacing-xs);
+  }
+  .cosme-quick-view__add-button.cosme-button--success {
+    background-color: var(--color-success, var(--color-accent));
+    border-color: var(--color-success, var(--color-accent));
+    color: var(--color-accent-contrast);
+  }
+  .cosme-quick-view__view-link {
+    align-self: flex-center;
+    padding: 0 var(--spacing-md);
+    margin-top: var(--spacing-sm);
+  }
+
+  /* === Мобильная версия === */
+  @media (max-width: 767px) {
+    .cosme-quick-view {
+      top: 0;
+      left: 0;
+      right: 0;
+      transform: none;
+      width: 100%;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      margin: 0;
+    }
+    .cosme-quick-view__panel {
+      height: 100dvh;
+      max-height: none;
+      border-radius: 0;
+    }
+    @keyframes cosme-quick-view-slide-up {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+    .cosme-quick-view--animated[open] {
+      animation: cosme-quick-view-slide-up 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    @keyframes cosme-quick-view-slide-down {
+      from {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+    }
+    .cosme-quick-view--animated.cosme-quick-view--closing[open] {
+      animation: cosme-quick-view-slide-down 0.8s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+    .cosme-quick-view__body {
+      padding: var(--spacing-md);
+    }
+    .cosme-quick-view__quantity-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .cosme-quick-view__quantity {
+      justify-content: center;
+    }
+    .cosme-quick-view__buy-now {
+      width: 100%;
+    }
+    .cosme-quick-view__slider-prev,
+    .cosme-quick-view__slider-next {
+      width: 2rem;
+      height: 2rem;
+    }
+    .cosme-quick-view__slider-prev svg,
+    .cosme-quick-view__slider-next svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    .cosme-quick-view__controls {
+      padding: 0 var(--spacing-xs);
+    }
+  }
+
+  /* Отключаем старые transition */
+  .cosme-quick-view--animated,
+  .cosme-quick-view--animated::backdrop,
+  .cosme-quick-view--animated .cosme-quick-view__panel {
+    transition: none;
+  }
+  html.cosme-quick-view-open,
+  body.cosme-quick-view-open {
+    overflow: hidden;
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const dialog = document.querySelector('[data-cosme-quick-view]');
+    if (!dialog) return;
+
+    const bodyElement = document.body;
+    const body = dialog.querySelector('[data-cosme-quick-view-body]');
+    const liveRegion = dialog.querySelector('[data-cosme-quick-view-live]');
+    const titleEl = dialog.querySelector('[data-cosme-quick-view-title]');
+    const closeButton = dialog.querySelector('[data-cosme-quick-view-close]');
+    const configEl = document.querySelector('[data-cosme-quick-view-config]');
+
+    let config = { moneyFormat: '', enableAnimations: true, strings: {} };
+    if (configEl) {
+      try {
+        config = { ...config, ...JSON.parse(configEl.textContent) };
+      } catch (error) {
+        return;
+      }
+    }
+
+    const productCache = new Map();
+    let lastTrigger = null;
+    let currentProduct = null;
+    let isAddingToCart = false;
+    let sliderInstance = null;
+
+    const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const canAnimate = () => {
+      if (prefersReducedMotion()) return false;
+      return dialog.dataset.enableAnimations === 'true';
+    };
+
+    const isSettingEnabled = (value) => value !== 'false';
+
+    const getQuickViewSettings = () => {
+      const delay = parseInt(dialog.dataset.quickViewDelay, 10);
+
+      return {
+        enabled: isSettingEnabled(dialog.dataset.quickViewEnabled),
+        autoplay: isSettingEnabled(dialog.dataset.quickViewAutoplay),
+        delay: Number.isNaN(delay) ? 4000 : delay,
+        showArrows: isSettingEnabled(dialog.dataset.quickViewShowArrows),
+        showDots: isSettingEnabled(dialog.dataset.quickViewShowDots),
+        showDescription: isSettingEnabled(dialog.dataset.quickViewShowDescription),
+        showBuyNow: isSettingEnabled(dialog.dataset.quickViewShowBuyNow),
+      };
+    };
+
+    const getIcon = (name) => {
+      const template = document.querySelector(`[data-cosme-quick-view-icon="${name}"]`);
+      return template ? template.content.firstElementChild.cloneNode(true) : null;
+    };
+
+    const escapeHtml = (value) =>
+      String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    const currencyCode = dialog.dataset.currency || 'USD';
+
+    const formatMoney = (cents) => {
+      if (typeof Shopify !== 'undefined' && typeof Shopify.formatMoney === 'function') {
+        const formatted = Shopify.formatMoney(cents);
+        if (formatted && formatted !== '0.00' && !formatted.startsWith('0')) {
+          return formatted;
+        }
+      }
+      const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currencyCode,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return formatter.format(cents / 100);
+    };
+
+    const excerpt = (html, maxLength = 160) => {
+      const element = document.createElement('div');
+      element.innerHTML = html || '';
+      const text = (element.textContent || '').trim();
+      if (text.length <= maxLength) return text;
+      return `${text.slice(0, maxLength).trim()}…`;
+    };
+
+    const announce = (message) => {
+      if (!liveRegion) return;
+      liveRegion.textContent = '';
+      window.requestAnimationFrame(() => {
+        liveRegion.textContent = message;
+      });
+    };
+
+    const interpolate = (template, values) => template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => values[key] ?? '');
+
+    const updateHeaderCartCount = async () => {
+      try {
+        const response = await fetch('/cart.js', {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) return;
+
+        const cart = await response.json();
+
+        document.querySelectorAll('[data-header-cart-count], .cosme-header__cart-count').forEach((element) => {
+          if (cart.item_count > 0) {
+            element.textContent = cart.item_count;
+            element.hidden = false;
+          } else {
+            element.hidden = true;
+          }
+        });
+
+        document.querySelectorAll('[data-header-cart-toggle], .cosme-header__action--cart').forEach((element) => {
+          if (cart.item_count > 0 && config.strings.cartCount) {
+            element.setAttribute('aria-label', interpolate(config.strings.cartCount, { count: cart.item_count }));
+          } else if (element.matches('[data-header-cart-toggle]')) {
+            element.removeAttribute('aria-label');
+          }
+        });
+
+        document.dispatchEvent(new CustomEvent('cart:refresh'));
+      } catch (error) {
+        return;
+      }
+    };
+
+    const findVariant = (product, selectedOptions) =>
+      product.variants.find((variant) => variant.options.every((value, index) => value === selectedOptions[index]));
+
+    const optionValueAvailable = (product, optionIndex, value, selectedOptions) =>
+      product.variants.some((variant) => {
+        if (variant.options[optionIndex] !== value) return false;
+        if (!variant.available) return false;
+
+        return variant.options.every((optionValue, index) => {
+          if (index === optionIndex) return true;
+          if (!selectedOptions[index]) return true;
+          return optionValue === selectedOptions[index];
+        });
+      });
+
+    const getSelectedOptions = (root) =>
+      Array.from(root.querySelectorAll('[data-cosme-quick-view-option]')).map((select) => select.value);
+
+    const getVariantImage = (product, variant) => {
+      if (variant?.featured_image?.src) return variant.featured_image.src;
+      if (product.featured_image) return product.featured_image;
+      if (product.images?.length) return product.images[0];
+      return '';
+    };
+
+    const renderPrice = (variant) => {
+      const onSale = variant.compare_at_price && variant.compare_at_price > variant.price;
+      let html = '<div class="cosme-price';
+      if (onSale) html += ' cosme-price--on-sale';
+      html += ' cosme-quick-view__price">';
+      if (onSale) {
+        html += `<span class="cosme-visually-hidden">${config.strings.regularPrice}</span>`;
+        html += `<s class="cosme-price__compare">${formatMoney(variant.compare_at_price)}</s>`;
+        html += `<span class="cosme-visually-hidden">${config.strings.salePrice}</span>`;
+      }
+      html += `<span class="cosme-price__regular">${formatMoney(variant.price)}</span>`;
+      html += '</div>';
+      return html;
+    };
+
+    const renderBadgeContent = (variant) => {
+      if (!variant) return '';
+      if (!variant.available) {
+        return `<span class="cosme-product-badge cosme-product-badge--sold-out">${escapeHtml(
+          config.strings.soldOut
+        )}</span>`;
+      }
+      if (variant.compare_at_price && variant.compare_at_price > variant.price) {
+        return `<span class="cosme-product-badge cosme-product-badge--sale">${escapeHtml(config.strings.sale)}</span>`;
+      }
+      return '';
+    };
+
+    const renderOptions = (product, selectedOptions) => {
+      if (product.variants.length <= 1) return '';
+
+      let html = '<div class="cosme-quick-view__options">';
+      product.options.forEach((option, optionIndex) => {
+        const optionName = typeof option === 'object' ? option.name : option;
+        html += '<div class="cosme-quick-view__option">';
+        html += `<label class="cosme-quick-view__option-label" for="CosmeQuickViewOption-${optionIndex}">${escapeHtml(
+          optionName
+        )}</label>`;
+        html += '<div class="cosme-quick-view__option-select-wrap">';
+        html += `<select id="CosmeQuickViewOption-${optionIndex}" class="cosme-quick-view__option-select" data-cosme-quick-view-option>`;
+        const values = [...new Set(product.variants.map((variant) => variant.options[optionIndex]))];
+        values.forEach((value) => {
+          const available = optionValueAvailable(product, optionIndex, value, selectedOptions);
+          const selected = selectedOptions[optionIndex] === value;
+          html += `<option value="${escapeHtml(value)}"${selected ? ' selected' : ''}${
+            available ? '' : ' disabled'
+          }>${escapeHtml(value)}${available ? '' : ` (${escapeHtml(config.strings.unavailable)})`}</option>`;
+        });
+        html += '</select>';
+        html += '<span class="cosme-quick-view__option-icon" aria-hidden="true"></span>';
+        html += '</div>';
+        html += `<p class="cosme-quick-view__option-message" data-cosme-quick-view-option-message="${optionIndex}" hidden></p>`;
+        html += '</div>';
+      });
+      html += '</div>';
+      return html;
+    };
+
+    const bindVariantUI = (product) => {
+      const badgesContainer = body.querySelector('[data-cosme-quick-view-badges]');
+      const priceContainer = body.querySelector('[data-cosme-quick-view-price]');
+      const addButton = body.querySelector('[data-cosme-quick-view-add]');
+      const buyNowButton = body.querySelector('[data-cosme-quick-view-buy-now]');
+      const optionMessage = body.querySelector('[data-cosme-quick-view-variant-message]');
+      const quantityInput = body.querySelector('[data-cosme-quick-view-quantity]');
+
+      const syncVariant = () => {
+        let variant;
+        const selectedOptions = getSelectedOptions(body);
+
+        if (product.variants.length <= 1) {
+          variant = product.variants[0];
+        } else {
+          variant = findVariant(product, selectedOptions);
+        }
+
+        if (product.variants.length > 1) {
+          body.querySelectorAll('[data-cosme-quick-view-option]').forEach((select, optionIndex) => {
+            Array.from(select.options).forEach((option) => {
+              const available = optionValueAvailable(product, optionIndex, option.value, selectedOptions);
+              option.disabled = !available;
+              option.textContent = available ? option.value : `${option.value} (${config.strings.unavailable})`;
+            });
+
+            let currentAvailable = optionValueAvailable(product, optionIndex, select.value, selectedOptions);
+            if (!currentAvailable) {
+              const firstAvailable = Array.from(select.options).find((option) => !option.disabled);
+              if (firstAvailable) {
+                select.value = firstAvailable.value;
+                currentAvailable = true;
+              }
+            }
+
+            select.setAttribute('aria-invalid', currentAvailable ? 'false' : 'true');
+            const message = body.querySelector(`[data-cosme-quick-view-option-message="${optionIndex}"]`);
+            if (message) {
+              if (!currentAvailable) {
+                message.textContent = config.strings.variantUnavailable;
+                message.hidden = false;
+              } else {
+                message.hidden = true;
+              }
+            }
+          });
+        }
+
+        // Переключаем слайд, если вариант имеет своё изображение
+        if (variant && variant.featured_image && sliderInstance) {
+          const variantImageSrc = variant.featured_image.src;
+          const images = product.images || [];
+          const index = images.findIndex((img) => img.src === variantImageSrc);
+          if (index !== -1) {
+            sliderInstance.goTo(index);
+          }
+        }
+
+        if (badgesContainer) {
+          const badgeHtml = renderBadgeContent(variant);
+          badgesContainer.innerHTML = badgeHtml;
+          badgesContainer.hidden = !badgeHtml;
+        }
+
+        if (priceContainer && variant) {
+          priceContainer.innerHTML = renderPrice(variant);
+        }
+
+        if (optionMessage) {
+          if (!variant) {
+            optionMessage.textContent = config.strings.variantUnavailable;
+            optionMessage.hidden = false;
+          } else if (!variant.available) {
+            optionMessage.textContent = config.strings.soldOut;
+            optionMessage.hidden = false;
+          } else {
+            optionMessage.hidden = true;
+          }
+        }
+
+        const quantity = Math.max(1, Number(quantityInput?.value) || 1);
+        const canAdd = Boolean(variant && variant.available && quantity >= 1 && !isAddingToCart);
+
+        if (addButton) {
+          addButton.disabled = !canAdd;
+          addButton.dataset.variantId = variant ? String(variant.id) : '';
+        }
+        if (buyNowButton) {
+          buyNowButton.disabled = !canAdd;
+          buyNowButton.dataset.variantId = variant ? String(variant.id) : '';
+        }
+      };
+
+      body.querySelectorAll('[data-cosme-quick-view-option]').forEach((select) => {
+        select.addEventListener('change', syncVariant);
+      });
+
+      if (quantityInput) {
+        quantityInput.addEventListener('change', () => {
+          quantityInput.value = String(Math.max(1, Number(quantityInput.value) || 1));
+          syncVariant();
+        });
+      }
+
+      body.querySelector('[data-cosme-quick-view-quantity-decrease]')?.addEventListener('click', () => {
+        quantityInput.value = String(Math.max(1, Number(quantityInput.value) - 1));
+        syncVariant();
+      });
+
+      body.querySelector('[data-cosme-quick-view-quantity-increase]')?.addEventListener('click', () => {
+        quantityInput.value = String(Math.max(1, Number(quantityInput.value) + 1));
+        syncVariant();
+      });
+
+      body.querySelector('[data-cosme-quick-view-add]')?.addEventListener('click', async (event) => {
+        event.preventDefault();
+        const button = event.currentTarget;
+        const variantId = button.dataset.variantId;
+        const quantity = Math.max(1, Number(quantityInput?.value) || 1);
+
+        if (!variantId || isAddingToCart) return;
+
+        isAddingToCart = true;
+        button.disabled = true;
+        if (buyNowButton) buyNowButton.disabled = true;
+        button.classList.remove('cosme-button--success');
+        const originalLabel = button.textContent;
+        button.textContent = config.strings.addToCart;
+
+        try {
+          const response = await fetch('/cart/add.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({ id: Number(variantId), quantity }),
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok) {
+            throw new Error(payload.description || config.strings.addError);
+          }
+
+          button.classList.add('cosme-button--success');
+          announce(interpolate(config.strings.addSuccess, { title: product.title }));
+          await updateHeaderCartCount();
+
+          // === Обработка перехода/открытия корзины ===
+          const cartType = dialog.dataset.cartType || 'page';
+
+          if (cartType === 'drawer') {
+            // Закрываем Quick View и открываем дровер
+            await closeDialog();
+            const cartToggle = document.querySelector('[data-header-cart-toggle]');
+            if (cartToggle) {
+              cartToggle.click();
+            }
+          } else {
+            // Переход на страницу корзины
+            window.location.href = '/cart';
+          }
+        } catch (error) {
+          announce(error.message || config.strings.addError);
+        } finally {
+          isAddingToCart = false;
+          button.textContent = originalLabel;
+          syncVariant();
+        }
+      });
+
+      body.querySelector('[data-cosme-quick-view-buy-now]')?.addEventListener('click', (event) => {
+        const button = event.currentTarget;
+        const variantId = button.dataset.variantId;
+        const quantity = Math.max(1, Number(quantityInput?.value) || 1);
+
+        if (!variantId || isAddingToCart) return;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/cart';
+        form.innerHTML = `
+          <input type="hidden" name="id" value="${escapeHtml(variantId)}">
+          <input type="hidden" name="quantity" value="${escapeHtml(String(quantity))}">
+          <input type="hidden" name="checkout" value="true">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+      });
+
+      body.querySelectorAll('.cosme-quick-view__option-icon').forEach((slot) => {
+        const icon = getIcon('chevron-down');
+        if (icon) slot.appendChild(icon);
+      });
+
+      syncVariant();
+    };
+
+    const renderProduct = (product) => {
+      currentProduct = product;
+      const defaultVariant = product.variants.find((variant) => variant.available) || product.variants[0];
+      const initialOptions = defaultVariant?.options || [];
+      const description = excerpt(product.description);
+      const badgeContent = renderBadgeContent(defaultVariant);
+
+      titleEl.textContent = product.title;
+
+      // Получаем изображения
+      let images = [];
+      if (product.images && product.images.length > 0) {
+        images = product.images.map((img) => img.src || img);
+      } else if (product.featured_image) {
+        images = [product.featured_image.src || product.featured_image];
+      } else {
+        images = [];
+      }
+
+      const viewSettings = getQuickViewSettings();
+      const hasMultipleImages = images.length > 1;
+      const showArrows = hasMultipleImages && viewSettings.showArrows;
+      const showDots = hasMultipleImages && viewSettings.showDots;
+      const showSliderControls = showArrows || showDots;
+
+      let slidesHtml = '';
+      let dotsHtml = '';
+
+      images.forEach((src, index) => {
+        const isActive = index === 0 ? 'is-active' : '';
+        slidesHtml += `
+          <div class="cosme-quick-view__slide ${isActive}" data-slide-index="${index}">
+            <img src="${escapeHtml(src)}" alt="${escapeHtml(product.title)}" width="800" height="800" loading="lazy">
+          </div>
+        `;
+        if (showDots) {
+          dotsHtml += `<button type="button" class="cosme-quick-view__dot ${isActive}" data-slide-index="${index}" aria-label="${escapeHtml(
+            'Slide ' + (index + 1)
+          )}"></button>`;
+        }
+      });
+
+      let mediaHtml = `
+        <div class="cosme-quick-view__media">
+          <div class="cosme-quick-view__slider" data-slider>
+            ${slidesHtml}
+          </div>
+          ${
+            showSliderControls
+              ? `
+            <div class="cosme-quick-view__controls">
+              ${
+                showArrows
+                  ? `<button type="button" class="cosme-quick-view__slider-prev" data-slider-prev aria-label="${escapeHtml(
+                      'Previous'
+                    )}"></button>`
+                  : ''
+              }
+              ${showDots ? `<div class="cosme-quick-view__dots" data-slider-dots>${dotsHtml}</div>` : ''}
+              ${
+                showArrows
+                  ? `<button type="button" class="cosme-quick-view__slider-next" data-slider-next aria-label="${escapeHtml(
+                      'Next'
+                    )}"></button>`
+                  : ''
+              }
+            </div>
+          `
+              : ''
+          }
+        </div>
+      `;
+
+      body.innerHTML = `
+        <div class="cosme-quick-view__layout">
+          ${mediaHtml}
+          <div class="cosme-quick-view__details">
+            ${
+              badgeContent
+                ? `<div class="cosme-quick-view__badges" data-cosme-quick-view-badges>${badgeContent}</div>`
+                : '<div class="cosme-quick-view__badges" data-cosme-quick-view-badges hidden></div>'
+            }
+            <h3 class="cosme-quick-view__product-title">${escapeHtml(product.title)}</h3>
+            ${product.vendor ? `<p class="cosme-quick-view__vendor">${escapeHtml(product.vendor)}</p>` : ''}
+            <div data-cosme-quick-view-price>${defaultVariant ? renderPrice(defaultVariant) : ''}</div>
+            ${
+              viewSettings.showDescription && description
+                ? `<p class="cosme-quick-view__description">${escapeHtml(description)}</p>`
+                : ''
+            }
+            <div class="cosme-quick-view__form">
+              ${renderOptions(product, initialOptions)}
+              <p class="cosme-quick-view__option-message" data-cosme-quick-view-variant-message hidden></p>
+              <div class="cosme-quick-view__quantity-row">
+                <div class="cosme-quick-view__quantity">
+                  <span class="cosme-quick-view__quantity-label" id="CosmeQuickViewQuantityLabel">${escapeHtml(
+                    config.strings.quantity
+                  )}</span>
+                  <div class="cosme-quick-view__quantity-controls" role="group" aria-labelledby="CosmeQuickViewQuantityLabel">
+                    <button type="button" class="cosme-quick-view__quantity-btn" data-cosme-quick-view-quantity-decrease aria-label="${escapeHtml(
+                      config.strings.decreaseQuantity
+                    )}">
+                      <span data-cosme-quick-view-quantity-minus></span>
+                    </button>
+                    <input type="number" class="cosme-quick-view__quantity-input" data-cosme-quick-view-quantity value="1" min="1" inputmode="numeric" aria-label="${escapeHtml(
+                      config.strings.quantity
+                    )}">
+                    <button type="button" class="cosme-quick-view__quantity-btn" data-cosme-quick-view-quantity-increase aria-label="${escapeHtml(
+                      config.strings.increaseQuantity
+                    )}">
+                      <span data-cosme-quick-view-quantity-plus></span>
+                    </button>
+                  </div>
+                </div>
+                ${
+                  viewSettings.showBuyNow
+                    ? `<button type="button" class="cosme-button cosme-button--outline cosme-quick-view__buy-now" data-cosme-quick-view-buy-now data-variant-id="${
+                        defaultVariant?.id || ''
+                      }">
+                  ${escapeHtml(config.strings.buyNow)}
+                </button>`
+                    : ''
+                }
+              </div>
+              <div class="cosme-quick-view__actions">
+                <button type="button" class="cosme-button cosme-button--primary cosme-quick-view__add-button" data-cosme-quick-view-add data-variant-id="${
+                  defaultVariant?.id || ''
+                }">
+                  ${escapeHtml(config.strings.addToCart)}
+                </button>
+                <a class="cosme-button cosme-button--tertiary cosme-quick-view__view-link" href="${escapeHtml(
+                  product.url
+                )}">
+                  ${escapeHtml(config.strings.viewProduct)}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Вставляем иконки в кнопки
+      const prevBtn = body.querySelector('[data-slider-prev]');
+      const nextBtn = body.querySelector('[data-slider-next]');
+      if (prevBtn) {
+        const icon = getIcon('chevron-left');
+        if (icon) prevBtn.prepend(icon);
+      }
+      if (nextBtn) {
+        const icon = getIcon('chevron-right');
+        if (icon) nextBtn.prepend(icon);
+      }
+
+      const minusSlot = body.querySelector('[data-cosme-quick-view-quantity-minus]');
+      const plusSlot = body.querySelector('[data-cosme-quick-view-quantity-plus]');
+      const minusIcon = getIcon('minus');
+      const plusIcon = getIcon('plus');
+      if (minusSlot && minusIcon) minusSlot.replaceWith(minusIcon);
+      if (plusSlot && plusIcon) plusSlot.replaceWith(plusIcon);
+
+      // === Инициализация слайдера ===
+      const sliderContainer = body.querySelector('[data-slider]');
+      const dotsContainer = body.querySelector('[data-slider-dots]');
+      const slides = sliderContainer ? Array.from(sliderContainer.querySelectorAll('.cosme-quick-view__slide')) : [];
+      const dots = dotsContainer ? Array.from(dotsContainer.querySelectorAll('.cosme-quick-view__dot')) : [];
+      const prevBtnEl = body.querySelector('[data-slider-prev]');
+      const nextBtnEl = body.querySelector('[data-slider-next]');
+
+      sliderInstance = null;
+
+      if (slides.length > 1) {
+        let currentIndex = 0;
+
+        const goTo = (index) => {
+          if (index < 0 || index >= slides.length) return;
+          if (index === currentIndex) return;
+
+          slides.forEach((slide, i) => {
+            slide.classList.toggle('is-active', i === index);
+          });
+          if (dots.length) {
+            dots.forEach((dot, i) => {
+              dot.classList.toggle('is-active', i === index);
+            });
+          }
+          currentIndex = index;
+        };
+
+        const next = () => goTo((currentIndex + 1) % slides.length);
+        const prev = () => goTo((currentIndex - 1 + slides.length) % slides.length);
+
+        if (prevBtnEl) prevBtnEl.addEventListener('click', prev);
+        if (nextBtnEl) nextBtnEl.addEventListener('click', next);
+
+        dots.forEach((dot) => {
+          dot.addEventListener('click', () => {
+            const idx = parseInt(dot.dataset.slideIndex, 10);
+            goTo(idx);
+          });
+        });
+
+        sliderInstance = { goTo, getCurrentIndex: () => currentIndex, next, prev };
+
+        let autoplayInterval = null;
+        const startAutoplay = () => {
+          if (autoplayInterval) return;
+          if (slides.length <= 1) return;
+          if (!viewSettings.autoplay) return;
+          if (prefersReducedMotion()) return;
+          autoplayInterval = setInterval(() => {
+            if (sliderInstance) sliderInstance.next();
+          }, viewSettings.delay);
+        };
+        const stopAutoplay = () => {
+          if (autoplayInterval) {
+            clearInterval(autoplayInterval);
+            autoplayInterval = null;
+          }
+        };
+
+        // Запускаем сразу
+        startAutoplay();
+
+        // Останавливаем, если пользователь взаимодействует со слайдером (наведение или касание)
+        const sliderWrapper = body.querySelector('.cosme-quick-view__slider');
+        if (sliderWrapper) {
+          sliderWrapper.addEventListener('mouseenter', stopAutoplay);
+          sliderWrapper.addEventListener('mouseleave', startAutoplay);
+          sliderWrapper.addEventListener('touchstart', stopAutoplay, { passive: true });
+          sliderWrapper.addEventListener('touchend', startAutoplay, { passive: true });
+        }
+        // ---------- конец автопрокрутки ----------
+      } else {
+        // Один слайд — скрываем контролы (если они есть)
+        if (prevBtnEl) prevBtnEl.style.display = 'none';
+        if (nextBtnEl) nextBtnEl.style.display = 'none';
+        const controls = body.querySelector('.cosme-quick-view__controls');
+        if (controls) controls.style.display = 'none';
+      }
+
+      bindVariantUI(product);
+    };
+
+    const showLoading = () => {
+      titleEl.textContent = config.strings.dialogTitle;
+      body.innerHTML = `<p class="cosme-quick-view__loading">${config.strings.loading}</p>`;
+      sliderInstance = null;
+    };
+
+    const showError = (message) => {
+      titleEl.textContent = config.strings.dialogTitle;
+      body.innerHTML = `<p class="cosme-quick-view__error" role="alert">${message || config.strings.error}</p>`;
+      sliderInstance = null;
+    };
+
+    const fetchProduct = async (handle) => {
+      if (productCache.has(handle)) return productCache.get(handle);
+
+      const response = await fetch(`/products/${encodeURIComponent(handle)}.js`, {
+        headers: { Accept: 'application/json' },
+      });
+
+      if (!response.ok) {
+        throw new Error(config.strings.error);
+      }
+
+      const product = await response.json();
+      productCache.set(handle, product);
+      return product;
+    };
+
+    const openDialog = async (trigger) => {
+      const handle = trigger.dataset.productHandle;
+      if (!handle) return;
+
+      lastTrigger = trigger;
+      showLoading();
+
+      if (!dialog.open) {
+        dialog.showModal();
+        bodyElement.classList.add('cosme-quick-view-open');
+      }
+
+      try {
+        const product = await fetchProduct(handle);
+        renderProduct(product);
+
+        const firstFocusable = body.querySelector(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (firstFocusable) {
+          firstFocusable.focus();
+        } else {
+          closeButton.focus();
+        }
+      } catch (error) {
+        showError(error.message);
+        announce(error.message || config.strings.error);
+        closeButton.focus();
+      }
+    };
+
+    const closeDialog = () => {
+      return new Promise((resolve) => {
+        if (!dialog.open) {
+          resolve();
+          return;
+        }
+
+        const finishClose = () => {
+          dialog.classList.remove('cosme-quick-view--closing');
+          dialog.close();
+          bodyElement.classList.remove('cosme-quick-view-open');
+          currentProduct = null;
+          sliderInstance = null;
+
+          if (lastTrigger && typeof lastTrigger.focus === 'function') {
+            lastTrigger.focus();
+            lastTrigger.blur();
+          }
+          resolve();
+        };
+
+        if (canAnimate()) {
+          dialog.classList.add('cosme-quick-view--closing');
+
+          dialog.addEventListener(
+            'animationend',
+            (event) => {
+              if (event.animationName === 'cosme-quick-view-slide-out') {
+                finishClose();
+              }
+            },
+            { once: true }
+          );
+
+          setTimeout(() => {
+            if (dialog.open && dialog.classList.contains('cosme-quick-view--closing')) {
+              finishClose();
+            }
+          }, 800);
+        } else {
+          finishClose();
+        }
+      });
+    };
+
+    document.addEventListener('click', (event) => {
+      const trigger = event.target.closest('[data-quick-view]');
+      if (!trigger || trigger.disabled) return;
+
+      event.preventDefault();
+
+      if (!getQuickViewSettings().enabled) {
+        const productUrl = trigger.dataset.productUrl;
+        if (productUrl) {
+          window.location.href = productUrl;
+        }
+        return;
+      }
+
+      openDialog(trigger);
+    });
+
+    closeButton.addEventListener('click', closeDialog);
+
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) {
+        closeDialog();
+      }
+    });
+
+    dialog.addEventListener('cancel', (event) => {
+      event.preventDefault();
+      closeDialog();
+    });
+
+    dialog.addEventListener('close', () => {
+      bodyElement.classList.remove('cosme-quick-view-open');
+      dialog.classList.remove('cosme-quick-view--closing');
+      body.innerHTML = '';
+      titleEl.textContent = config.strings.dialogTitle;
+      sliderInstance = null;
+    });
+
+    if (!canAnimate()) {
+      dialog.classList.remove('cosme-quick-view--animated');
+    }
+  })();
+{% endjavascript %}

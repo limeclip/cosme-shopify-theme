@@ -1,5 +1,4 @@
-{
-  "404": {
+{  "404": {
     "title": "404",
     "not_found": "Page not found.",
     "back_to_shopping": "Back to shopping"
@@ -17,7 +16,14 @@
     "checkout": "Checkout",
     "title": "Cart",
     "update": "Update",
-    "remove": "Remove"
+    "remove": "Remove",
+    "view_cart": "View cart",
+    "subtotal": "Subtotal",
+    "empty": "Your cart is empty",
+    "quantity": "Quantity, {{ product }}",
+    "decrease_quantity": "Decrease quantity for {{ product }}",
+    "increase_quantity": "Increase quantity for {{ product }}",
+    "close": "Close cart"
   },
   "customers": {
     "login": {
@@ -29,6 +35,44 @@
   },
   "collections": {
     "title": "Collections"
+  },
+  "general": {
+    "accessibility": {
+      "required": "(required)"
+    }
+  },
+  "header": {
+    "account": "Account",
+    "cart": "Cart",
+    "cart_count": "Cart, {{ count }} items",
+    "close_menu": "Close menu",
+    "menu": "Menu",
+    "mobile_menu": "Mobile menu",
+    "navigation": "Main navigation",
+    "navigation_drawer": "Navigation menu",
+    "search": "Search",
+    "view_all": "View all {{ title }}"
+  },
+  "footer": {
+    "copyright": "© {{ year }} {{ shop_name }}",
+    "customer_care": "Customer care",
+    "menu_column": "Footer menu",
+    "newsletter": {
+      "email_label": "Email address",
+      "error": "Please enter a valid email address.",
+      "submit": "Subscribe",
+      "success": "Thanks — you are subscribed."
+    },
+    "payment_methods": "Payment methods",
+    "policies": "Policies",
+    "separator": " · ",
+    "shop": "Shop",
+    "social_facebook": "Facebook",
+    "social_instagram": "Instagram",
+    "social_links": "Social media",
+    "social_pinterest": "Pinterest",
+    "social_tiktok": "TikTok",
+    "social_youtube": "YouTube"
   },
   "gift_card": {
     "add_to_apple_wallet": "Add to Apple Wallet",
@@ -42,11 +86,252 @@
     "password": "Password",
     "enter": "Enter"
   },
+  "products": {
+    "badge": {
+      "sale": "Sale",
+      "sold_out": "Sold out"
+    },
+    "price": {
+      "from": "From {{ price }}",
+      "regular": "Regular price",
+      "sale": "Sale price"
+    },
+    "quick_view": "Quick view",
+    "add_to_cart": "Add {{ title }} to cart",
+    "quick_view_dialog": "Quick view",
+    "quick_view_close": "Close quick view",
+    "quick_view_loading": "Loading product…",
+    "quick_view_error": "Unable to load this product. Please try again.",
+    "quick_view_add_success": "{{ title }} added to cart",
+    "quick_view_add_error": "Unable to add to cart. Please try again.",
+    "view_product": "View product",
+    "add_to_cart_button": "Add to cart",
+    "add_to_cart_adding": "Adding…",
+    "add_to_cart_added": "Added to cart",
+    "add_to_cart_error": "Unable to add to cart. Please try again.",
+    "unavailable": "Unavailable",
+    "variant_unavailable": "This combination is unavailable",
+    "quantity": "Quantity",
+    "decrease_quantity": "Decrease quantity",
+    "increase_quantity": "Increase quantity",
+    "buy_now": "Buy it now",
+    "gallery": {
+      "label": "Product media",
+      "thumbnails": "Product media",
+      "media": "Media {{ number }} of {{ total }}",
+      "previous": "Previous media",
+      "next": "Next media",
+      "zoom": "View larger image",
+      "close": "Close media viewer",
+      "lightbox": "Product media viewer",
+      "counter": "{{ current }} / {{ total }}"
+    },
+    "rating": {
+      "summary": "{{ rating }} out of 5 stars, based on {{ count }} reviews",
+      "count": "{{ rating }} from {{ count }} reviews",
+      "value": "{{ rating }} out of 5"
+    },
+    "availability": {
+      "in_stock": "In stock",
+      "low_stock": "Low stock",
+      "sold_out": "Sold out"
+    },
+    "meta": {
+      "sku": "SKU",
+      "vendor": "Vendor",
+      "type": "Type"
+    },
+    "share": {
+      "label": "Share",
+      "action": "Share",
+      "copied": "Link copied",
+      "copy_failed": "Unable to copy link"
+    },
+    "sticky_atc": {
+      "bar_label": "Sticky add to cart",
+      "variant": "Selected variant"
+    },
+    "details": {
+      "description": "Description",
+      "information": "Information",
+      "ingredients": "Ingredients",
+      "how_to_use": "How to use",
+      "shipping": "Shipping & returns",
+      "additional": "Additional information"
+    },
+    "reviews": {
+      "landmark_label": "Product reviews",
+      "heading": "Reviews",
+      "list_heading": "Review list",
+      "out_of": "out of {{ scale }}",
+      "count_one": "{{ count }} review",
+      "count_other": "{{ count }} reviews",
+      "distribution_label": "Rating distribution",
+      "star_level": "{{ count }} star",
+      "sort_by": "Sort by",
+      "sort_newest": "Newest",
+      "sort_highest": "Highest rating",
+      "sort_lowest": "Lowest rating",
+      "showing": "Showing %from%-%to% of %total% results",
+      "pagination_label": "Review pagination",
+      "load_more": "Load more",
+      "write": "Write a review",
+      "verified": "Verified purchase",
+      "rating_stars": "{{ rating }} out of 5 stars",
+      "empty": "No reviews yet",
+      "empty_editor": "Add a review app block, or connect review metafields, to show customer reviews.",
+      "disabled": "Reviews are turned off for this section."
+    },
+    "tabs": {
+      "description": "Description",
+      "reviews": "Reviews",
+      "description_empty": "No description yet"
+    }
+  },
   "search": {
     "title": "Search",
     "placeholder": "Search articles, pages, or products",
+    "placeholder_short": "What are you looking for?",
     "submit": "Search",
+    "close": "Close search",
+    "suggestions": "Search suggestions",
+    "no_suggestions": "No results found",
     "no_results_html": "No results found for {{ terms }}",
     "results_for_html": "{{ count }} results found for {{ terms }}"
+  },
+  "sections": {
+    "main_hero": {
+      "landmark_label": "Featured products",
+      "category_navigation": "Shop categories",
+      "slide_controls": "Hero slides",
+      "slide_label": "Slide {{ number }} of {{ total }}",
+      "previous_slide": "Previous slide",
+      "next_slide": "Next slide",
+      "image_placeholder": "Product image placeholder. Replace with your hero image in the theme editor."
+    },
+    "main_collections_editorial": {
+      "landmark_label": "Editorial collections",
+      "navigation": "Collection navigation",
+      "pagination": "Collection pages",
+      "page_label": "Page {{ number }} of {{ total }}",
+      "slide_label": "Collection {{ number }} of {{ total }}",
+      "previous": "Previous collection",
+      "next": "Next collection",
+      "shop_link": "Shop {{ title }}"
+    },
+    "main_popular_products": {
+      "landmark_label": "Popular products",
+      "navigation": "Product navigation",
+      "previous": "Previous",
+      "next": "Next",
+      "page_status": "Page {current} of {total}"
+    },
+    "vertical_video": {
+      "landmark_label": "Shop the look videos",
+      "category_navigation": "Shop categories",
+      "previous": "Previous videos",
+      "next": "Next videos",
+      "view_product": "View {{ title }}",
+      "open_media": "Open featured look",
+      "play": "Play video",
+      "pause": "Pause video",
+      "mute": "Mute video",
+      "unmute": "Unmute video",
+      "demo_product_1": "Soft Focus Blurring Blush",
+      "demo_product_2": "Hydrating Lip Crayon",
+      "demo_product_3": "Skin Tint SPF 40",
+      "demo_product_4": "Glow Serum",
+      "demo_product_5": "Cream Bronzer",
+      "demo_product_6": "Skin Rewind"
+    },
+    "editorial_cta": {
+      "landmark_label": "Featured essentials",
+      "image_placeholder": "Editorial image placeholder. Replace with your campaign image in the theme editor.",
+      "image_link_label": "Shop featured essentials"
+    },
+    "benefits": {
+      "landmark_label": "Store benefits",
+      "link_fallback": "Learn more"
+    },
+    "product_details": {
+      "landmark_label": "Product details"
+    },
+    "product_description_reviews": {
+      "landmark_label": "Product description and reviews"
+    },
+    "product_complementary": {
+      "heading": "Complete your routine",
+      "empty": "Add products to complete this routine",
+      "disabled": "Complete your routine is turned off",
+      "demo_vendor": "Cosme",
+      "demo_price": "$48.00",
+      "demo_product_1": "Hydrating cleanser",
+      "demo_product_2": "Balancing toner",
+      "demo_product_3": "Glow serum",
+      "demo_product_4": "Hydrating eye cream"
+    },
+    "product_recommendations": {
+      "landmark_label": "Related products",
+      "navigation": "Related products navigation",
+      "previous": "Previous",
+      "next": "Next",
+      "page_status": "Page {current} of {total}",
+      "heading_related": "You may also like",
+      "heading_complementary": "Pairs well with",
+      "empty": "No product recommendations yet"
+    },
+    "recently_viewed": {
+      "landmark_label": "Recently viewed products",
+      "heading": "Recently viewed",
+      "navigation": "Recently viewed navigation",
+      "previous": "Previous",
+      "next": "Next",
+      "page_status": "Page {current} of {total}",
+      "demo_vendor": "Cosme",
+      "demo_price": "$48.00",
+      "demo_product_1": "Hydrating cleanser",
+      "demo_product_2": "Balancing toner",
+      "demo_product_3": "Glow serum",
+      "demo_product_4": "Hydrating eye cream"
+    },
+    "testimonials": {
+      "landmark_label": "Customer testimonials",
+      "carousel_label": "Customer stories",
+      "previous": "Previous testimonials",
+      "next": "Next testimonials",
+      "rating_stars": "{{ rating }} out of 5 stars",
+      "rating_summary": "{{ rating }} out of 5 stars, based on {{ count }} reviews",
+      "author_fallback": "Customer",
+      "view_product": "View {{ title }}"
+    }
+  },
+  "labels": {
+    "height_desktop": "Height (desktop)",
+    "height_mobile": "Height (mobile)",
+    "speed": "Speed",
+    "enable_ticker": "Enable ticker",
+    "icon": "Icon",
+    "enable_top_border": "Enable top border",
+    "enable_bottom_border": "Enable bottom border",
+    "border_color": "Border color",
+    "custom_css": "Custom CSS",
+    "scheme_1": "Light",
+    "scheme_2": "Dark",
+    "scheme_3": "Light + Accent",
+    "quick_view_enabled": "Enable Quick View",
+    "quick_view_autoplay": "Enable autoplay",
+    "quick_view_autoplay_delay": "Autoplay delay",
+    "quick_view_show_arrows": "Show arrows",
+    "quick_view_show_dots": "Show dots",
+    "quick_view_show_description": "Show description",
+    "quick_view_show_buy_now": "Show Buy Now button"
+  },
+  "options": {
+    "none": "None"
+  },
+  "info": {
+    "speed": "Duration of one full cycle (seconds).",
+    "border_color": "Used for both top and bottom borders.",
+    "custom_css": "Additional CSS to style this section."
   }
 }

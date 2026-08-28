@@ -1,0 +1,160 @@
+{% doc %}
+  Renders an accessible form field with label, control, hint, and error message.
+
+  @param {string} label - Visible field label
+  @param {string} id - Input `id` and label `for` attribute
+  @param {string} name - Input `name` attribute
+  @param {string} [type] - Control type: `text`, `email`, `password`, `tel`, `number`, `search`, or `textarea` (default: `text`)
+  @param {string} [value] - Input value
+  @param {boolean} [required] - Marks the field as required
+  @param {string} [hint] - Supplementary help text
+  @param {string} [error] - Error message displayed below the field
+  @param {string} [placeholder] - Placeholder text
+  @param {string} [autocomplete] - Autocomplete attribute value
+  @param {number} [rows] - Rows for `textarea` controls (default: 4)
+  @param {string} [class] - Additional CSS classes for the wrapper
+
+  @example
+  {% render 'cosme-form-field',
+    label: 'Email',
+    id: 'contact-email',
+    name: 'contact[email]',
+    type: 'email',
+    required: true
+  %}
+{% enddoc %}
+
+{% liquid
+  assign field_type = type | default: 'text'
+  assign is_required = required | default: false
+  assign textarea_rows = rows | default: 4
+  assign hint_id = id | append: '-hint'
+  assign error_id = id | append: '-error'
+  assign describedby = ''
+
+  if hint != blank
+    assign describedby = hint_id
+  endif
+
+  if error != blank
+    if describedby != blank
+      assign describedby = describedby | append: ' ' | append: error_id
+    else
+      assign describedby = error_id
+    endif
+  endif
+%}
+
+<div class="cosme-form-field{% if error != blank %} cosme-form-field--error{% endif %}{% if class != blank %} {{ class }}{% endif %}">
+  <label class="cosme-form-field__label" for="{{ id | escape }}">
+    {{ label | escape }}
+    {% if is_required %}
+      <span class="cosme-form-field__required" aria-hidden="true">*</span>
+      <span class="cosme-visually-hidden">{{ 'general.accessibility.required' | t }}</span>
+    {% endif %}
+  </label>
+
+  {% if field_type == 'textarea' %}
+    <textarea
+      class="cosme-form-field__control"
+      id="{{ id | escape }}"
+      name="{{ name | escape }}"
+      rows="{{ textarea_rows }}"
+      {% if is_required %}
+        required
+        aria-required="true"
+      {% endif %}
+      {% if describedby != blank %}
+        aria-describedby="{{ describedby }}"
+      {% endif %}
+      {% if error != blank %}
+        aria-invalid="true"
+      {% endif %}
+      {% if placeholder != blank %}
+        placeholder="{{ placeholder | escape }}"
+      {% endif %}
+    >{{ value }}</textarea>
+  {% else %}
+    <input
+      class="cosme-form-field__control"
+      type="{{ field_type | escape }}"
+      id="{{ id | escape }}"
+      name="{{ name | escape }}"
+      {% if value != blank %}
+        value="{{ value | escape }}"
+      {% endif %}
+      {% if is_required %}
+        required
+        aria-required="true"
+      {% endif %}
+      {% if describedby != blank %}
+        aria-describedby="{{ describedby }}"
+      {% endif %}
+      {% if error != blank %}
+        aria-invalid="true"
+      {% endif %}
+      {% if placeholder != blank %}
+        placeholder="{{ placeholder | escape }}"
+      {% endif %}
+      {% if autocomplete != blank %}
+        autocomplete="{{ autocomplete | escape }}"
+      {% endif %}
+    >
+  {% endif %}
+
+  {% if hint != blank %}
+    <p class="cosme-form-field__hint" id="{{ hint_id }}">{{ hint | escape }}</p>
+  {% endif %}
+
+  {% if error != blank %}
+    <p class="cosme-form-field__error" id="{{ error_id }}" role="alert">{{ error | escape }}</p>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .cosme-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-form-field__label {
+    color: var(--color-input-label, var(--color-foreground));
+    font-size: inherit;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-form-field__required {
+    color: var(--color-error);
+  }
+
+  .cosme-form-field__control {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    color: var(--color-foreground);
+    background-color: var(--color-input-background);
+    border: var(--border-width) solid var(--color-input-border, var(--color-border));
+    border-radius: var(--radius-input);
+  }
+
+  .cosme-form-field__control:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-form-field--error .cosme-form-field__control {
+    border-color: var(--color-error);
+  }
+
+  .cosme-form-field__hint {
+    color: var(--color-muted);
+    font-size: 0.875em;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-form-field__error {
+    color: var(--color-error);
+    font-size: 0.875em;
+    line-height: var(--line-height-body);
+  }
+{% endstylesheet %}
