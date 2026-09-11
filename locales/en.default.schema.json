@@ -8,6 +8,8 @@
     "blog": "Blog",
     "brand": "Brand",
     "cart": "Cart",
+    "cart_drawer": "Cart drawer",
+    "cart_recommendations": "Cart recommendations",
     "collection": "Collection",
     "collections": "Collections",
     "collection_card": "Collection card",
@@ -19,7 +21,10 @@
     "custom_section": "Custom section",
     "fonts": "Fonts",
     "favicon": "Favicon",
+    "faq": "FAQ",
+    "contact": "Contact",
     "footer": "Footer",
+    "gift_card": "Gift card",
     "group": "Group",
     "header": "Header",
     "logo": "Logo",
@@ -27,6 +32,7 @@
     "main": "Main",
     "page": "Page",
     "password": "Password",
+    "policy": "Policy",
     "primary": "Primary",
     "product": "Product",
     "row": "Row",
@@ -39,6 +45,7 @@
     "text": "Text",
     "theme": "Theme",
     "typography": "Typography",
+    "actions": "Actions",
     "appearance": "Appearance",
     "borders": "Borders",
     "custom_css": "Custom CSS",
@@ -54,7 +61,19 @@
     "product_complementary": "Complete your routine",
     "product_reviews": "Reviews",
     "product_description_reviews": "Description and reviews",
-    "recently_viewed": "Recently viewed"
+    "recently_viewed": "Recently viewed",
+    "collection_header": "Collection header",
+    "collection_toolbar": "Collection toolbar",
+    "about_hero": "About hero",
+    "about_story": "Brand story",
+    "about_manifesto": "Manifesto",
+    "about_philosophy": "Philosophy",
+    "about_image_story": "Image story",
+    "about_brand_facts": "Brand facts",
+    "about_cta": "About CTA",
+    "overlay_group": "Overlay",
+    "popup": "Popup",
+    "back_to_top": "Back to top"
   },
   "labels": {
     "accent": "Accent",
@@ -87,6 +106,7 @@
     "menu_item_trigger": "Menu item trigger",
     "customer_account_menu": "Customer account menu",
     "enable_animations": "Enable animations",
+    "enable_back_to_top": "Enable back to top button",
     "enable_predictive_search": "Enable predictive search",
     "quick_view_enabled": "Enable Quick View",
     "quick_view_autoplay": "Enable autoplay",
@@ -125,6 +145,7 @@
     "social_facebook": "Facebook",
     "social_instagram": "Instagram",
     "social_pinterest": "Pinterest",
+    "social_x": "X (Twitter)",
     "social_tiktok": "TikTok",
     "social_youtube": "YouTube",
     "success": "Success",
@@ -426,6 +447,9 @@
         "show_social": "Show social links",
         "show_social_info": "Uses the social links from Theme settings.",
         "social_style": "Social links style",
+        "country_header": "Country / region",
+        "enable_country_selector": "Enable country/region selector",
+        "enable_country_selector_info": "Uses countries and regions from Shopify Markets.",
         "bottom_header": "Bottom bar",
         "show_copyright": "Show copyright"
       }
@@ -556,6 +580,552 @@
         "products_to_show": "Maximum products",
         "columns": "Columns",
         "show_navigation": "Show navigation"
+      }
+    },
+    "collection_header": {
+      "settings": {
+        "heading_alignment": "Heading alignment",
+        "show_description": "Show description",
+        "show_product_count": "Show product count",
+        "show_collection_image": "Show collection image",
+        "header_spacing": "Header spacing",
+        "image_fit": {
+          "label": "Image fit",
+          "options": {
+            "cover": "Cover",
+            "contain": "Contain"
+          }
+        }
+      }
+    },
+    "collection_toolbar": {
+      "settings": {
+        "header_collection_navigation": "Collection navigation",
+        "show_collection_dropdown": "Show collection dropdown",
+        "show_horizontal_links": "Show horizontal links",
+        "show_all_collections_link": "Show 'All collections' link",
+        "collections_to_show": "Collections to show in horizontal links",
+        "horizontal_links_alignment": "Horizontal links alignment",
+        "header_filters": "Filters",
+        "filter_source": {
+          "label": "Filter source",
+          "info": "Select 'Native' to use Shopify's Search & Discovery filters (requires app setup). Select 'Custom' to use filters based on product data (no app required).",
+          "options": {
+            "native": "Native (Search & Discovery)",
+            "custom": "Custom (no app)"
+          }
+        },
+        "show_filters": "Show filters",
+        "show_sorting": "Show sorting",
+        "show_product_count": "Show product count",
+        "header_behavior": "Behavior",
+        "sticky_toolbar": "Sticky toolbar"
+      }
+    },
+    "blog": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "show_eyebrow": "Show eyebrow",
+        "description": "Description",
+        "show_description": "Show description",
+        "text_alignment": "Text alignment",
+        "featured_header": "Featured article",
+        "show_featured": "Show featured article",
+        "featured_article": "Featured article",
+        "featured_article_info": "If none is selected, the most recent article is featured on the first page.",
+        "featured_image_ratio": "Featured image ratio",
+        "show_featured_excerpt": "Show featured excerpt",
+        "grid_header": "Latest stories",
+        "columns_desktop": "Desktop columns",
+        "image_ratio": "Image ratio",
+        "ratio_landscape": "Landscape",
+        "ratio_wide": "Wide",
+        "ratio_portrait": "Portrait",
+        "ratio_square": "Square",
+        "show_category": "Show category",
+        "show_excerpt": "Show article excerpt",
+        "show_date": "Show date",
+        "show_reading_time": "Show reading time",
+        "show_index": "Show editorial index",
+        "show_cta": "Show article CTA"
+      }
+    },
+    "article": {
+      "settings": {
+        "show_back_link": "Show back to journal",
+        "show_excerpt": "Show excerpt",
+        "show_date": "Show date",
+        "show_author": "Show author",
+        "show_reading_time": "Show reading time",
+        "hero_image_ratio": "Hero image ratio",
+        "ratio_landscape": "Landscape",
+        "ratio_wide": "Wide",
+        "ratio_square": "Square",
+        "show_share": "Show sharing",
+        "related_header": "Related stories",
+        "show_related": "Show related stories",
+        "related_count": "Number of articles",
+        "related_heading": "Heading",
+        "related_description": "Description",
+        "newsletter_header": "Newsletter",
+        "show_newsletter": "Show newsletter",
+        "newsletter_eyebrow": "Eyebrow",
+        "newsletter_heading": "Heading",
+        "newsletter_description": "Description",
+        "newsletter_button_label": "Button label",
+        "newsletter_color_scheme": "Color scheme"
+      }
+    },
+    "not_found": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "heading": "Headline",
+        "description": "Description",
+        "primary_label": "Primary button label",
+        "secondary_label": "Secondary button label",
+        "search_header": "Search",
+        "show_search": "Show search",
+        "search_label": "Search label",
+        "image_header": "Editorial image",
+        "show_image": "Show image",
+        "image_ratio": "Image ratio"
+      }
+    },
+    "password": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "heading": "Headline",
+        "description": "Description",
+        "password_label": "Password label",
+        "password_button_label": "Button label",
+        "image_header": "Editorial image",
+        "show_image": "Show image",
+        "image_ratio": "Image ratio"
+      }
+    },
+    "gift_card": {
+      "settings": {
+        "show_eyebrow": "Show eyebrow",
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "description": "Description",
+        "text_alignment": "Text alignment",
+        "editorial_header": "Editorial message",
+        "show_editorial": "Show editorial message",
+        "editorial_eyebrow": "Editorial eyebrow",
+        "editorial_heading": "Editorial heading",
+        "editorial_text": "Editorial text",
+        "editorial_color_scheme": "Editorial color scheme",
+        "continue_shopping": "Continue shopping label"
+      }
+    },
+    "about": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "description": "Description",
+        "text_alignment": "Text alignment",
+        "content_width": "Content width",
+        "image": "Desktop image",
+        "mobile_image": "Mobile image",
+        "mobile_image_info": "Shown on small screens. The desktop image is used if this is empty.",
+        "image_alt": "Image alt text",
+        "image_alt_info": "Describe the image for screen readers. Leave empty to use the image’s alt text or the heading.",
+        "image_ratio": "Image aspect ratio",
+        "ratio_adapt": "Original"
+      }
+    },
+    "about_story": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "body": "Body text",
+        "secondary_text": "Secondary text",
+        "text_alignment": "Text alignment",
+        "content_width": "Content width",
+        "image": "Image",
+        "image_alt": "Image alt text",
+        "image_alt_info": "Describe the image for screen readers. Leave empty to use the image’s alt text or the heading.",
+        "image_position": "Image position",
+        "image_ratio": "Image aspect ratio",
+        "show_cta": "Show call to action",
+        "cta_label": "Button label",
+        "cta_link": "Button link"
+      }
+    },
+    "about_manifesto": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "statement": "Statement",
+        "supporting_text": "Supporting text",
+        "alignment": "Alignment",
+        "statement_max_width": "Statement max width",
+        "show_index": "Show index",
+        "index_text": "Index text",
+        "show_divider": "Show divider"
+      }
+    },
+    "about_philosophy": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "description": "Description",
+        "layout": "Layout",
+        "layout_grid": "Editorial grid",
+        "layout_list": "Editorial list"
+      },
+      "blocks": {
+        "item": "Principle",
+        "title": "Title",
+        "description": "Description"
+      }
+    },
+    "about_image_story": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "body": "Body text",
+        "primary_image": "Primary image",
+        "primary_image_alt": "Primary image alt text",
+        "show_secondary_image": "Show secondary image",
+        "secondary_image": "Secondary image",
+        "secondary_image_alt": "Secondary image alt text",
+        "image_alt_info": "Describe the image for screen readers. Leave empty to use the image’s alt text or the heading.",
+        "secondary_image_alt_info": "Describe the secondary image for screen readers. Leave empty to treat it as decorative.",
+        "image_ratio": "Image aspect ratio",
+        "image_position": "Image position",
+        "cta_label": "Button label",
+        "cta_link": "Button link"
+      }
+    },
+    "about_brand_facts": {
+      "settings": {
+        "enable": "Enable section",
+        "enable_info": "Turn off to hide this section on the storefront without removing it. Add 2 to 4 facts.",
+        "eyebrow": "Eyebrow"
+      },
+      "blocks": {
+        "item": "Fact",
+        "index": "Number",
+        "title": "Title",
+        "description": "Description"
+      }
+    },
+    "about_cta": {
+      "settings": {
+        "enable": "Enable section",
+        "enable_info": "Turn off to hide this section on the storefront without removing it.",
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "description": "Description",
+        "alignment": "Alignment",
+        "primary_label": "Primary button label",
+        "primary_link": "Primary button link",
+        "show_secondary_cta": "Show secondary button",
+        "secondary_label": "Secondary button label",
+        "secondary_link": "Secondary button link"
+      }
+    },
+    "popup": {
+      "settings": {
+        "popup_header": "Popup",
+        "enable": "Enable",
+        "show_home_only": "Show on home page only",
+        "show_visitors_only": "Show for visitors only",
+        "trigger_automatically": "Trigger open automatically",
+        "trigger_header": "Automatic trigger",
+        "trigger_type": "Trigger type",
+        "delay": "Delay before popup appears",
+        "scroll_percentage": "Scroll percentage",
+        "repeat_header": "Repeat",
+        "repeat_interval": "Repeat open automatically",
+        "teaser_header": "Teaser button",
+        "show_teaser": "Show teaser button",
+        "teaser_label": "Button label",
+        "teaser_position": "Position",
+        "text_alignment": "Text alignment",
+        "container_width": "Container width",
+        "image_position_top": "Top",
+        "image_position_left": "Left",
+        "image_alt": "Image alt text",
+        "image_alt_info": "Describe the image for screen readers. Leave empty to use the image’s alt text.",
+        "heading_tag": "Heading tag",
+        "button_label": "Button label",
+        "button_design": "Design"
+      },
+      "blocks": {
+        "image": "Image",
+        "heading": "Heading",
+        "text": "Text",
+        "newsletter": "Newsletter form",
+        "social": "Social links"
+      }
+    },
+    "page": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "show_eyebrow": "Show eyebrow",
+        "content_alignment": "Content alignment",
+        "content_width": "Content width"
+      }
+    },
+    "faq": {
+      "settings": {
+        "show_eyebrow": "Show eyebrow",
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "description": "Description",
+        "hero_alignment": "Text alignment",
+        "heading_size": "Heading size",
+        "hero_max_width": "Hero content max width",
+        "hero_spacing_top": "Hero top spacing",
+        "hero_spacing_bottom": "Hero bottom spacing",
+        "intro_label": "FAQ intro label",
+        "faq_header": "FAQ",
+        "enable_search": "Enable FAQ search",
+        "search_placeholder": "Search placeholder",
+        "enable_category_nav": "Enable category navigation",
+        "show_result_count": "Show result count",
+        "faq_width": "FAQ content width",
+        "faq_alignment": "FAQ alignment",
+        "question_size": "Question text size",
+        "answer_size": "Answer text size",
+        "show_category": "Show category",
+        "show_numbering": "Show question numbering",
+        "open_first": "Open first item by default",
+        "desktop_columns": "Desktop columns",
+        "column_one": "1",
+        "column_two": "2",
+        "content_max_width": "Content max width",
+        "section_spacing_top": "Section top spacing",
+        "section_spacing_bottom": "Section bottom spacing",
+        "border_opacity": "Border opacity",
+        "accordion_spacing": "Accordion spacing",
+        "note_header": "FAQ note",
+        "enable_note": "Enable FAQ note",
+        "note_title": "Note title",
+        "note_text": "Note text",
+        "cta_header": "Contact CTA",
+        "enable_cta": "Enable contact CTA",
+        "cta_eyebrow": "CTA eyebrow",
+        "cta_heading": "CTA heading",
+        "cta_description": "CTA description",
+        "cta_button_label": "CTA button label",
+        "cta_button_link": "CTA button link",
+        "cta_color_scheme": "CTA color scheme",
+        "cta_spacing": "CTA spacing"
+      },
+      "blocks": {
+        "item": "FAQ item",
+        "question": "Question",
+        "answer": "Answer",
+        "category": "Category",
+        "open_by_default": "Open by default"
+      }
+    },
+    "contact": {
+      "settings": {
+        "show_eyebrow": "Show eyebrow",
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "description": "Description",
+        "hero_alignment": "Text alignment",
+        "heading_size": "Heading size",
+        "hero_max_width": "Hero content max width",
+        "hero_spacing_top": "Hero top spacing",
+        "hero_spacing_bottom": "Hero bottom spacing",
+        "info_header": "Contact information",
+        "show_contact_info": "Show contact information",
+        "contact_eyebrow": "Contact eyebrow",
+        "contact_heading": "Contact heading",
+        "email": "Email",
+        "email_link": "Email link",
+        "email_link_info": "Optional. Leave blank to open a mailto link from the email address.",
+        "hours_title": "Business hours title",
+        "hours_text": "Business hours text",
+        "phone": "Phone",
+        "phone_link": "Phone link",
+        "phone_link_info": "Optional. Leave blank to open a tel link from the phone number.",
+        "phone_label": "Phone label",
+        "form_header": "Contact form",
+        "form_heading": "Form heading",
+        "form_description": "Form description",
+        "submit_label": "Submit button label",
+        "success_message": "Success message",
+        "show_phone_field": "Show phone field",
+        "phone_required": "Require phone number",
+        "section_spacing_bottom": "Section bottom spacing",
+        "faq_header": "Quick answers",
+        "enable_quick_answers": "Enable Quick Answers",
+        "faq_eyebrow": "Eyebrow",
+        "faq_heading": "Heading",
+        "faq_description": "Description",
+        "faq_alignment": "Text alignment",
+        "faq_max_width": "Content max width",
+        "show_faq_link": "Show FAQ link",
+        "faq_link_label": "FAQ link label",
+        "faq_link": "FAQ link",
+        "faq_link_info": "Select your FAQ page. If left blank, the theme uses /pages/faq.",
+        "faq_spacing_top": "Top spacing",
+        "faq_spacing_bottom": "Bottom spacing",
+        "cta_header": "Final CTA",
+        "show_final_cta": "Show final CTA",
+        "cta_eyebrow": "CTA eyebrow",
+        "cta_heading": "CTA heading",
+        "cta_description": "CTA description",
+        "cta_button_label": "CTA button label",
+        "cta_button_link": "CTA button link",
+        "cta_button_link_info": "Leave blank to scroll to the contact form. Links to this Contact page also scroll to the form.",
+        "cta_color_scheme": "CTA color scheme",
+        "cta_spacing_top": "CTA top spacing",
+        "cta_spacing_bottom": "CTA bottom spacing"
+      },
+      "blocks": {
+        "item": "FAQ item",
+        "question": "Question",
+        "answer": "Answer",
+        "open_by_default": "Open by default"
+      }
+    },
+    "policy": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "show_eyebrow": "Show eyebrow"
+      }
+    },
+    "list_collections": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "show_eyebrow": "Show eyebrow",
+        "description": "Description",
+        "show_description": "Show description",
+        "text_alignment": "Text alignment",
+        "collection_source": "Collections",
+        "source_all": "All collections",
+        "source_selected": "Selected collections",
+        "selected_info": "Add collection blocks and drag them to set the display order.",
+        "grid_header": "Grid",
+        "columns_desktop": "Desktop columns",
+        "image_ratio": "Image ratio",
+        "ratio_4_5": "Portrait 4:5",
+        "ratio_1_1": "Square 1:1",
+        "ratio_4_3": "Landscape 4:3",
+        "card_header": "Card content",
+        "show_collection_description": "Show collection description",
+        "show_product_count": "Show product count",
+        "show_cta": "Show collection CTA",
+        "enable_hover_effect": "Enable hover effect",
+        "collection_source_info": "All collections lists every collection in the store. Selected collections uses the collection blocks below.",
+        "block_collection_info": "Duplicate selections are ignored. Block order sets the display order."
+      }
+    },
+    "search": {
+      "settings": {
+        "eyebrow": "Eyebrow",
+        "placeholder": "Search placeholder",
+        "no_results_heading": "No-results heading",
+        "no_results_text": "No-results text",
+        "no_results_cta_label": "No-results CTA label",
+        "show_popular_searches": "Show popular searches",
+        "desktop_columns": "Desktop columns"
+      },
+      "blocks": {
+        "popular_search": "Popular search",
+        "term": "Search term",
+        "label": "Custom label"
+      }
+    },
+    "collection": {
+      "settings": {
+        "desktop_columns": "Desktop columns",
+        "mobile_columns": "Mobile columns",
+        "image_aspect_ratio": "Image aspect ratio",
+        "aspect_3_4": "3 / 4",
+        "aspect_1_1": "1 / 1",
+        "aspect_4_5": "4 / 5",
+        "show_vendor": "Show vendor",
+        "show_secondary_image": "Show secondary image on hover",
+        "product_loading": "Product loading",
+        "loading_pagination": "Pagination",
+        "loading_load_more": "Load more",
+        "products_per_page": "Products per page"
+      }
+    },
+    "cart": {
+      "settings": {
+        "show_vendor": "Show vendor",
+        "show_compare_at": "Show compare-at price",
+        "show_free_shipping": "Show free shipping message",
+        "show_free_shipping_bar": "Show free shipping bar",
+        "free_shipping_threshold": "Free shipping threshold",
+        "free_shipping_threshold_info": "Enter the amount in your store currency, for example 100.00. The theme converts it to subunits automatically.",
+        "show_discount_code": "Show discount code",
+        "show_payment_methods": "Show payment methods",
+        "show_trust_message": "Show trust message",
+        "trust_message": "Trust message"
+      }
+    },
+    "cart_drawer": {
+      "settings": {
+        "free_shipping": "Free shipping",
+        "enable_free_shipping_bar": "Enable free shipping bar",
+        "free_shipping_message": "Before-threshold message",
+        "free_shipping_unlocked": "Unlocked message",
+        "empty_cart": "Empty cart",
+        "empty_heading": "Heading",
+        "empty_description": "Description",
+        "empty_button_label": "Button label",
+        "empty_button_link": "Button link",
+        "empty_show_recs": "Show recommendations",
+        "empty_recs_heading": "Recommendation heading",
+        "empty_recs_source": "Recommendation source",
+        "empty_recs_products": "Manual products",
+        "empty_recs_products_info": "Select up to 4 products. Also shown if recommendations cannot be loaded.",
+        "empty_recs_limit": "Maximum products",
+        "upsell": "Upsell",
+        "show_upsell": "Enable upsell",
+        "upsell_heading": "Heading",
+        "upsell_source": "Upsell source",
+        "upsell_source_manual": "Manual products",
+        "upsell_source_recommendations": "Product recommendations",
+        "upsell_products": "Manual products",
+        "upsell_products_info": "Select up to 4 products. Shown when source is Manual products.",
+        "upsell_limit": "Maximum products",
+        "upsell_show_vendor": "Show vendor",
+        "order_note": "Order note",
+        "show_order_note": "Enable order note",
+        "order_note_label": "Label",
+        "order_note_placeholder": "Placeholder",
+        "discount_code": "Discount code",
+        "show_discount_code": "Enable discount code",
+        "discount_label": "Label",
+        "discount_placeholder": "Placeholder",
+        "discount_button_label": "Button label",
+        "trust": "Trust / payment",
+        "show_trust_message": "Enable trust message",
+        "trust_message": "Trust message"
+      }
+    },
+    "cart_recommendations": {
+      "name": "Cart recommendations",
+      "settings": {
+        "products_header": "Products",
+        "products_info": "Add up to 4 products. Empty product blocks are hidden. If no products are selected, this section is hidden on the storefront.",
+        "products_per_row": "Products per row on desktop",
+        "show_vendor": "Show vendor",
+        "show_secondary_image": "Show secondary image on hover",
+        "image_aspect_ratio": "Image aspect ratio",
+        "aspect_3_4": "3 / 4",
+        "aspect_1_1": "1 / 1",
+        "aspect_4_5": "4 / 5",
+        "show_badges": "Show badges"
+      },
+      "blocks": {
+        "product": {
+          "name": "Recommendation product",
+          "product": "Product",
+          "product_info": "Select a product to recommend. Leave empty to hide this block."
+        }
       }
     },
     "product_reviews": {
@@ -764,6 +1334,7 @@
     "density": {
       "compact": "Compact",
       "default": "Default",
+      "standard": "Standard",
       "spacious": "Spacious"
     },
     "social_style": {
@@ -772,8 +1343,51 @@
     },
     "size": {
       "small": "Small",
+      "base": "Base",
       "medium": "Medium",
-      "large": "Large"
+      "large": "Large",
+      "inherit": "Inherit"
+    },
+    "heading_size": {
+      "heading_xs": "Heading XS",
+      "heading_sm": "Heading SM",
+      "heading_md": "Heading MD",
+      "heading_lg": "Heading LG",
+      "heading_xl": "Heading XL",
+      "heading_2xl": "Heading 2XL",
+      "display_md": "Display MD",
+      "display_lg": "Display LG",
+      "display_xl": "Display XL",
+      "display_2xl": "Display 2XL"
+    },
+    "heading_tag": {
+      "h1": "H1",
+      "h2": "H2",
+      "h3": "H3",
+      "h4": "H4",
+      "h5": "H5",
+      "h6": "H6"
+    },
+    "popup_design": {
+      "design_1": "Design 1",
+      "design_2": "Design 2"
+    },
+    "popup_trigger": {
+      "immediate": "Open immediately after page loaded",
+      "delay": "Delay after page loaded",
+      "scroll": "Customers scrolling down"
+    },
+    "popup_repeat": {
+      "none": "No repeat",
+      "30m": "Every 30 minutes",
+      "1h": "Every 1 hour",
+      "6h": "Every 6 hours",
+      "12h": "Every 12 hours",
+      "1d": "Every day",
+      "3d": "Every 3 days",
+      "7d": "Every week",
+      "14d": "Every 2 weeks",
+      "30d": "Every month"
     },
     "text_style": {
       "title": "Title",

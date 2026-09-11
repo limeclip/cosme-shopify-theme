@@ -1,17 +1,461 @@
-{% comment %}
-  This section is used in the page template to render store pages like About us
-  or Contact us.
+{% liquid
+  assign heading_id = 'PageHeading-' | append: section.id
+  assign section_spacing = section.settings.section_spacing | default: 'medium'
+  assign eyebrow = section.settings.eyebrow | strip
+  assign show_eyebrow = false
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/page
-{% endcomment %}
+  if section.settings.show_eyebrow
+    if eyebrow != blank
+      assign show_eyebrow = true
+    endif
+  endif
 
-<h1>{{ page.title }}</h1>
+  assign has_content = false
+  if page.content != blank
+    assign has_content = true
+  endif
 
-{{ page.content }}
+  assign content_alignment = section.settings.content_alignment | default: 'left'
+  assign content_width = section.settings.content_width | default: 'narrow'
+%}
+
+<main
+  id="Page-{{ section.id }}"
+  class="cosme-page full-width color-{{ section.settings.color_scheme }} cosme-page--spacing-{{ section_spacing }} cosme-page--align-{{ content_alignment }} cosme-page--width-{{ content_width }}"
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-page__inner">
+    <header class="cosme-page__header">
+      {% if show_eyebrow %}
+        <p class="cosme-page__eyebrow">{{ eyebrow | escape }}</p>
+      {% endif %}
+
+      <h1 class="cosme-page__title" id="{{ heading_id }}">{{ page.title | escape }}</h1>
+    </header>
+
+    {% if has_content %}
+      <div class="cosme-page__content">
+        {{ page.content }}
+      </div>
+    {% endif %}
+  </div>
+</main>
+
+{% stylesheet %}
+  .cosme-page {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-page__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+    text-align: left;
+  }
+  .cosme-page--align-center .cosme-page__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cosme-page--align-center .cosme-page__header,
+  .cosme-page--align-center .cosme-page__content {
+    width: 100%;
+    margin-inline: auto;
+  }
+  .cosme-page--spacing-small .cosme-page__inner {
+    padding-block: calc(var(--spacing-section) * 0.4);
+  }
+
+  .cosme-page--spacing-medium .cosme-page__inner {
+    padding-block: clamp(1.75rem, 4vw, calc(var(--spacing-section) * 0.75));
+  }
+
+  .cosme-page--spacing-large .cosme-page__inner {
+    padding-block: clamp(2.25rem, 5.5vw, var(--spacing-section));
+  }
+
+  .cosme-page__header {
+    max-width: 44rem;
+    margin-block-end: clamp(var(--spacing-xl), 4vw, var(--spacing-2xl));
+    text-align: left;
+  }
+
+  .cosme-page__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-page__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 6vw, 3.25rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-page__content {
+    min-width: 0;
+    overflow-x: auto;
+    overflow-wrap: anywhere;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--color-foreground);
+    text-align: left;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cosme-page--width-narrow .cosme-page__content {
+    max-width: 42rem;
+  }
+
+  .cosme-page--width-wide .cosme-page__content {
+    max-width: 100%;
+  }
+
+  .cosme-page__content > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-page__content > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-page__content p {
+    margin-block: 0 var(--spacing-md);
+  }
+
+  .cosme-page__content h2,
+  .cosme-page__content h3,
+  .cosme-page__content h4,
+  .cosme-page__content h5,
+  .cosme-page__content h6 {
+    color: var(--color-heading, var(--color-foreground));
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-page__content h2 {
+    margin-block: var(--spacing-2xl) var(--spacing-md);
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+  }
+
+  .cosme-page__content h3 {
+    margin-block: var(--spacing-xl) var(--spacing-sm);
+    font-size: clamp(1.25rem, 2.4vw, 1.5rem);
+  }
+
+  .cosme-page__content h4 {
+    margin-block: var(--spacing-lg) var(--spacing-sm);
+    font-size: 1.125rem;
+  }
+
+  .cosme-page__content h5,
+  .cosme-page__content h6 {
+    margin-block: var(--spacing-lg) var(--spacing-sm);
+    font-size: 1rem;
+  }
+
+  .cosme-page__content a {
+    color: var(--color-foreground);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  @media (pointer: coarse) {
+    .cosme-page__content a {
+      padding-block: 0.35em;
+    }
+  }
+
+  .cosme-page__content a:focus-visible {
+    color: var(--color-accent);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) {
+    .cosme-page__content a:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  .cosme-page__content strong,
+  .cosme-page__content b {
+    font-weight: 600;
+  }
+
+  .cosme-page__content em,
+  .cosme-page__content i {
+    font-style: italic;
+  }
+
+  .cosme-page__content ul,
+  .cosme-page__content ol {
+    margin-block: 0 var(--spacing-md);
+    padding-inline-start: 1.25rem;
+  }
+
+  .cosme-page__content li {
+    margin-block-end: var(--spacing-xs);
+  }
+
+  .cosme-page__content li::marker {
+    color: var(--color-muted);
+  }
+
+  .cosme-page__content li > ul,
+  .cosme-page__content li > ol {
+    margin-block: var(--spacing-xs) 0;
+  }
+
+  .cosme-page__content blockquote {
+    margin-block: var(--spacing-xl);
+    margin-inline: 0;
+    padding-block: var(--spacing-sm);
+    padding-inline-start: var(--spacing-lg);
+    border-inline-start: 1px solid var(--color-accent);
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
+    line-height: 1.55;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-page__content blockquote p:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-page__content hr {
+    width: 100%;
+    max-width: 8rem;
+    margin-block: var(--spacing-2xl);
+    margin-inline: 0;
+    border: 0;
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .cosme-page__content img,
+  .cosme-page__content video,
+  .cosme-page__content embed,
+  .cosme-page__content object {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .cosme-page__content iframe {
+    display: block;
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .cosme-page__content video {
+    width: 100%;
+  }
+
+  .cosme-page__content .video-wrapper,
+  .cosme-page__content .media-wrapper,
+  .cosme-page__content .rte__video-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin-block: var(--spacing-xl);
+  }
+
+  .cosme-page__content .video-wrapper iframe,
+  .cosme-page__content .media-wrapper iframe,
+  .cosme-page__content .rte__video-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-page__content figure {
+    margin-block: var(--spacing-xl);
+    margin-inline: 0;
+  }
+
+  .cosme-page__content p:has(> img) {
+    margin-block: var(--spacing-xl);
+  }
+
+  .cosme-page__content figure img {
+    width: 100%;
+  }
+
+  .cosme-page__content figcaption,
+  .cosme-page__content .caption {
+    margin-block-start: var(--spacing-sm);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--color-muted);
+  }
+
+  .cosme-page__content pre,
+  .cosme-page__content code {
+    font-size: 0.9375rem;
+  }
+
+  .cosme-page__content pre {
+    max-width: 100%;
+    margin-block: 0 var(--spacing-md);
+    padding: var(--spacing-sm);
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    color: var(--color-foreground);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-page__content table {
+    width: max-content;
+    min-width: 100%;
+    max-width: none;
+    margin-block: var(--spacing-lg);
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+
+  .cosme-page__content th,
+  .cosme-page__content td {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+    text-align: start;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-page__content th {
+    font-weight: 600;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-page__content dl {
+    margin-block: 0 var(--spacing-md);
+  }
+
+  .cosme-page__content dt {
+    font-weight: 600;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-page__content dd {
+    margin-inline-start: 0;
+    margin-block-end: var(--spacing-sm);
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-page__title {
+      font-size: clamp(2.25rem, 4.5vw, 3.5rem);
+    }
+
+    .cosme-page__content {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-page--spacing-medium .cosme-page__inner {
+      padding-block: clamp(2.5rem, 5vw, calc(var(--spacing-section) * 0.85));
+    }
+
+    .cosme-page--spacing-large .cosme-page__inner {
+      padding-block: clamp(3rem, 6vw, var(--spacing-section));
+    }
+
+    .cosme-page__header {
+      margin-block-end: var(--spacing-2xl);
+    }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.page",
-  "settings": []
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "t:sections.page.settings.show_eyebrow",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.page.settings.eyebrow",
+      "default": "THE COSME STORY",
+      "visible_if": "{{ section.settings.show_eyebrow }}"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "t:sections.page.settings.content_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "content_width",
+      "label": "t:sections.page.settings.content_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "narrow"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    }
+  ]
 }
 {% endschema %}

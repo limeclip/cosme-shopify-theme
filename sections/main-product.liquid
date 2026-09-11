@@ -153,6 +153,7 @@
   data-string-error="{{ 'products.add_to_cart_error' | t }}"
   data-string-copied="{{ 'products.share.copied' | t }}"
   data-string-copy-failed="{{ 'products.share.copy_failed' | t }}"
+  data-cart-type="{{ settings.cart_type }}"
   aria-label="{{ product.title | escape }}"
   {{ section.shopify_attributes }}
 >
@@ -1031,34 +1032,34 @@
     };
 
     const updateVariant = async (section, optionInput) => {
-  const selected = Array.from(section.querySelectorAll('[data-option-value-id]:checked'))
-    .map((input) => input.dataset.optionValueId)
-    .filter(Boolean);
+      const selected = Array.from(section.querySelectorAll('[data-option-value-id]:checked'))
+        .map((input) => input.dataset.optionValueId)
+        .filter(Boolean);
 
-  const productUrl = optionInput.dataset.productUrl || section.dataset.productUrl || window.location.pathname;
-  const url = new URL(productUrl, window.location.origin);
-  url.searchParams.set('section_id', section.dataset.sectionId);
-  if (selected.length) url.searchParams.set('option_values', selected.join(','));
+      const productUrl = optionInput.dataset.productUrl || section.dataset.productUrl || window.location.pathname;
+      const url = new URL(productUrl, window.location.origin);
+      url.searchParams.set('section_id', section.dataset.sectionId);
+      if (selected.length) url.searchParams.set('option_values', selected.join(','));
 
-  const response = await fetch(url.toString());
-  if (!response.ok) return;
+      const response = await fetch(url.toString());
+      if (!response.ok) return;
 
-  const html = await response.text();
+      const html = await response.text();
 
-  // Если изменение пришло из sticky — не фокусируемся
-  const focusId = window._cosmeVariantFromSticky ? null : optionInput.id;
-  replaceProductRoot(section, html, focusId);
-  window._cosmeVariantFromSticky = false;
+      // Если изменение пришло из sticky — не фокусируемся
+      const focusId = window._cosmeVariantFromSticky ? null : optionInput.id;
+      replaceProductRoot(section, html, focusId);
+      window._cosmeVariantFromSticky = false;
 
-  const variantInput = section.querySelector('[data-product-variant-id]');
-  const historyUrl = new URL(window.location.href);
-  if (variantInput && variantInput.value) {
-    historyUrl.searchParams.set('variant', variantInput.value);
-  } else {
-    historyUrl.searchParams.delete('variant');
-  }
-  window.history.replaceState({}, '', historyUrl.toString());
-};
+      const variantInput = section.querySelector('[data-product-variant-id]');
+      const historyUrl = new URL(window.location.href);
+      if (variantInput && variantInput.value) {
+        historyUrl.searchParams.set('variant', variantInput.value);
+      } else {
+        historyUrl.searchParams.delete('variant');
+      }
+      window.history.replaceState({}, '', historyUrl.toString());
+    };
     const desktopGalleryQuery = window.matchMedia('(min-width: 768px)');
 
     const syncStickyGallery = (section) => {
@@ -1163,9 +1164,14 @@
 
         document.dispatchEvent(new CustomEvent('cart:refresh'));
 
-        const cartToggle = document.querySelector('[data-header-cart-toggle]');
-        if (cartToggle) {
-          cartToggle.click();
+        const cartType = section.dataset.cartType || 'drawer';
+        if (cartType === 'page') {
+          window.location.href = '/cart';
+        } else {
+          const cartToggle = document.querySelector('[data-header-cart-toggle]');
+          if (cartToggle) {
+            cartToggle.click();
+          }
         }
 
         statuses.forEach((status) => {
@@ -1272,23 +1278,23 @@
     });
   })();
   document.addEventListener('click', function (e) {
-  const link = e.target.closest('.cosme-main-product__rating-link');
-  if (!link) return;
-  const href = link.getAttribute('href');
-  if (!href || !href.startsWith('#')) return;
-  e.preventDefault();
+    const link = e.target.closest('.cosme-main-product__rating-link');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href || !href.startsWith('#')) return;
+    e.preventDefault();
 
-  const tabsContainer = document.querySelector('.cosme-product-tabs');
-  if (!tabsContainer) return;
+    const tabsContainer = document.querySelector('.cosme-product-tabs');
+    if (!tabsContainer) return;
 
-  // Ищем кнопку вкладки Reviews
-  const reviewTabButton = tabsContainer.querySelector('[data-product-tab][aria-controls="ProductReviews"]');
-  if (reviewTabButton) {
-    reviewTabButton.click(); // эмулируем клик
-  }
+    // Ищем кнопку вкладки Reviews
+    const reviewTabButton = tabsContainer.querySelector('[data-product-tab][aria-controls="ProductReviews"]');
+    if (reviewTabButton) {
+      reviewTabButton.click(); // эмулируем клик
+    }
 
-  tabsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
+    tabsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 {% endjavascript %}
 
 {% schema %}

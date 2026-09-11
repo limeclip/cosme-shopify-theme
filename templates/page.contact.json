@@ -1,0 +1,94 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-contact",
+      "settings": {
+        "show_eyebrow": true,
+        "eyebrow": "GET IN TOUCH",
+        "heading": "We'd love to hear from you.",
+        "description": "Have a question about an order, our products or anything else? Send us a message and our team will get back to you.",
+        "hero_alignment": "left",
+        "heading_size": "large",
+        "hero_max_width": "narrow",
+        "hero_spacing_top": "large",
+        "hero_spacing_bottom": "medium",
+        "color_scheme": "scheme-1",
+        "show_contact_info": true,
+        "contact_eyebrow": "CONTACT",
+        "contact_heading": "Customer Care",
+        "email": "hello@example.com",
+        "hours_title": "BUSINESS HOURS",
+        "hours_text": "Monday – Friday\n9:00 – 18:00",
+        "phone_label": "PHONE",
+        "form_heading": "Send us a message",
+        "form_description": "We'll get back to you as soon as possible.",
+        "submit_label": "SEND MESSAGE",
+        "success_message": "Thank you for your message. We'll be in touch soon.",
+        "show_phone_field": true,
+        "phone_required": false,
+        "section_spacing_bottom": "large",
+        "enable_quick_answers": true,
+        "faq_eyebrow": "QUICK ANSWERS",
+        "faq_heading": "Looking for an answer?",
+        "faq_description": "You may find what you're looking for in our frequently asked questions.",
+        "faq_alignment": "center",
+        "faq_max_width": "medium",
+        "show_faq_link": true,
+        "faq_link_label": "View all FAQs",
+        "faq_link": "/pages/faq",
+        "faq_color_scheme": "scheme-1",
+        "faq_spacing_top": "medium",
+        "faq_spacing_bottom": "medium",
+        "show_final_cta": true,
+        "cta_eyebrow": "WE'RE HERE FOR YOU",
+        "cta_heading": "Questions, ideas or just want to say hello?",
+        "cta_description": "Our team is always happy to hear from you.",
+        "cta_button_label": "CONTACT US",
+        "cta_color_scheme": "scheme-1",
+        "cta_spacing_top": "medium",
+        "cta_spacing_bottom": "medium"
+      },
+      "blocks": {
+        "faq-shipping": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How long does shipping take?",
+            "answer": "<p>Standard shipping typically arrives in 3–6 business days after dispatch. Express options, where available, usually arrive in 1–2 business days.</p>",
+            "open_by_default": false
+          }
+        },
+        "faq-track": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How can I track my order?",
+            "answer": "<p>A tracking link is sent to your email as soon as your order leaves our studio. You can also find tracking details in your order confirmation.</p>",
+            "open_by_default": false
+          }
+        },
+        "faq-returns": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is your return policy?",
+            "answer": "<p>Unopened items may be returned within 30 days of delivery. For hygiene reasons, opened skincare cannot always be accepted. Contact us and we will guide you through the next step.</p>",
+            "open_by_default": false
+          }
+        },
+        "faq-sensitive": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Are your products suitable for sensitive skin?",
+            "answer": "<p>Many of our formulas are developed with sensitive skin in mind and are dermatologist tested. We recommend reviewing the ingredient list and patch testing if you have known sensitivities.</p>",
+            "open_by_default": false
+          }
+        }
+      },
+      "block_order": [
+        "faq-shipping",
+        "faq-track",
+        "faq-returns",
+        "faq-sensitive"
+      ]
+    }
+  },
+  "order": ["main"]
+}

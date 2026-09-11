@@ -56,6 +56,9 @@
   assign can_add_to_cart = false
   assign has_overlay_actions = false
   assign first_available_variant = null
+  assign adding_label = 'products.add_to_cart_adding' | t
+  assign cart_url = routes.cart_url
+  assign cart_count_label = 'header.cart_count' | t: count: '__COUNT__'
 
   unless is_demo
     if product.compare_at_price_min > product.price_min
@@ -223,7 +226,7 @@
               </span>
             </button>
           {% elsif can_add_to_cart %}
-            {% form 'product', product, class: 'cosme-product-card__add-form' %}
+            {% form 'product', product, class: 'cosme-product-card__add-form', data-adding-label: adding_label, data-cart-url: cart_url, data-cart-count-label: cart_count_label %}
               <input type="hidden" name="id" value="{{ first_available_variant.id }}">
               <input type="hidden" name="quantity" value="1">
               <button
@@ -610,24 +613,33 @@
 {% endstylesheet %}
 {% javascript %}
   (function() {
-    // Вешаем обработчик только один раз
     if (!window._cosmeCartFormHandler) {
       window._cosmeCartFormHandler = true;
 
       document.addEventListener('submit', async function(event) {
         const form = event.target.closest('.cosme-product-card__add-form');
-        if (!form || form.dataset.ajaxProcessed) return;
-        form.dataset.ajaxProcessed = 'true'; // чтобы не обрабатывать повторно
+        if (!form) return;
 
         event.preventDefault();
 
-        const button = form.querySelector('button[type="submit"]');
-        if (!button || button.disabled) return;
+        if (form.dataset.ajaxBusy === 'true') return;
+        form.dataset.ajaxBusy = 'true';
 
-        // Блокируем кнопку и меняем текст
+        const button = form.querySelector('button[type="submit"]');
+        if (!button || button.disabled) {
+          form.dataset.ajaxBusy = 'false';
+          return;
+        }
+
+        const label = button.querySelector('.cosme-product-card__action-label');
+        const originalLabel = label ? label.textContent : '';
+        const addingLabel = form.getAttribute('data-adding-label') || originalLabel;
+
         button.disabled = true;
-        const originalLabel = button.textContent;
-        button.textContent = 'Adding…';
+        button.setAttribute('aria-busy', 'true');
+        if (label && addingLabel) {
+          label.textContent = addingLabel;
+        }
 
         const formData = new FormData(form);
         const variantId = formData.get('id');
@@ -648,7 +660,6 @@
             throw new Error(payload.description || 'Error adding to cart');
           }
 
-          // --- Обновляем счётчик корзины (как в Quick View) ---
           try {
             const cartResponse = await fetch('/cart.js');
             const cart = await cartResponse.json();
@@ -662,36 +673,37 @@
               }
             });
 
-            // Обновляем aria-label для кнопки корзины
             document.querySelectorAll('[data-header-cart-toggle]').forEach((toggle) => {
-              if (cart.item_count > 0) {
-                toggle.setAttribute('aria-label', `Cart, ${cart.item_count} items`);
+              const template = form.getAttribute('data-cart-count-label');
+              if (cart.item_count > 0 && template) {
+                toggle.setAttribute('aria-label', template.replace('__COUNT__', String(cart.item_count)));
+              } else if (cart.item_count > 0) {
+                toggle.setAttribute('aria-label', String(cart.item_count));
               } else {
                 toggle.removeAttribute('aria-label');
               }
             });
 
-            // Триггерим событие для других частей (если нужно)
             document.dispatchEvent(new CustomEvent('cart:refresh'));
           } catch (e) {
-            // Если не удалось обновить счётчик – игнорируем
           }
 
-          // --- Открываем дровер или редиректим ---
           const cartToggle = document.querySelector('[data-header-cart-toggle]');
           if (cartToggle) {
-            cartToggle.click(); // открываем дровер
+            cartToggle.click();
           } else {
-            window.location.href = '/cart'; // редирект на страницу корзины
+            const cartUrl = form.getAttribute('data-cart-url') || '/cart';
+            window.location.href = cartUrl;
           }
-
         } catch (error) {
           console.error('Add to cart error:', error);
-          // Можно показать уведомление об ошибке (опционально)
         } finally {
-          // Восстанавливаем кнопку
+          form.dataset.ajaxBusy = 'false';
           button.disabled = false;
-          button.textContent = originalLabel;
+          button.removeAttribute('aria-busy');
+          if (label) {
+            label.textContent = originalLabel;
+          }
         }
       });
     }

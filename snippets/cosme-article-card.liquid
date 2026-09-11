@@ -1,0 +1,444 @@
+{% doc %}
+  Renders an editorial journal article card for featured stories, grids, and related articles.
+
+  The parent must wrap this snippet in a single link to `article.url`.
+  This snippet does not output an `<a>` so nested links are never created.
+
+  @param {object} article - The article to render
+  @param {string} aspect_ratio - CSS aspect ratio, e.g. `4/5`
+  @param {number} image_width - Maximum image width in pixels
+  @param {number} image_height - Cropped image height in pixels
+  @param {string} sizes - Responsive `sizes` attribute
+  @param {string} [heading_tag] - Heading tag for the title. Default: `h3`
+  @param {string} [loading] - `lazy` or `eager`
+  @param {string} [fetchpriority] - `high`, `low`, or `auto`
+  @param {boolean} [featured] - Render the larger featured treatment
+  @param {boolean} [show_excerpt] - Show the native article excerpt when present
+  @param {boolean} [show_date] - Show the published date
+  @param {boolean} [show_reading_time] - Show estimated reading time
+  @param {boolean} [show_category] - Show blog or category context
+  @param {boolean} [show_cta] - Show the read article cue
+  @param {boolean} [show_index] - Show a decorative editorial index
+  @param {number} [card_index] - 1-based index used for the editorial number
+  @param {string} [category_label] - Optional category label; defaults to the current blog title
+  @param {string} [placeholder_name] - Shopify placeholder SVG name
+
+  @example
+  {% render 'cosme-article-card', article: article, aspect_ratio: '4/5', image_width: 900, image_height: 1125, sizes: '92vw', card_index: 1 %}
+{% enddoc %}
+
+{% liquid
+  assign card_image = article.image
+  assign card_alt = article.title
+  if card_image != blank
+    if card_image.alt != blank
+      assign card_alt = card_image.alt
+    endif
+  endif
+
+  assign card_loading = loading | default: 'lazy'
+  assign placeholder = placeholder_name | default: 'image'
+  assign title_tag = heading_tag | default: 'h3'
+  assign is_featured = featured | default: false, allow_false: true
+  assign display_category = show_category | default: true, allow_false: true
+  assign display_cta = show_cta | default: true, allow_false: true
+  assign display_index = show_index | default: false, allow_false: true
+  if is_featured
+    assign display_index = false
+  endif
+
+  assign context_label = category_label | strip
+  if context_label == blank
+    assign context_label = blog.title
+  endif
+
+  assign excerpt_text = article.excerpt | strip_html | strip
+  if excerpt_text != blank
+    if is_featured
+      assign excerpt_text = excerpt_text | truncatewords: 36
+    else
+      assign excerpt_text = excerpt_text | truncatewords: 18
+    endif
+  endif
+
+  assign reading_minutes = 0
+  if show_reading_time
+    assign article_plain = article.content | strip_html | strip
+    if article_plain != blank
+      assign word_count = article_plain | split: ' ' | size
+      assign reading_minutes = word_count | plus: 199 | divided_by: 200
+      if reading_minutes < 1
+        assign reading_minutes = 1
+      endif
+    endif
+  endif
+
+  assign show_meta = false
+  if show_date
+    if article.published_at != blank
+      assign show_meta = true
+    endif
+  endif
+  if reading_minutes > 0
+    assign show_meta = true
+  endif
+
+  assign index_label = blank
+  if display_index
+    assign index_number = card_index | default: 0 | plus: 0
+    if index_number > 0
+      if index_number < 10
+        assign index_label = index_number | prepend: '0'
+      else
+        assign index_label = index_number
+      endif
+    endif
+  endif
+
+  assign show_kicker = false
+  if index_label != blank
+    assign show_kicker = true
+  endif
+  if display_category
+    if context_label != blank
+      assign show_kicker = true
+    endif
+  endif
+
+  assign card_class = 'cosme-article-card'
+  if is_featured
+    assign card_class = card_class | append: ' cosme-article-card--featured'
+  endif
+  if settings.enable_animations
+    assign card_class = card_class | append: ' cosme-article-card--animated'
+  endif
+%}
+
+<div class="{{ card_class }}">
+  <div class="cosme-article-card__media">
+    {% if card_image != blank %}
+      {% render 'cosme-image',
+        image: card_image,
+        alt: card_alt,
+        class: 'cosme-article-card__image',
+        width: image_width,
+        height: image_height,
+        crop: 'center',
+        sizes: sizes,
+        loading: card_loading,
+        fetchpriority: fetchpriority,
+        aspect_ratio: aspect_ratio
+      %}
+    {% else %}
+      <div
+        class="cosme-article-card__placeholder"
+        style="--cosme-image-ratio: {{ aspect_ratio }};"
+        aria-hidden="true"
+      >
+        {{ placeholder | placeholder_svg_tag: 'cosme-article-card__placeholder-svg' }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="cosme-article-card__content">
+    {% if show_kicker %}
+      <div class="cosme-article-card__kicker">
+        {% if index_label != blank %}
+          <span class="cosme-article-card__index" aria-hidden="true">{{ index_label }}</span>
+        {% endif %}
+        {% if display_category %}
+          {% if context_label != blank %}
+            <p class="cosme-article-card__category">{{ context_label | escape }}</p>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <{{ title_tag }} class="cosme-article-card__title">{{ article.title | escape }}</{{ title_tag }}>
+
+    {% if show_excerpt %}
+      {% if excerpt_text != blank %}
+        <p class="cosme-article-card__excerpt">{{ excerpt_text | escape }}</p>
+      {% endif %}
+    {% endif %}
+
+    {% if show_meta %}
+      <p class="cosme-article-card__meta">
+        {% if show_date %}
+          {% if article.published_at != blank %}
+            {{ article.published_at | time_tag: format: 'date' }}
+          {% endif %}
+        {% endif %}
+        {% if show_date %}
+          {% if article.published_at != blank %}
+            {% if reading_minutes > 0 %}
+              <span class="cosme-article-card__meta-sep" aria-hidden="true">·</span>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+        {% if reading_minutes > 0 %}
+          <span>{{ 'blog.reading_time' | t: count: reading_minutes }}</span>
+        {% endif %}
+      </p>
+    {% endif %}
+
+    {% if display_cta %}
+      <p class="cosme-article-card__cta" aria-hidden="true">
+        <span class="cosme-article-card__cta-label">{{ 'blog.read_article' | t }}</span>
+        {% render 'cosme-icon', icon: 'arrow-right', size: 'sm', class: 'cosme-article-card__cta-icon' %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .cosme-article-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-width: 0;
+    height: 100%;
+  }
+
+  .cosme-article-card__media {
+    overflow: hidden;
+    width: 100%;
+    background-color: var(--color-background);
+  }
+
+  .cosme-article-card__image,
+  .cosme-article-card__placeholder {
+    width: 100%;
+  }
+
+  .cosme-article-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: var(--cosme-image-ratio, 4 / 5);
+    color: var(--color-muted);
+    background-color: var(--color-background);
+  }
+
+  .cosme-article-card__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .color-scheme-2 .cosme-article-card__placeholder-svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.25;
+  }
+
+  .cosme-article-card__image .cosme-image__img,
+  .cosme-article-card__placeholder-svg {
+    transform: scale(1);
+    transform-origin: center;
+  }
+
+  .cosme-article-card--animated .cosme-article-card__image .cosme-image__img,
+  .cosme-article-card--animated .cosme-article-card__placeholder-svg,
+  .cosme-article-card--animated .cosme-article-card__title,
+  .cosme-article-card--animated .cosme-article-card__cta,
+  .cosme-article-card--animated .cosme-article-card__cta-icon {
+    transition: transform var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing),
+      gap var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-article-card__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    min-width: 0;
+  }
+
+  .cosme-article-card__kicker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-sm);
+    margin: 0;
+  }
+
+  .cosme-article-card__index {
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    color: var(--color-muted);
+  }
+
+  .cosme-article-card__category {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article-card__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 6vw, 1.875rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article-card--featured .cosme-article-card__title {
+    font-size: clamp(1.875rem, 6vw, 2.75rem);
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-article-card__title {
+      font-size: clamp(1.25rem, 1.8vw, 1.625rem);
+    }
+
+    .cosme-article-card--featured .cosme-article-card__title {
+      font-size: clamp(2.125rem, 3.4vw, 3rem);
+    }
+  }
+
+  .cosme-article-card__excerpt {
+    margin: var(--spacing-xs) 0 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-article-card--featured .cosme-article-card__excerpt {
+    max-width: 38rem;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    font-size: 1rem;
+  }
+
+  .cosme-article-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35em 0.5em;
+    margin: var(--spacing-xs) 0 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article-card__meta time {
+    font-style: normal;
+  }
+
+  .cosme-article-card__meta-sep {
+    color: var(--color-border);
+  }
+
+  .cosme-article-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) 0 0;
+    min-height: 2.75rem;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--color-foreground);
+  }
+
+  .cosme-article-card__cta-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  a:focus-visible .cosme-article-card__title,
+  a:focus-visible .cosme-article-card__cta {
+    color: var(--color-accent);
+  }
+
+  a:focus-visible .cosme-article-card--animated .cosme-article-card__cta {
+    gap: var(--spacing-sm);
+  }
+
+  a:focus-visible .cosme-article-card--animated .cosme-article-card__cta-icon {
+    transform: translateX(0.2em);
+  }
+
+  a:focus-visible .cosme-article-card--animated .cosme-article-card__image .cosme-image__img,
+  a:focus-visible .cosme-article-card--animated .cosme-article-card__placeholder-svg {
+    transform: scale(1.03);
+  }
+
+  @media (hover: hover) {
+    a:hover .cosme-article-card__title,
+    a:hover .cosme-article-card__cta {
+      color: var(--color-accent);
+    }
+
+    a:hover .cosme-article-card--animated .cosme-article-card__cta {
+      gap: var(--spacing-sm);
+    }
+
+    a:hover .cosme-article-card--animated .cosme-article-card__cta-icon {
+      transform: translateX(0.2em);
+    }
+
+    a:hover .cosme-article-card--animated .cosme-article-card__image .cosme-image__img,
+    a:hover .cosme-article-card--animated .cosme-article-card__placeholder-svg {
+      transform: scale(1.03);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-article-card--featured {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      gap: var(--spacing-xl) var(--spacing-2xl);
+      align-items: end;
+    }
+
+    .cosme-article-card--featured .cosme-article-card__media {
+      min-width: 0;
+    }
+
+    .cosme-article-card--featured .cosme-article-card__content {
+      padding-block-end: var(--spacing-sm);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-article-card--animated .cosme-article-card__image .cosme-image__img,
+    .cosme-article-card--animated .cosme-article-card__placeholder-svg,
+    .cosme-article-card--animated .cosme-article-card__title,
+    .cosme-article-card--animated .cosme-article-card__cta,
+    .cosme-article-card--animated .cosme-article-card__cta-icon {
+      transition: none;
+    }
+
+    a:hover .cosme-article-card--animated .cosme-article-card__image .cosme-image__img,
+    a:hover .cosme-article-card--animated .cosme-article-card__placeholder-svg,
+    a:focus-visible .cosme-article-card--animated .cosme-article-card__image .cosme-image__img,
+    a:focus-visible .cosme-article-card--animated .cosme-article-card__placeholder-svg,
+    a:hover .cosme-article-card--animated .cosme-article-card__cta-icon,
+    a:focus-visible .cosme-article-card--animated .cosme-article-card__cta-icon {
+      transform: none;
+    }
+
+    a:hover .cosme-article-card--animated .cosme-article-card__cta,
+    a:focus-visible .cosme-article-card--animated .cosme-article-card__cta {
+      gap: var(--spacing-xs);
+    }
+  }
+{% endstylesheet %}

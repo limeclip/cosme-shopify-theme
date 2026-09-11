@@ -67,6 +67,11 @@
         "type": "url",
         "id": "social_pinterest",
         "label": "t:labels.social_pinterest"
+      },
+      {
+        "type": "url",
+        "id": "social_x",
+        "label": "t:labels.social_x"
       }
     ]
   },
@@ -507,12 +512,130 @@
     ]
   },
   {
+    "name": "t:general.gift_card",
+    "settings": [
+      {
+        "type": "header",
+        "content": "t:general.content"
+      },
+      {
+        "type": "checkbox",
+        "id": "gift_card_show_eyebrow",
+        "label": "t:sections.gift_card.settings.show_eyebrow",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "gift_card_eyebrow",
+        "label": "t:sections.gift_card.settings.eyebrow",
+        "default": "GIFT CARD"
+      },
+      {
+        "type": "text",
+        "id": "gift_card_heading",
+        "label": "t:sections.gift_card.settings.heading",
+        "default": "A gift of beauty"
+      },
+      {
+        "type": "textarea",
+        "id": "gift_card_description",
+        "label": "t:sections.gift_card.settings.description",
+        "default": "Give someone special the freedom to choose something they truly love."
+      },
+      {
+        "type": "select",
+        "id": "gift_card_text_alignment",
+        "label": "t:sections.gift_card.settings.text_alignment",
+        "options": [
+          {
+            "value": "center",
+            "label": "t:options.alignment.center"
+          },
+          {
+            "value": "left",
+            "label": "t:options.alignment.left"
+          },
+          {
+            "value": "right",
+            "label": "t:options.alignment.right"
+          }
+        ],
+        "default": "center"
+      },
+      {
+        "type": "color_scheme",
+        "id": "gift_card_color_scheme",
+        "label": "t:labels.color_scheme",
+        "default": "scheme-1"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.gift_card.settings.editorial_header"
+      },
+      {
+        "type": "checkbox",
+        "id": "gift_card_show_editorial",
+        "label": "t:sections.gift_card.settings.show_editorial",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "gift_card_editorial_eyebrow",
+        "label": "t:sections.gift_card.settings.editorial_eyebrow",
+        "default": "A THOUGHTFUL GIFT",
+        "visible_if": "{{ settings.gift_card_show_editorial }}"
+      },
+      {
+        "type": "text",
+        "id": "gift_card_editorial_heading",
+        "label": "t:sections.gift_card.settings.editorial_heading",
+        "default": "Something they'll love",
+        "visible_if": "{{ settings.gift_card_show_editorial }}"
+      },
+      {
+        "type": "textarea",
+        "id": "gift_card_editorial_text",
+        "label": "t:sections.gift_card.settings.editorial_text",
+        "default": "From everyday essentials to beautiful skincare rituals, let them choose what feels right for them.",
+        "visible_if": "{{ settings.gift_card_show_editorial }}"
+      },
+      {
+        "type": "color_scheme",
+        "id": "gift_card_editorial_color_scheme",
+        "label": "t:sections.gift_card.settings.editorial_color_scheme",
+        "default": "scheme-1",
+        "visible_if": "{{ settings.gift_card_show_editorial }}"
+      },
+      {
+        "type": "header",
+        "content": "t:general.actions"
+      },
+      {
+        "type": "text",
+        "id": "gift_card_continue_label",
+        "label": "t:sections.gift_card.settings.continue_shopping",
+        "default": "Continue shopping"
+      }
+    ]
+  },
+  {
     "name": "t:general.animation",
     "settings": [
       {
         "type": "checkbox",
         "id": "enable_animations",
         "label": "t:labels.enable_animations",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "t:general.back_to_top",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "enable_back_to_top",
+        "label": "t:labels.enable_back_to_top",
         "default": true
       }
     ]

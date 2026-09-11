@@ -1,0 +1,1727 @@
+{% liquid
+  assign heading_id = 'ContactHeading-' | append: section.id
+  assign info_heading_id = 'ContactInfoHeading-' | append: section.id
+  assign form_heading_id = 'ContactFormHeading-' | append: section.id
+  assign form_id = 'ContactForm-' | append: section.id
+  assign success_id = 'ContactSuccess-' | append: section.id
+  assign error_id = 'ContactErrors-' | append: section.id
+  assign name_id = 'ContactForm-' | append: section.id | append: '-name'
+  assign email_id = 'ContactForm-' | append: section.id | append: '-email'
+  assign phone_id = 'ContactForm-' | append: section.id | append: '-phone'
+  assign body_id = 'ContactForm-' | append: section.id | append: '-body'
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign heading = section.settings.heading | strip
+  assign description = section.settings.description | strip
+
+  assign show_eyebrow = false
+  if section.settings.show_eyebrow
+    if eyebrow != blank
+      assign show_eyebrow = true
+    endif
+  endif
+
+  if heading == blank
+    assign heading = page.title | strip
+  endif
+  if heading == blank
+    assign heading = 'sections.contact.heading_fallback' | t
+  endif
+
+  assign hero_alignment = section.settings.hero_alignment | default: 'left'
+  assign heading_size = section.settings.heading_size | default: 'large'
+  assign hero_max_width = section.settings.hero_max_width | default: 'narrow'
+  assign hero_spacing_top = section.settings.hero_spacing_top | default: 'large'
+  assign hero_spacing_bottom = section.settings.hero_spacing_bottom | default: 'medium'
+  assign section_spacing_bottom = section.settings.section_spacing_bottom | default: 'large'
+
+  assign contact_eyebrow = section.settings.contact_eyebrow | strip
+  assign contact_heading = section.settings.contact_heading | strip
+  assign email = section.settings.email | strip
+  assign hours_title = section.settings.hours_title | strip
+  assign hours_text = section.settings.hours_text | strip
+  assign phone = section.settings.phone | strip
+  assign phone_label = section.settings.phone_label | strip
+
+  assign email_href = section.settings.email_link
+  if email_href == blank
+    if email != blank
+      assign email_href = 'mailto:' | append: email
+    endif
+  endif
+
+  assign phone_href = section.settings.phone_link
+  if phone_href == blank
+    if phone != blank
+      assign phone_tel = phone | replace: ' ', '' | replace: '-', '' | replace: '(', '' | replace: ')', '' | replace: '.', ''
+      assign phone_href = 'tel:' | append: phone_tel
+    endif
+  endif
+
+  assign show_hours = false
+  if hours_title != blank
+    assign show_hours = true
+  endif
+  if hours_text != blank
+    assign show_hours = true
+  endif
+
+  assign show_phone_info = false
+  if phone != blank
+    assign show_phone_info = true
+  endif
+
+  assign show_info = false
+  if section.settings.show_contact_info
+    if contact_eyebrow != blank
+      assign show_info = true
+    endif
+    if contact_heading != blank
+      assign show_info = true
+    endif
+    if email != blank
+      assign show_info = true
+    endif
+    if show_hours
+      assign show_info = true
+    endif
+    if show_phone_info
+      assign show_info = true
+    endif
+  endif
+
+  assign form_heading = section.settings.form_heading | strip
+  assign form_description = section.settings.form_description | strip
+  assign submit_label = section.settings.submit_label | strip
+  assign success_message = section.settings.success_message | strip
+
+  if submit_label == blank
+    assign submit_label = 'sections.contact.submit' | t
+  endif
+  if success_message == blank
+    assign success_message = 'sections.contact.success' | t
+  endif
+
+  assign show_phone_field = false
+  if section.settings.show_phone_field
+    assign show_phone_field = true
+  endif
+
+  assign phone_required = false
+  if show_phone_field
+    if section.settings.phone_required
+      assign phone_required = true
+    endif
+  endif
+
+  assign name_label = 'sections.contact.name' | t
+  assign email_label = 'sections.contact.email' | t
+  assign phone_field_label = 'sections.contact.phone' | t
+  assign message_label = 'sections.contact.message' | t
+  assign optional_hint = 'sections.contact.optional' | t
+
+  assign faq_heading_id = 'ContactFaqHeading-' | append: section.id
+  assign faq_eyebrow = section.settings.faq_eyebrow | strip
+  assign faq_heading = section.settings.faq_heading | strip
+  assign faq_description = section.settings.faq_description | strip
+  assign faq_alignment = section.settings.faq_alignment | default: 'center'
+  assign faq_max_width = section.settings.faq_max_width | default: 'medium'
+  assign faq_spacing_top = section.settings.faq_spacing_top | default: 'medium'
+  assign faq_spacing_bottom = section.settings.faq_spacing_bottom | default: 'large'
+  assign faq_link_label = section.settings.faq_link_label | strip
+  assign faq_link = section.settings.faq_link
+  if faq_link == blank
+    assign faq_link = '/pages/faq'
+  endif
+  if faq_link_label == blank
+    assign faq_link_label = 'sections.contact.faq_link' | t
+  endif
+
+  assign faq_count = 0
+  for block in section.blocks
+    assign faq_question = block.settings.question | strip
+    if faq_question != blank
+      assign faq_count = faq_count | plus: 1
+    endif
+  endfor
+
+  assign show_faq = false
+  if section.settings.enable_quick_answers
+    if faq_count > 0
+      assign show_faq = true
+    endif
+    if faq_eyebrow != blank
+      assign show_faq = true
+    endif
+    if faq_heading != blank
+      assign show_faq = true
+    endif
+    if faq_description != blank
+      assign show_faq = true
+    endif
+  endif
+
+  assign show_faq_link = false
+  if section.settings.show_faq_link
+    if faq_link_label != blank
+      assign show_faq_link = true
+    endif
+  endif
+
+  assign cta_heading_id = 'ContactCtaHeading-' | append: section.id
+  assign cta_eyebrow = section.settings.cta_eyebrow | strip
+  assign cta_heading = section.settings.cta_heading | strip
+  assign cta_description = section.settings.cta_description | strip
+  assign cta_label = section.settings.cta_button_label | strip
+  assign cta_link = section.settings.cta_link
+  assign cta_spacing_top = section.settings.cta_spacing_top | default: 'medium'
+  assign cta_spacing_bottom = section.settings.cta_spacing_bottom | default: 'medium'
+
+  assign cta_is_self = false
+  if cta_link != blank
+    assign cta_href = cta_link | split: '?' | first
+    assign cta_href = cta_href | split: '#' | first
+    if request.origin != blank
+      assign cta_href = cta_href | replace: request.origin, ''
+    endif
+    if cta_href == request.path
+      assign cta_is_self = true
+    endif
+    if page.url != blank
+      if cta_href == page.url
+        assign cta_is_self = true
+      endif
+    endif
+  endif
+
+  assign show_cta_button = false
+  assign cta_button_url = blank
+  if cta_label != blank
+    if cta_link != blank
+      if cta_is_self
+        assign cta_button_url = '#' | append: form_id
+        assign show_cta_button = true
+      else
+        assign cta_button_url = cta_link
+        assign show_cta_button = true
+      endif
+    else
+      assign cta_button_url = '#' | append: form_id
+      assign show_cta_button = true
+    endif
+  endif
+
+  assign show_cta = false
+  if section.settings.show_final_cta
+    if cta_eyebrow != blank
+      assign show_cta = true
+    endif
+    if cta_heading != blank
+      assign show_cta = true
+    endif
+    if cta_description != blank
+      assign show_cta = true
+    endif
+    if show_cta_button
+      assign show_cta = true
+    endif
+  endif
+%}
+
+<section
+  id="Contact-{{ section.id }}"
+  class="
+    cosme-contact
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-contact--align-{{ hero_alignment }}
+    cosme-contact--heading-{{ heading_size }}
+    cosme-contact--hero-{{ hero_max_width }}
+    cosme-contact--hero-top-{{ hero_spacing_top }}
+    cosme-contact--hero-bottom-{{ hero_spacing_bottom }}
+    cosme-contact--section-bottom-{{ section_spacing_bottom }}
+    {% if show_info %}cosme-contact--has-info{% endif %}
+    {% if show_faq %}cosme-contact--has-faq{% endif %}
+    {% if show_cta %}cosme-contact--has-cta{% endif %}
+  "
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-contact__inner">
+    <header class="cosme-contact__hero">
+      <div class="cosme-contact__hero-copy">
+        {% if show_eyebrow %}
+          <p class="cosme-contact__eyebrow">{{ eyebrow | escape }}</p>
+        {% endif %}
+
+        <h1 class="cosme-contact__heading" id="{{ heading_id }}">{{ heading | escape }}</h1>
+
+        {% if description != blank %}
+          <p class="cosme-contact__description">{{ description | escape }}</p>
+        {% endif %}
+      </div>
+    </header>
+
+    <div class="cosme-contact__layout">
+      {% if show_info %}
+        <aside
+          class="cosme-contact__info"
+          {% if contact_heading != blank %}
+            aria-labelledby="{{ info_heading_id }}"
+          {% else %}
+            aria-label="{{ 'sections.contact.info_label' | t }}"
+          {% endif %}
+        >
+          {% if contact_eyebrow != blank %}
+            <p class="cosme-contact__info-eyebrow">{{ contact_eyebrow | escape }}</p>
+          {% endif %}
+
+          {% if contact_heading != blank %}
+            <h2 class="cosme-contact__info-heading" id="{{ info_heading_id }}">
+              {{ contact_heading | escape }}
+            </h2>
+          {% endif %}
+
+          {% if email != blank %}
+            <p class="cosme-contact__detail">
+              <a class="cosme-contact__link" href="{{ email_href }}">{{ email | escape }}</a>
+            </p>
+          {% endif %}
+
+          {% if show_hours %}
+            <div class="cosme-contact__group">
+              {% if hours_title != blank %}
+                <p class="cosme-contact__label">{{ hours_title | escape }}</p>
+              {% else %}
+                <p class="cosme-contact__label">{{ 'sections.contact.hours_label' | t }}</p>
+              {% endif %}
+              {% if hours_text != blank %}
+                <p class="cosme-contact__text">{{ hours_text | escape | newline_to_br }}</p>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          {% if show_phone_info %}
+            <div class="cosme-contact__group">
+              {% if phone_label != blank %}
+                <p class="cosme-contact__label">{{ phone_label | escape }}</p>
+              {% else %}
+                <p class="cosme-contact__label">{{ 'sections.contact.phone_label' | t }}</p>
+              {% endif %}
+              <p class="cosme-contact__detail">
+                <a class="cosme-contact__link" href="{{ phone_href }}">{{ phone | escape }}</a>
+              </p>
+            </div>
+          {% endif %}
+        </aside>
+      {% endif %}
+
+      <div
+        class="cosme-contact__form-panel"
+        {% if form_heading != blank %}
+          aria-labelledby="{{ form_heading_id }}"
+        {% else %}
+          aria-label="{{ 'sections.contact.form_label' | t }}"
+        {% endif %}
+      >
+        {% if form_heading != blank %}
+          <h2 class="cosme-contact__form-heading" id="{{ form_heading_id }}">
+            {{ form_heading | escape }}
+          </h2>
+        {% endif %}
+
+        {% if form_description != blank %}
+          <p class="cosme-contact__form-description">{{ form_description | escape }}</p>
+        {% endif %}
+
+        {% form 'contact', id: form_id, class: 'cosme-contact__form' %}
+          {% liquid
+            assign form_posted = false
+            if form.posted_successfully?
+              assign form_posted = true
+            endif
+
+            assign has_errors = false
+            if form.errors
+              assign has_errors = true
+            endif
+
+            assign name_error = blank
+            assign email_error = blank
+            assign phone_error = blank
+            assign body_error = blank
+
+            if has_errors
+              assign name_error = form.errors.messages['name']
+              assign email_error = form.errors.messages['email']
+              assign phone_error = form.errors.messages['phone']
+              assign body_error = form.errors.messages['body']
+            endif
+          %}
+
+          {% if form_posted %}
+            <p
+              class="cosme-contact__status cosme-contact__status--success"
+              id="{{ success_id }}"
+              role="status"
+              aria-live="polite"
+              tabindex="-1"
+              autofocus
+            >
+              {{ success_message | escape }}
+            </p>
+          {% endif %}
+
+          {% if has_errors %}
+            <div
+              class="cosme-contact__status cosme-contact__status--error"
+              id="{{ error_id }}"
+              role="alert"
+              tabindex="-1"
+              autofocus
+            >
+              <p class="cosme-contact__status-heading">{{ 'sections.contact.error_heading' | t }}</p>
+              <ul class="cosme-contact__status-list">
+                {% for field in form.errors %}
+                  <li>
+                    {% if field == 'form' %}
+                      {{ form.errors.messages[field] }}
+                    {% else %}
+                      <a href="#ContactForm-{{ section.id }}-{{ field }}">
+                        {{ form.errors.translated_fields[field] | capitalize }}
+                        {{ form.errors.messages[field] }}
+                      </a>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          {% endif %}
+
+          {% render 'cosme-form-field',
+            label: name_label,
+            id: name_id,
+            name: 'contact[name]',
+            type: 'text',
+            value: form.name,
+            required: true,
+            autocomplete: 'name',
+            error: name_error,
+            class: 'cosme-contact__field'
+          %}
+
+          {% render 'cosme-form-field',
+            label: email_label,
+            id: email_id,
+            name: 'contact[email]',
+            type: 'email',
+            value: form.email,
+            required: true,
+            autocomplete: 'email',
+            error: email_error,
+            class: 'cosme-contact__field'
+          %}
+
+          {% if show_phone_field %}
+            {% if phone_required %}
+              {% render 'cosme-form-field',
+                label: phone_field_label,
+                id: phone_id,
+                name: 'contact[phone]',
+                type: 'tel',
+                value: form.phone,
+                required: true,
+                autocomplete: 'tel',
+                error: phone_error,
+                class: 'cosme-contact__field'
+              %}
+            {% else %}
+              {% render 'cosme-form-field',
+                label: phone_field_label,
+                id: phone_id,
+                name: 'contact[phone]',
+                type: 'tel',
+                value: form.phone,
+                required: false,
+                autocomplete: 'tel',
+                hint: optional_hint,
+                error: phone_error,
+                class: 'cosme-contact__field'
+              %}
+            {% endif %}
+          {% endif %}
+
+          {% render 'cosme-form-field',
+            label: message_label,
+            id: body_id,
+            name: 'contact[body]',
+            type: 'textarea',
+            value: form.body,
+            required: true,
+            rows: 6,
+            error: body_error,
+            class: 'cosme-contact__field cosme-contact__field--message'
+          %}
+
+          {% render 'cosme-button',
+            label: submit_label,
+            type: 'submit',
+            style: 'primary',
+            class: 'cosme-contact__submit'
+          %}
+        {% endform %}
+      </div>
+    </div>
+  </div>
+
+  {% if show_faq %}
+    <div
+      class="
+        cosme-contact__faq
+        color-{{ section.settings.faq_color_scheme }}
+        cosme-contact__faq--align-{{ faq_alignment }}
+        cosme-contact__faq--width-{{ faq_max_width }}
+        cosme-contact__faq--top-{{ faq_spacing_top }}
+        cosme-contact__faq--bottom-{{ faq_spacing_bottom }}
+      "
+      {% if faq_heading != blank %}
+        aria-labelledby="{{ faq_heading_id }}"
+      {% else %}
+        aria-label="{{ 'sections.contact.faq_label' | t }}"
+      {% endif %}
+    >
+      <div class="cosme-contact__faq-inner">
+        <header class="cosme-contact__faq-header">
+          {% if faq_eyebrow != blank %}
+            <p class="cosme-contact__faq-eyebrow">{{ faq_eyebrow | escape }}</p>
+          {% endif %}
+
+          {% if faq_heading != blank %}
+            <h2 class="cosme-contact__faq-heading" id="{{ faq_heading_id }}">
+              {{ faq_heading | escape }}
+            </h2>
+          {% endif %}
+
+          {% if faq_description != blank %}
+            <p class="cosme-contact__faq-description">{{ faq_description | escape }}</p>
+          {% endif %}
+        </header>
+
+        {% if faq_count > 0 %}
+          <div class="cosme-contact__faq-list">
+            {% assign faq_index = 0 %}
+            {% for block in section.blocks %}
+              {% liquid
+                assign question = block.settings.question | strip
+                assign answer = block.settings.answer
+                assign answer_plain = answer | strip_html | strip
+              %}
+              {% if question != blank %}
+                {% liquid
+                  assign faq_index = faq_index | plus: 1
+                  assign faq_number = faq_index
+                  if faq_index < 10
+                    assign faq_number = faq_index | prepend: '0'
+                  endif
+                  assign item_id = 'ContactFaq-' | append: section.id | append: '-' | append: block.id
+                %}
+                <details
+                  class="cosme-contact__faq-item"
+                  id="{{ item_id }}"
+                  {% if block.settings.open_by_default %}
+                    open
+                  {% endif %}
+                  {{ block.shopify_attributes }}
+                >
+                  <summary class="cosme-contact__faq-summary">
+                    <span class="cosme-contact__faq-number" aria-hidden="true">{{ faq_number }}</span>
+                    <span class="cosme-contact__faq-question">{{ question | escape }}</span>
+                    <span class="cosme-contact__faq-icon" aria-hidden="true">
+                      <span class="cosme-contact__faq-icon-plus">
+                        {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+                      </span>
+                      <span class="cosme-contact__faq-icon-minus">
+                        {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+                      </span>
+                    </span>
+                  </summary>
+                  {% if answer_plain != blank %}
+                    <div class="cosme-contact__faq-panel">
+                      <div class="cosme-contact__faq-answer">{{ answer }}</div>
+                    </div>
+                  {% endif %}
+                </details>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if show_faq_link %}
+          <p class="cosme-contact__faq-cta">
+            <a class="cosme-contact__faq-link" href="{{ faq_link }}">
+              <span>{{ faq_link_label | escape }}</span>
+              {% render 'cosme-icon', icon: 'arrow-right', size: 'sm' %}
+            </a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% if show_cta %}
+    <div
+      class="
+        cosme-contact__cta
+        color-{{ section.settings.cta_color_scheme }}
+        cosme-contact__cta--top-{{ cta_spacing_top }}
+        cosme-contact__cta--bottom-{{ cta_spacing_bottom }}
+      "
+      {% if cta_heading != blank %}
+        aria-labelledby="{{ cta_heading_id }}"
+      {% else %}
+        aria-label="{{ 'sections.contact.cta_label' | t }}"
+      {% endif %}
+    >
+      <div class="cosme-contact__cta-inner">
+        {% if cta_eyebrow != blank %}
+          <p class="cosme-contact__cta-eyebrow">{{ cta_eyebrow | escape }}</p>
+        {% endif %}
+
+        {% if cta_heading != blank %}
+          <h2 class="cosme-contact__cta-heading" id="{{ cta_heading_id }}">
+            {{ cta_heading | escape }}
+          </h2>
+        {% endif %}
+
+        {% if cta_description != blank %}
+          <p class="cosme-contact__cta-description">{{ cta_description | escape }}</p>
+        {% endif %}
+
+        {% if show_cta_button %}
+          {% render 'cosme-button',
+            label: cta_label,
+            url: cta_button_url,
+            style: 'primary',
+            class: 'cosme-contact__cta-button'
+          %}
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .cosme-contact {
+    overflow-x: clip;
+    min-width: 0;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-contact__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+  }
+
+  .cosme-contact--section-bottom-small .cosme-contact__inner {
+    padding-block-end: calc(var(--spacing-section) * 0.35);
+  }
+
+  .cosme-contact--section-bottom-medium .cosme-contact__inner {
+    padding-block-end: clamp(2rem, 5vw, calc(var(--spacing-section) * 0.75));
+  }
+
+  .cosme-contact--section-bottom-large .cosme-contact__inner {
+    padding-block-end: clamp(2.75rem, 7vw, var(--spacing-section));
+  }
+
+  .cosme-contact__hero {
+    padding-block-start: clamp(2rem, 6vw, 5rem);
+    padding-block-end: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .cosme-contact--hero-top-small .cosme-contact__hero {
+    padding-block-start: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .cosme-contact--hero-top-medium .cosme-contact__hero {
+    padding-block-start: clamp(2.25rem, 6vw, 4rem);
+  }
+
+  .cosme-contact--hero-top-large .cosme-contact__hero {
+    padding-block-start: clamp(3rem, 8vw, 6.25rem);
+  }
+
+  .cosme-contact--hero-bottom-small .cosme-contact__hero {
+    padding-block-end: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .cosme-contact--hero-bottom-medium .cosme-contact__hero {
+    padding-block-end: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .cosme-contact--hero-bottom-large .cosme-contact__hero {
+    padding-block-end: clamp(2.75rem, 6vw, 4.5rem);
+  }
+
+  .cosme-contact__hero-copy {
+    max-width: 36rem;
+  }
+
+  .cosme-contact--hero-medium .cosme-contact__hero-copy {
+    max-width: 44rem;
+  }
+
+  .cosme-contact--hero-wide .cosme-contact__hero-copy {
+    max-width: 54rem;
+  }
+
+  .cosme-contact--align-center .cosme-contact__hero-copy {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-contact__eyebrow,
+  .cosme-contact__info-eyebrow,
+  .cosme-contact__label {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-contact--heading-small .cosme-contact__heading {
+    font-size: clamp(1.625rem, 4vw, 2.25rem);
+  }
+
+  .cosme-contact--heading-medium .cosme-contact__heading {
+    font-size: clamp(1.875rem, 5vw, 2.875rem);
+  }
+
+  .cosme-contact--heading-large .cosme-contact__heading {
+    font-size: clamp(2rem, 5.8vw, 3.5rem);
+  }
+
+  .cosme-contact__description {
+    max-width: 34rem;
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact--align-center .cosme-contact__description {
+    margin-inline: auto;
+  }
+
+  .cosme-contact__layout {
+    display: grid;
+    gap: clamp(2rem, 5vw, 4rem);
+    min-width: 0;
+  }
+
+  .cosme-contact__info {
+    min-width: 0;
+  }
+
+  .cosme-contact__info-heading,
+  .cosme-contact__form-heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+    font-size: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .cosme-contact__info-eyebrow + .cosme-contact__info-heading {
+    margin-block-start: 0.15rem;
+  }
+
+  .cosme-contact__detail {
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+
+  .cosme-contact__link {
+    color: var(--color-foreground);
+    text-decoration: none;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-foreground) 28%, transparent);
+  }
+
+  .cosme-contact__link:hover {
+    color: var(--color-accent);
+    border-block-end-color: var(--color-accent);
+  }
+
+  .cosme-contact__link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  .cosme-contact__group {
+    margin-block-start: var(--spacing-lg);
+    padding-block-start: var(--spacing-lg);
+    border-block-start: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  }
+
+  .cosme-contact__text {
+    margin: var(--spacing-sm) 0 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-foreground);
+  }
+
+  .cosme-contact__form-panel {
+    min-width: 0;
+  }
+
+  .cosme-contact__form-description {
+    margin: var(--spacing-sm) 0 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    margin-block-start: var(--spacing-lg);
+    min-width: 0;
+    scroll-margin-block-start: 6rem;
+  }
+
+  .cosme-contact__status {
+    margin: 0;
+    padding: var(--spacing-md) 0;
+    border-block-start: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  }
+
+  .cosme-contact__status--success {
+    color: var(--color-success, var(--color-foreground));
+    font-size: 1rem;
+    line-height: 1.6;
+    border-block-start-color: color-mix(in srgb, var(--color-success, var(--color-accent)) 45%, transparent);
+  }
+
+  .cosme-contact__status--error {
+    color: var(--color-error);
+    border-block-start-color: color-mix(in srgb, var(--color-error) 45%, transparent);
+  }
+
+  .cosme-contact__status-heading {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .cosme-contact__status-list {
+    margin: 0;
+    padding-inline-start: 1.15rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  .cosme-contact__status-list a {
+    color: inherit;
+  }
+
+  .cosme-contact__status-list a:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-contact .cosme-form-field__label {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .cosme-contact .cosme-form-field__control {
+    min-height: 3rem;
+    border-radius: var(--radius-input);
+  }
+
+  .cosme-contact .cosme-contact__field--message .cosme-form-field__control,
+  .cosme-contact textarea.cosme-form-field__control {
+    min-height: 10rem;
+    resize: vertical;
+  }
+
+  .cosme-contact__submit {
+    align-self: stretch;
+    min-height: 3.15rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-contact__layout {
+      gap: clamp(2.25rem, 5vw, 3.5rem);
+    }
+
+    .cosme-contact__submit {
+      align-self: flex-start;
+      min-width: 14rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-contact--has-info .cosme-contact__layout {
+      grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
+      gap: clamp(3.5rem, 8vw, 7rem);
+      align-items: start;
+    }
+
+    .cosme-contact__info {
+      padding-block-start: 0.2rem;
+    }
+  }
+
+  .cosme-contact--has-faq .cosme-contact__inner,
+  .cosme-contact--has-cta .cosme-contact__inner {
+    padding-block-end: clamp(1.5rem, 4vw, 2.75rem);
+  }
+
+  .cosme-contact--has-cta .cosme-contact__faq--bottom-medium .cosme-contact__faq-inner,
+  .cosme-contact--has-cta .cosme-contact__faq--bottom-large .cosme-contact__faq-inner {
+    padding-block-end: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .cosme-contact__faq {
+    overflow-x: clip;
+    min-width: 0;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-contact__faq-inner {
+    width: 100%;
+    max-width: 46rem;
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+  }
+
+  .cosme-contact__faq--width-narrow .cosme-contact__faq-inner {
+    max-width: 38rem;
+  }
+
+  .cosme-contact__faq--width-medium .cosme-contact__faq-inner {
+    max-width: 46rem;
+  }
+
+  .cosme-contact__faq--width-wide .cosme-contact__faq-inner {
+    max-width: 54rem;
+  }
+
+  .cosme-contact__faq--top-small .cosme-contact__faq-inner {
+    padding-block-start: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .cosme-contact__faq--top-medium .cosme-contact__faq-inner {
+    padding-block-start: clamp(2.25rem, 5vw, 4rem);
+  }
+
+  .cosme-contact__faq--top-large .cosme-contact__faq-inner {
+    padding-block-start: clamp(2.75rem, 6vw, 5rem);
+  }
+
+  .cosme-contact__faq--bottom-small .cosme-contact__faq-inner {
+    padding-block-end: clamp(1.75rem, 4vw, 2.75rem);
+  }
+
+  .cosme-contact__faq--bottom-medium .cosme-contact__faq-inner {
+    padding-block-end: clamp(2.25rem, 5vw, 3.75rem);
+  }
+
+  .cosme-contact__faq--bottom-large .cosme-contact__faq-inner {
+    padding-block-end: clamp(2.75rem, 7vw, var(--spacing-section));
+  }
+
+  .cosme-contact__faq-header {
+    margin-block-end: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .cosme-contact__faq--align-center .cosme-contact__faq-header {
+    text-align: center;
+  }
+
+  .cosme-contact__faq-eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__faq-heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+    font-size: clamp(1.5rem, 3.2vw, 2.125rem);
+  }
+
+  .cosme-contact__faq-description {
+    max-width: 28rem;
+    margin: var(--spacing-md) 0 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__faq--align-center .cosme-contact__faq-description {
+    margin-inline: auto;
+  }
+
+  .cosme-contact__faq-list {
+    min-width: 0;
+    border-block-start: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  }
+
+  .cosme-contact__faq-item {
+    border-block-end: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  }
+
+  .cosme-contact__faq-summary {
+    display: grid;
+    grid-template-columns: 2.15rem minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--spacing-md);
+    width: 100%;
+    min-height: 3rem;
+    padding-block: 1.05rem;
+    padding-inline: 0;
+    cursor: pointer;
+    list-style: none;
+    color: var(--color-heading, var(--color-foreground));
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cosme-contact__faq-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cosme-contact__faq-summary:focus {
+    outline: none;
+  }
+
+  .cosme-contact__faq-summary:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-contact__faq-number {
+    padding-block-start: 0.28rem;
+    font-family: var(--font-heading--family);
+    font-size: 0.6875rem;
+    font-weight: var(--font-heading--weight);
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__faq-question {
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-contact__faq-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-block-start: 0.15rem;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__faq-item[open] .cosme-contact__faq-icon {
+    color: var(--color-foreground);
+  }
+
+  .cosme-contact__faq-icon-minus {
+    display: none;
+  }
+
+  .cosme-contact__faq-item[open] .cosme-contact__faq-icon-plus {
+    display: none;
+  }
+
+  .cosme-contact__faq-item[open] .cosme-contact__faq-icon-minus {
+    display: inline-flex;
+  }
+
+  .cosme-contact__faq-panel {
+    padding-inline-start: 2.15rem;
+    padding-block-end: 1.15rem;
+  }
+
+  .cosme-contact__faq-answer {
+    max-width: 38rem;
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-contact__faq-answer > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-contact__faq-answer > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-contact__faq-answer p {
+    margin-block: 0 var(--spacing-sm);
+  }
+
+  .cosme-contact__faq-cta {
+    display: flex;
+    margin: clamp(1.5rem, 4vw, 2.25rem) 0 0;
+  }
+
+  .cosme-contact__faq--align-center .cosme-contact__faq-cta {
+    justify-content: center;
+  }
+
+  .cosme-contact__faq-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-block-end: 1px solid color-mix(in srgb, var(--color-foreground) 28%, transparent);
+  }
+
+  .cosme-contact__faq-link:hover {
+    color: var(--color-accent);
+    border-block-end-color: var(--color-accent);
+  }
+
+  .cosme-contact__faq-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-contact__faq-link,
+    .cosme-contact__faq-icon,
+    .cosme-contact__cta-button {
+      transition: none;
+    }
+  }
+
+  .cosme-contact__cta {
+    overflow-x: clip;
+    min-width: 0;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border-block-start: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  }
+
+  .cosme-contact__cta-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+    text-align: center;
+  }
+
+  .cosme-contact__cta--top-small .cosme-contact__cta-inner {
+    padding-block-start: clamp(2rem, 5vw, 3rem);
+  }
+
+  .cosme-contact__cta--top-medium .cosme-contact__cta-inner {
+    padding-block-start: clamp(2.5rem, 6vw, 4.25rem);
+  }
+
+  .cosme-contact__cta--top-large .cosme-contact__cta-inner {
+    padding-block-start: clamp(3rem, 8vw, 5.5rem);
+  }
+
+  .cosme-contact__cta--bottom-small .cosme-contact__cta-inner {
+    padding-block-end: clamp(2rem, 5vw, 3rem);
+  }
+
+  .cosme-contact__cta--bottom-medium .cosme-contact__cta-inner {
+    padding-block-end: clamp(2.5rem, 6vw, 4.25rem);
+  }
+
+  .cosme-contact__cta--bottom-large .cosme-contact__cta-inner {
+    padding-block-end: clamp(3rem, 8vw, 5.5rem);
+  }
+
+  .cosme-contact__cta-eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__cta-heading {
+    margin: 0 auto;
+    max-width: 18ch;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.625rem, 4vw, 2.5rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-contact__cta-description {
+    max-width: 28rem;
+    margin: var(--spacing-md) auto 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-contact__cta-button {
+    margin-block-start: var(--spacing-xl);
+    min-width: 10.5rem;
+    min-height: 2.75rem;
+  }
+
+  @media screen and (max-width: 749px) {
+    .cosme-contact--hero-top-large .cosme-contact__hero {
+      padding-block-start: clamp(1.75rem, 8vw, 3.25rem);
+    }
+
+    .cosme-contact--heading-large .cosme-contact__heading {
+      font-size: clamp(1.75rem, 8vw, 2.35rem);
+    }
+
+    .cosme-contact__cta-button {
+      width: min(100%, 20rem);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.contact",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "t:sections.contact.settings.show_eyebrow",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.contact.settings.eyebrow",
+      "default": "GET IN TOUCH",
+      "visible_if": "{{ section.settings.show_eyebrow }}"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.contact.settings.heading",
+      "default": "We'd love to hear from you."
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "t:sections.contact.settings.description",
+      "default": "Have a question about an order, our products or anything else? Send us a message and our team will get back to you."
+    },
+    {
+      "type": "select",
+      "id": "hero_alignment",
+      "label": "t:sections.contact.settings.hero_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:sections.contact.settings.heading_size",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "select",
+      "id": "hero_max_width",
+      "label": "t:sections.contact.settings.hero_max_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "narrow"
+    },
+    {
+      "type": "select",
+      "id": "hero_spacing_top",
+      "label": "t:sections.contact.settings.hero_spacing_top",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "select",
+      "id": "hero_spacing_bottom",
+      "label": "t:sections.contact.settings.hero_spacing_bottom",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.contact.settings.info_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_contact_info",
+      "label": "t:sections.contact.settings.show_contact_info",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "contact_eyebrow",
+      "label": "t:sections.contact.settings.contact_eyebrow",
+      "default": "CONTACT",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "text",
+      "id": "contact_heading",
+      "label": "t:sections.contact.settings.contact_heading",
+      "default": "Customer Care",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "text",
+      "id": "email",
+      "label": "t:sections.contact.settings.email",
+      "default": "hello@example.com",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "url",
+      "id": "email_link",
+      "label": "t:sections.contact.settings.email_link",
+      "info": "t:sections.contact.settings.email_link_info",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "text",
+      "id": "hours_title",
+      "label": "t:sections.contact.settings.hours_title",
+      "default": "BUSINESS HOURS",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "textarea",
+      "id": "hours_text",
+      "label": "t:sections.contact.settings.hours_text",
+      "default": "Monday – Friday\n9:00 – 18:00",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "text",
+      "id": "phone",
+      "label": "t:sections.contact.settings.phone",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "url",
+      "id": "phone_link",
+      "label": "t:sections.contact.settings.phone_link",
+      "info": "t:sections.contact.settings.phone_link_info",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "text",
+      "id": "phone_label",
+      "label": "t:sections.contact.settings.phone_label",
+      "default": "PHONE",
+      "visible_if": "{{ section.settings.show_contact_info }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.contact.settings.form_header"
+    },
+    {
+      "type": "text",
+      "id": "form_heading",
+      "label": "t:sections.contact.settings.form_heading",
+      "default": "Send us a message"
+    },
+    {
+      "type": "textarea",
+      "id": "form_description",
+      "label": "t:sections.contact.settings.form_description",
+      "default": "We'll get back to you as soon as possible."
+    },
+    {
+      "type": "text",
+      "id": "submit_label",
+      "label": "t:sections.contact.settings.submit_label",
+      "default": "SEND MESSAGE"
+    },
+    {
+      "type": "textarea",
+      "id": "success_message",
+      "label": "t:sections.contact.settings.success_message",
+      "default": "Thank you for your message. We'll be in touch soon."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_phone_field",
+      "label": "t:sections.contact.settings.show_phone_field",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "phone_required",
+      "label": "t:sections.contact.settings.phone_required",
+      "default": false,
+      "visible_if": "{{ section.settings.show_phone_field }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.contact.settings.faq_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_quick_answers",
+      "label": "t:sections.contact.settings.enable_quick_answers",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "faq_eyebrow",
+      "label": "t:sections.contact.settings.faq_eyebrow",
+      "default": "QUICK ANSWERS",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "text",
+      "id": "faq_heading",
+      "label": "t:sections.contact.settings.faq_heading",
+      "default": "Looking for an answer?",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "textarea",
+      "id": "faq_description",
+      "label": "t:sections.contact.settings.faq_description",
+      "default": "You may find what you're looking for in our frequently asked questions.",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "select",
+      "id": "faq_alignment",
+      "label": "t:sections.contact.settings.faq_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "center",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "select",
+      "id": "faq_max_width",
+      "label": "t:sections.contact.settings.faq_max_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "medium",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_faq_link",
+      "label": "t:sections.contact.settings.show_faq_link",
+      "default": true,
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "text",
+      "id": "faq_link_label",
+      "label": "t:sections.contact.settings.faq_link_label",
+      "default": "View all FAQs",
+      "visible_if": "{{ section.settings.enable_quick_answers and section.settings.show_faq_link }}"
+    },
+    {
+      "type": "url",
+      "id": "faq_link",
+      "label": "t:sections.contact.settings.faq_link",
+      "info": "t:sections.contact.settings.faq_link_info",
+      "visible_if": "{{ section.settings.enable_quick_answers and section.settings.show_faq_link }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "faq_color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "select",
+      "id": "faq_spacing_top",
+      "label": "t:sections.contact.settings.faq_spacing_top",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "select",
+      "id": "faq_spacing_bottom",
+      "label": "t:sections.contact.settings.faq_spacing_bottom",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large",
+      "visible_if": "{{ section.settings.enable_quick_answers }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.contact.settings.cta_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_final_cta",
+      "label": "t:sections.contact.settings.show_final_cta",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta_eyebrow",
+      "label": "t:sections.contact.settings.cta_eyebrow",
+      "default": "WE'RE HERE FOR YOU",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "text",
+      "id": "cta_heading",
+      "label": "t:sections.contact.settings.cta_heading",
+      "default": "Questions, ideas or just want to say hello?",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "textarea",
+      "id": "cta_description",
+      "label": "t:sections.contact.settings.cta_description",
+      "default": "Our team is always happy to hear from you.",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "text",
+      "id": "cta_button_label",
+      "label": "t:sections.contact.settings.cta_button_label",
+      "default": "CONTACT US",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.contact.settings.cta_button_link",
+      "info": "t:sections.contact.settings.cta_button_link_info",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "cta_color_scheme",
+      "label": "t:sections.contact.settings.cta_color_scheme",
+      "default": "scheme-3",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "select",
+      "id": "cta_spacing_top",
+      "label": "t:sections.contact.settings.cta_spacing_top",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "select",
+      "id": "cta_spacing_bottom",
+      "label": "t:sections.contact.settings.cta_spacing_bottom",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium",
+      "visible_if": "{{ section.settings.show_final_cta }}"
+    },
+    {
+      "type": "header",
+      "content": "t:general.layout"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing_bottom",
+      "label": "t:sections.contact.settings.section_spacing_bottom",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    }
+  ],
+  "max_blocks": 8,
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "t:sections.contact.blocks.item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "t:sections.contact.blocks.question",
+          "default": "How long does shipping take?"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "t:sections.contact.blocks.answer",
+          "default": "<p>Standard shipping typically arrives in 3–6 business days after dispatch. Express options, where available, usually arrive in 1–2 business days.</p>"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "t:sections.contact.blocks.open_by_default",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.contact",
+      "blocks": [
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "How long does shipping take?",
+            "answer": "<p>Standard shipping typically arrives in 3–6 business days after dispatch. Express options, where available, usually arrive in 1–2 business days.</p>",
+            "open_by_default": false
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "How can I track my order?",
+            "answer": "<p>A tracking link is sent to your email as soon as your order leaves our studio. You can also find tracking details in your order confirmation.</p>",
+            "open_by_default": false
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is your return policy?",
+            "answer": "<p>Unopened items may be returned within 30 days of delivery. For hygiene reasons, opened skincare cannot always be accepted. Contact us and we will guide you through the next step.</p>",
+            "open_by_default": false
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "Are your products suitable for sensitive skin?",
+            "answer": "<p>Many of our formulas are developed with sensitive skin in mind and are dermatologist tested. We recommend reviewing the ingredient list and patch testing if you have known sensitivities.</p>",
+            "open_by_default": false
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

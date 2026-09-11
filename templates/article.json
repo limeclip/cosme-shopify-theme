@@ -11,7 +11,27 @@
   "sections": {
     "main": {
       "type": "article",
-      "settings": {}
+      "settings": {
+        "show_back_link": true,
+        "show_excerpt": true,
+        "show_date": true,
+        "show_author": true,
+        "show_reading_time": true,
+        "hero_image_ratio": "landscape",
+        "show_share": true,
+        "show_related": true,
+        "related_count": 3,
+        "related_heading": "Related Stories",
+        "related_description": "",
+        "show_newsletter": true,
+        "newsletter_eyebrow": "THE COSME JOURNAL",
+        "newsletter_heading": "Beauty, thoughtfully curated.",
+        "newsletter_description": "Receive new stories, rituals and discoveries from Cosme.",
+        "newsletter_button_label": "Subscribe",
+        "newsletter_color_scheme": "scheme-2",
+        "color_scheme": "scheme-1",
+        "section_spacing": "medium"
+      }
     }
   },
   "order": [

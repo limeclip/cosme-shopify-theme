@@ -1,0 +1,502 @@
+{% doc %}
+  Renders a Shopify Markets country/region selector.
+
+  Options come from `localization.available_countries`. Changing a market
+  submits Shopify's native localization form.
+
+  @param {string} section_id - Unique section id used for accessible control ids
+
+  @example
+  {% render 'cosme-country-selector', section_id: section.id %}
+{% enddoc %}
+
+{%- liquid
+  assign countries = localization.available_countries | sort: 'name'
+  assign current_country = localization.country
+  assign current_code = current_country.iso_code
+  assign current_currency_code = current_country.currency.iso_code
+  assign current_currency_symbol = current_country.currency.symbol
+  assign list_id = 'CosmeCountryList-' | append: section_id
+  assign trigger_id = 'CosmeCountryTrigger-' | append: section_id
+  assign form_id = 'CosmeLocalization-' | append: section_id
+  assign current_flag = current_country | image_url: width: 32
+-%}
+
+{%- capture current_currency_label -%}
+  {%- if current_currency_code != blank -%}
+    {%- if current_currency_symbol != blank -%}
+      {{ current_currency_code }} {{ current_currency_symbol }}
+    {%- else -%}
+      {{ current_currency_code }}
+    {%- endif -%}
+  {%- endif -%}
+{%- endcapture -%}
+
+{%- capture current_visible_label -%}
+  {{- current_country.name -}}
+  {%- if current_currency_label != blank %} ({{ current_currency_label | strip }}){%- endif -%}
+{%- endcapture -%}
+
+<cosme-country-selector class="cosme-country-selector">
+  {% form 'localization', class: 'cosme-country-selector__form', id: form_id %}
+    <input type="hidden" name="country_code" value="{{ current_code }}">
+    {%- if localization.language != blank -%}
+      <input type="hidden" name="language_code" value="{{ localization.language.iso_code }}">
+    {%- endif -%}
+
+    <button
+      type="button"
+      class="cosme-country-selector__trigger"
+      id="{{ trigger_id }}"
+      aria-expanded="false"
+      aria-haspopup="listbox"
+      aria-controls="{{ list_id }}"
+      aria-label="{{ 'footer.country_selector.label' | t }}: {{ current_visible_label | strip | escape }}"
+      data-country-selector-trigger
+    >
+      <span class="cosme-country-selector__current">
+        {%- if current_flag != blank -%}
+          {{
+            current_country
+            | image_url: width: 32
+            | image_tag:
+              class: 'cosme-country-selector__flag',
+              loading: 'lazy',
+              widths: '32, 64',
+              width: 32,
+              height: 24,
+              alt: '',
+              aria-hidden: 'true'
+          }}
+        {%- endif -%}
+        <span class="cosme-country-selector__text">
+          <span class="cosme-country-selector__name">{{ current_country.name | escape }}</span>
+          {%- if current_currency_label != blank -%}
+            <span class="cosme-country-selector__currency">({{ current_currency_label | strip | escape }})</span>
+          {%- endif -%}
+        </span>
+      </span>
+      <span class="cosme-country-selector__chevron">
+        {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+      </span>
+    </button>
+
+    <div
+      class="cosme-country-selector__panel"
+      id="{{ list_id }}"
+      role="listbox"
+      aria-labelledby="{{ trigger_id }}"
+      hidden
+      data-country-selector-panel
+    >
+      {%- for country in countries -%}
+        {%- liquid
+          assign is_current = false
+          if country.iso_code == current_code
+            assign is_current = true
+          endif
+          assign option_currency_code = country.currency.iso_code
+          assign option_currency_symbol = country.currency.symbol
+          assign option_flag = country | image_url: width: 32
+          assign option_id = 'CosmeCountryOption-' | append: section_id | append: '-' | append: country.iso_code
+        -%}
+        {%- capture option_currency_label -%}
+          {%- if option_currency_code != blank -%}
+            {%- if option_currency_symbol != blank -%}
+              {{ option_currency_code }} {{ option_currency_symbol }}
+            {%- else -%}
+              {{ option_currency_code }}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endcapture -%}
+        {%- capture option_visible_label -%}
+          {{- country.name -}}
+          {%- if option_currency_label != blank %} ({{ option_currency_label | strip }}){%- endif -%}
+        {%- endcapture -%}
+        <button
+          type="button"
+          class="cosme-country-selector__option"
+          id="{{ option_id }}"
+          role="option"
+          tabindex="-1"
+          data-value="{{ country.iso_code }}"
+          aria-selected="{% if is_current %}true{% else %}false{% endif %}"
+          aria-label="{{ option_visible_label | strip | escape }}"
+        >
+          {%- if option_flag != blank -%}
+            {{
+              country
+              | image_url: width: 32
+              | image_tag:
+                class: 'cosme-country-selector__flag',
+                loading: 'lazy',
+                widths: '32, 64',
+                width: 32,
+                height: 24,
+                alt: '',
+                aria-hidden: 'true'
+            }}
+          {%- endif -%}
+          <span class="cosme-country-selector__text">
+            <span class="cosme-country-selector__name">{{ country.name | escape }}</span>
+            {%- if option_currency_label != blank -%}
+              <span class="cosme-country-selector__currency">({{ option_currency_label | strip | escape }})</span>
+            {%- endif -%}
+          </span>
+        </button>
+      {%- endfor -%}
+    </div>
+  {% endform %}
+</cosme-country-selector>
+
+{% stylesheet %}
+  .cosme-country-selector {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cosme-country-selector__form {
+    position: relative;
+    margin: 0;
+  }
+
+  .cosme-country-selector__trigger,
+  .cosme-country-selector__option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    text-align: start;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  .cosme-country-selector__trigger {
+    gap: var(--spacing-sm);
+    justify-content: space-between;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-input);
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-country-selector__trigger:hover {
+    color: var(--color-heading, var(--color-foreground));
+    border: var(--border-width) solid var(--color-border);
+   
+  }
+
+  .cosme-country-selector__trigger:focus-visible,
+  .cosme-country-selector__option:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-country-selector__current,
+  .cosme-country-selector__option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 0;
+  }
+
+  .cosme-country-selector__current {
+    flex: 1;
+  }
+
+  .cosme-country-selector__text {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25em 0.35em;
+    min-width: 0;
+  }
+
+  .cosme-country-selector__trigger .cosme-country-selector__text {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .cosme-country-selector__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cosme-country-selector__option .cosme-country-selector__name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
+
+  .cosme-country-selector__currency {
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .cosme-country-selector__flag {
+    display: block;
+    flex: 0 0 auto;
+    width: 1.25rem;
+    height: 0.9375rem;
+    object-fit: cover;
+    background-color: var(--color-background-2, var(--color-background));
+    border: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-country-selector__flag.is-hidden {
+    display: none;
+  }
+
+  .cosme-country-selector__chevron {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: var(--color-muted);
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-country-selector.is-open .cosme-country-selector__chevron {
+    transform: rotate(180deg);
+  }
+
+  .cosme-country-selector__panel {
+    position: absolute;
+    top: calc(100% + var(--spacing-xs));
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    max-height: min(16rem, calc(100vh - 2rem));
+    margin: 0;
+    padding: var(--spacing-xs);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-input);
+  }
+
+  .cosme-country-selector__panel[hidden] {
+    display: none;
+  }
+
+  .cosme-country-selector.is-open-up .cosme-country-selector__panel {
+    top: auto;
+    bottom: calc(100% + var(--spacing-xs));
+  }
+
+  .cosme-country-selector__option {
+    min-height: 2.75rem;
+    padding: 0.5rem 0.625rem;
+    color: var(--color-muted);
+  }
+
+  .cosme-country-selector__option:hover,
+  .cosme-country-selector__option:focus-visible,
+  .cosme-country-selector__option[aria-selected='true'] {
+    color: var(--color-foreground);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-country-selector__chevron {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('cosme-country-selector')) {
+    customElements.define(
+      'cosme-country-selector',
+      class CosmeCountrySelector extends HTMLElement {
+        connectedCallback() {
+          this.form = this.querySelector('form');
+          this.trigger = this.querySelector('[data-country-selector-trigger]');
+          this.panel = this.querySelector('[data-country-selector-panel]');
+          this.input = this.querySelector('input[name="country_code"]');
+          this.options = Array.from(this.querySelectorAll('[role="option"]'));
+          if (!this.form || !this.trigger || !this.panel || !this.input) return;
+          if (this.bound) return;
+          this.bound = true;
+
+          this.querySelectorAll('.cosme-country-selector__flag').forEach((flag) => {
+            const hideFlag = () => flag.classList.add('is-hidden');
+            flag.addEventListener('error', hideFlag);
+            if (flag.complete && flag.naturalWidth === 0) hideFlag();
+          });
+
+          this.onToggle = this.onToggle.bind(this);
+          this.onKeyDown = this.onKeyDown.bind(this);
+          this.onOptionClick = this.onOptionClick.bind(this);
+          this.onPointerDown = this.onPointerDown.bind(this);
+          this.onFocusOut = this.onFocusOut.bind(this);
+
+          this.trigger.addEventListener('click', this.onToggle);
+          this.addEventListener('keydown', this.onKeyDown);
+          this.addEventListener('focusout', this.onFocusOut);
+          this.options.forEach((option) => {
+            option.addEventListener('click', this.onOptionClick);
+          });
+          document.addEventListener('pointerdown', this.onPointerDown);
+        }
+
+        disconnectedCallback() {
+          document.removeEventListener('pointerdown', this.onPointerDown);
+          this.bound = false;
+        }
+
+        get isOpen() {
+          return this.classList.contains('is-open');
+        }
+
+        onToggle(event) {
+          event.preventDefault();
+          if (this.isOpen) {
+            this.close();
+            return;
+          }
+          this.open();
+        }
+
+        onOptionClick(event) {
+          event.preventDefault();
+          this.select(event.currentTarget);
+        }
+
+        onPointerDown(event) {
+          if (!this.isOpen) return;
+          if (this.contains(event.target)) return;
+          this.close();
+        }
+
+        onFocusOut(event) {
+          if (!this.isOpen) return;
+          const next = event.relatedTarget;
+          if (next && this.contains(next)) return;
+          this.close();
+        }
+
+        onKeyDown(event) {
+          const key = event.key;
+          if (key === 'Escape') {
+            if (!this.isOpen) return;
+            event.preventDefault();
+            this.close();
+            this.trigger.focus();
+            return;
+          }
+
+          if (!this.isOpen) {
+            if (key === 'ArrowDown' || key === 'ArrowUp') {
+              event.preventDefault();
+              this.open();
+            }
+            return;
+          }
+
+          if (key === 'ArrowDown') {
+            event.preventDefault();
+            this.move(1);
+            return;
+          }
+          if (key === 'ArrowUp') {
+            event.preventDefault();
+            this.move(-1);
+            return;
+          }
+          if (key === 'Home') {
+            event.preventDefault();
+            this.focusOption(0);
+            return;
+          }
+          if (key === 'End') {
+            event.preventDefault();
+            this.focusOption(this.options.length - 1);
+            return;
+          }
+          if (key === 'Enter' || key === ' ') {
+            const active = document.activeElement;
+            if (active && active.getAttribute('role') === 'option') {
+              event.preventDefault();
+              this.select(active);
+            }
+          }
+        }
+
+        open() {
+          this.panel.hidden = false;
+          this.classList.add('is-open');
+          this.trigger.setAttribute('aria-expanded', 'true');
+          this.positionPanel();
+          const selected = this.options.find((option) => option.getAttribute('aria-selected') === 'true');
+          const index = selected ? this.options.indexOf(selected) : 0;
+          this.focusOption(index);
+        }
+
+        close() {
+          this.panel.hidden = true;
+          this.classList.remove('is-open', 'is-open-up');
+          this.trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        positionPanel() {
+          this.classList.remove('is-open-up');
+          this.panel.style.maxHeight = '';
+          const triggerRect = this.trigger.getBoundingClientRect();
+          const spaceBelow = window.innerHeight - triggerRect.bottom;
+          const spaceAbove = triggerRect.top;
+          const inset = 16;
+          const openUp = spaceBelow < 180 && spaceAbove > spaceBelow;
+          if (openUp) this.classList.add('is-open-up');
+          const available = (openUp ? spaceAbove : spaceBelow) - inset;
+          this.panel.style.maxHeight = `${Math.min(256, Math.max(available, 80))}px`;
+        }
+
+        focusOption(index) {
+          if (!this.options.length) return;
+          const nextIndex = Math.max(0, Math.min(index, this.options.length - 1));
+          this.options[nextIndex].focus();
+        }
+
+        move(offset) {
+          const active = document.activeElement;
+          const currentIndex = this.options.indexOf(active);
+          const start = currentIndex === -1 ? 0 : currentIndex;
+          this.focusOption(start + offset);
+        }
+
+        select(option) {
+          const value = option.getAttribute('data-value');
+          if (!value || value === this.input.value) {
+            this.close();
+            this.trigger.focus();
+            return;
+          }
+          this.input.value = value;
+          this.form.submit();
+        }
+      }
+    );
+  }
+{% endjavascript %}

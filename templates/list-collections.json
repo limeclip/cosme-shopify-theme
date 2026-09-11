@@ -11,7 +11,24 @@
   "sections": {
     "main": {
       "type": "collections",
-      "settings": {}
+      "settings": {
+        "eyebrow": "Explore",
+        "show_eyebrow": true,
+        "heading": "Collections",
+        "description": "Discover carefully curated collections designed around your beauty rituals.",
+        "show_description": true,
+        "text_alignment": "left",
+        "collection_source": "all",
+        "columns_desktop": "3",
+        "image_ratio": "4/5",
+        "grid_gap": "medium",
+        "show_collection_description": false,
+        "show_product_count": true,
+        "show_cta": true,
+        "enable_hover_effect": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "medium"
+      }
     }
   },
   "order": [

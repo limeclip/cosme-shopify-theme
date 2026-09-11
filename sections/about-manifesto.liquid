@@ -1,0 +1,318 @@
+{% liquid
+  assign heading_id = 'AboutManifestoHeading-' | append: section.id
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign statement = section.settings.statement | strip
+  assign supporting_text = section.settings.supporting_text | strip
+  assign index_text = section.settings.index_text | strip
+
+  assign alignment = section.settings.alignment | default: 'center'
+  assign statement_width = section.settings.statement_max_width | default: 'medium'
+  assign section_spacing = section.settings.section_spacing | default: 'large'
+
+  if statement == blank
+    assign statement = 'sections.about_manifesto.statement_fallback' | t
+  endif
+
+  assign show_index = false
+  if section.settings.show_index
+    if index_text != blank
+      assign show_index = true
+    endif
+  endif
+
+  assign show_divider = false
+  if section.settings.show_divider
+    assign show_divider = true
+  endif
+%}
+
+<section
+  id="AboutManifesto-{{ section.id }}"
+  class="
+    cosme-about-manifesto
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-about-manifesto--align-{{ alignment }}
+    cosme-about-manifesto--width-{{ statement_width }}
+    cosme-about-manifesto--spacing-{{ section_spacing }}
+    {% if settings.enable_animations %}cosme-about-manifesto--animated{% endif %}
+  "
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-about-manifesto__inner">
+    <div class="cosme-about-manifesto__copy">
+      {% if show_index %}
+        <p class="cosme-about-manifesto__index">{{ index_text | escape }}</p>
+      {% endif %}
+
+      {% if show_divider %}
+        <div class="cosme-about-manifesto__rule" aria-hidden="true"></div>
+      {% endif %}
+
+      {% if eyebrow != blank %}
+        <p class="cosme-about-manifesto__eyebrow">{{ eyebrow | escape }}</p>
+      {% endif %}
+
+      <h2 class="cosme-about-manifesto__statement" id="{{ heading_id }}">
+        {{ statement | escape }}
+      </h2>
+
+      {% if supporting_text != blank %}
+        <p class="cosme-about-manifesto__support">
+          {{ supporting_text | escape | newline_to_br }}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-about-manifesto {
+    overflow-x: clip;
+    background-color: var(--color-background-2, var(--color-background));
+    color: var(--color-foreground);
+  }
+
+  .cosme-about-manifesto__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-about-manifesto--spacing-small .cosme-about-manifesto__inner {
+    padding-block: clamp(3rem, 8vw, 5.5rem);
+  }
+
+  .cosme-about-manifesto--spacing-medium .cosme-about-manifesto__inner {
+    padding-block: clamp(4rem, 10vw, 7.5rem);
+  }
+
+  .cosme-about-manifesto--spacing-large .cosme-about-manifesto__inner {
+    padding-block: clamp(5rem, 12vw, 9.5rem);
+  }
+
+  .cosme-about-manifesto__copy {
+    max-width: 22rem;
+  }
+
+  .cosme-about-manifesto--width-medium .cosme-about-manifesto__copy {
+    max-width: 36rem;
+  }
+
+  .cosme-about-manifesto--width-wide .cosme-about-manifesto__copy {
+    max-width: 48rem;
+  }
+
+  .cosme-about-manifesto--align-center .cosme-about-manifesto__copy {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-about-manifesto--align-right .cosme-about-manifesto__copy {
+    margin-inline-start: auto;
+    text-align: right;
+  }
+
+  .cosme-about-manifesto__index {
+    margin: 0 0 var(--spacing-md);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-manifesto__rule {
+    width: 2.5rem;
+    height: 1px;
+    margin-block: 0 var(--spacing-lg);
+    background-color: var(--color-border, currentColor);
+  }
+
+  .cosme-about-manifesto--align-center .cosme-about-manifesto__rule {
+    margin-inline: auto;
+  }
+
+  .cosme-about-manifesto--align-right .cosme-about-manifesto__rule {
+    margin-inline-start: auto;
+  }
+
+  .cosme-about-manifesto__eyebrow {
+    margin: 0 0 var(--spacing-md);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-manifesto__statement {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2.5rem, 8vw, 5.5rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 1.05;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-about-manifesto__support {
+    max-width: 34rem;
+    margin: var(--spacing-lg) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-about-manifesto--align-center .cosme-about-manifesto__support {
+    margin-inline: auto;
+  }
+
+  .cosme-about-manifesto--align-right .cosme-about-manifesto__support {
+    margin-inline-start: auto;
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-about-manifesto__support {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-about-manifesto--spacing-large .cosme-about-manifesto__inner {
+      padding-block: clamp(6rem, 11vw, 10.5rem);
+    }
+
+    .cosme-about-manifesto__statement {
+      font-size: clamp(3.5rem, 6.2vw, 6.25rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-about-manifesto--animated .cosme-about-manifesto__copy {
+      animation: cosme-about-manifesto-enter 0.85s var(--transition-easing, ease) both;
+    }
+  }
+
+  @keyframes cosme-about-manifesto-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.6rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.about_manifesto",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.about_manifesto.settings.eyebrow",
+      "default": "THE COSME PHILOSOPHY"
+    },
+    {
+      "type": "textarea",
+      "id": "statement",
+      "label": "t:sections.about_manifesto.settings.statement",
+      "default": "Beauty should feel intentional."
+    },
+    {
+      "type": "textarea",
+      "id": "supporting_text",
+      "label": "t:sections.about_manifesto.settings.supporting_text",
+      "default": "Less noise. Better rituals. Products chosen for how they work, how they feel, and how naturally they become part of your everyday."
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "t:sections.about_manifesto.settings.alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" },
+        { "value": "right", "label": "t:options.alignment.right" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "statement_max_width",
+      "label": "t:sections.about_manifesto.settings.statement_max_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_index",
+      "label": "t:sections.about_manifesto.settings.show_index",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "index_text",
+      "label": "t:sections.about_manifesto.settings.index_text",
+      "default": "01 / PHILOSOPHY",
+      "visible_if": "{{ section.settings.show_index }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_divider",
+      "label": "t:sections.about_manifesto.settings.show_divider",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.about_manifesto"
+    }
+  ]
+}
+{% endschema %}

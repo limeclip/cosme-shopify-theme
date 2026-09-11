@@ -1,0 +1,116 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "custom.overlay",
+  "name": "t:general.overlay_group",
+  "sections": {
+    "cart-drawer": {
+      "type": "cart-drawer",
+      "settings": {
+        "heading": "Your bag",
+        "color_scheme": "scheme-1",
+        "show_compare_at": true,
+        "show_free_shipping": true,
+        "free_shipping_threshold": 100,
+        "free_shipping_message": "You're [amount] away from free shipping.",
+        "free_shipping_unlocked": "You've unlocked free shipping ✦",
+        "empty_heading": "Your bag is waiting.",
+        "empty_message": "Discover considered beauty essentials designed for your everyday ritual.",
+        "empty_button_label": "Shop all",
+        "empty_button_link": "/collections/all",
+        "empty_show_recs": true,
+        "empty_recs_heading": "You may also like",
+        "empty_recs_source": "manual",
+        "empty_recs_products": [],
+        "empty_recs_limit": 4,
+        "show_upsell": true,
+        "upsell_heading": "You may also like",
+        "upsell_source": "manual",
+        "upsell_products": [],
+        "upsell_limit": 4,
+        "upsell_show_vendor": false,
+        "show_order_note": true,
+        "order_note_label": "Order note",
+        "order_note_placeholder": "Add a note to your order...",
+        "show_discount_code": true,
+        "discount_label": "Have a discount code?",
+        "discount_placeholder": "Discount code",
+        "discount_button_label": "Apply",
+        "show_trust_message": true,
+        "trust_message": "Secure checkout"
+      }
+    },
+    "popup": {
+      "type": "popup",
+      "blocks": {
+        "image": {
+          "type": "image",
+          "settings": {
+            "image_position": "top",
+            "image_alt": ""
+          }
+        },
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "A considered welcome",
+            "heading_size": "heading-xl",
+            "heading_tag": "h2"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Join our list and receive 10% off your first order.</p>",
+            "text_size": "base"
+          }
+        },
+        "newsletter": {
+          "type": "newsletter",
+          "settings": {
+            "button_label": "GET 10% OFF",
+            "button_design": "design_1"
+          }
+        },
+        "social": {
+          "type": "social",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "image",
+        "heading",
+        "text",
+        "newsletter",
+        "social"
+      ],
+      "settings": {
+        "enable": true,
+        "show_home_only": false,
+        "show_visitors_only": false,
+        "text_alignment": "center",
+        "container_width": 680,
+        "color_scheme": "scheme-1",
+        "trigger_automatically": true,
+        "trigger_type": "delay",
+        "delay": 5,
+        "scroll_percentage": 50,
+        "repeat_interval": "1d",
+        "show_teaser": true,
+        "teaser_label": "GET 10% OFF",
+        "teaser_position": "right"
+      }
+    }
+  },
+  "order": [
+    "cart-drawer",
+    "popup"
+  ]
+}

@@ -1,70 +1,851 @@
-{% comment %}
-  This section is used in the search template to render search results for
-  products, articles, and pages.
+{% liquid
+  assign search_terms = search.terms | strip
+  assign has_query = false
+  if search_terms != blank
+    assign has_query = true
+  endif
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/search
-{% endcomment %}
+  assign search_performed = search.performed
+  assign results_count = search.results_count | default: 0
+  assign sort_by = search.sort_by | default: search.default_sort_by
 
-<h1>{{ 'search.title' | t }}</h1>
+  assign active_filter_count = 0
+  assign has_price_filter = false
+  for filter in search.filters
+    assign active_filter_count = active_filter_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value != blank
+        assign has_price_filter = true
+      endif
+      if filter.max_value.value != blank
+        assign has_price_filter = true
+      endif
+    endif
+  endfor
+  if has_price_filter
+    assign active_filter_count = active_filter_count | plus: 1
+  endif
 
-<form action="{{ routes.search_url }}" method="get" role="search">
-  <input
-    type="search"
-    size="50"
-    name="q"
-    value="{{ search.terms | escape }}"
-    placeholder="{{ 'search.placeholder' | t }}"
-  >
-  <button type="submit">{{ 'search.submit' | t }}</button>
-</form>
+  assign has_active_filters = false
+  if active_filter_count > 0
+    assign has_active_filters = true
+  endif
 
-{% if search.performed %}
-  {% if search.results_count == 0 %}
-    <p>{{ 'search.no_results_html' | t: terms: search.terms }}</p>
-  {% else %}
-    <p>{{ 'search.results_for_html' | t: terms: search.terms, count: search.results_count }}</p>
+  assign has_results = false
+  if has_query
+    if search_performed
+      if results_count > 0
+        assign has_results = true
+      endif
+    endif
+  endif
 
-    <div class="search-results">
-      {% paginate search.results by 20 %}
-        {% # Search result items may be an article, a page, or a product. %}
-        {% for result in search.results %}
-          <div class="search-result">
-            {% assign featured_image = result.featured_image | default: result.image %}
-            {% if featured_image %}
-              {% render 'image', class: 'search-result__image', image: featured_image, url: result.url, width: 400 %}
-            {% endif %}
-            <div class="search-result__content">
-              <p>
-                {{ result.title | link_to: result.url }}
-                {% if result.price %}
-                  {{ result.price | money_with_currency }}
+  assign is_empty_filters = false
+  assign is_no_results = false
+  if has_query
+    if search_performed
+      unless has_results
+        if has_active_filters
+          assign is_empty_filters = true
+        else
+          assign is_no_results = true
+        endif
+      endunless
+    endif
+  endif
+
+  assign show_results_toolbar = false
+  if has_results
+    assign show_results_toolbar = true
+  endif
+  if is_empty_filters
+    assign show_results_toolbar = true
+  endif
+
+  assign heading_id = 'SearchHeading-' | append: section.id
+  assign input_id = 'SearchInput-' | append: section.id
+  assign count_id = 'SearchCount-' | append: section.id
+  assign desktop_columns = section.settings.desktop_columns | default: '4' | plus: 0
+  assign mobile_columns = 2
+
+  assign empty_eyebrow = section.settings.eyebrow | strip
+  if empty_eyebrow == blank
+    assign empty_eyebrow = 'search.title' | t
+  endif
+
+  assign empty_heading = section.settings.heading | strip
+  if empty_heading == blank
+    assign empty_heading = 'search.empty_heading' | t
+  endif
+
+  assign placeholder = section.settings.placeholder | strip
+  if placeholder == blank
+    assign placeholder = 'search.page_placeholder' | t
+  endif
+
+  assign no_results_heading = section.settings.no_results_heading | strip
+  if no_results_heading == blank
+    assign no_results_heading = 'search.no_results_heading' | t
+  endif
+
+  assign no_results_text = section.settings.no_results_text | strip
+  if no_results_text == blank
+    assign no_results_text = 'search.no_results_text' | t
+  endif
+
+  assign no_results_cta_label = section.settings.no_results_cta_label | strip
+  if no_results_cta_label == blank
+    assign no_results_cta_label = 'search.explore_collections' | t
+  endif
+
+  if has_query
+    assign intro_eyebrow = 'search.results_eyebrow' | t
+    assign intro_heading = search_terms
+  else
+    assign intro_eyebrow = empty_eyebrow
+    assign intro_heading = empty_heading
+  endif
+
+  assign desktop_vw = 100 | divided_by: desktop_columns
+  assign card_sizes = '(min-width: 990px) ' | append: desktop_vw | append: 'vw, (min-width: 768px) 33vw, 50vw'
+  assign image_width = 720
+  if desktop_columns == 3
+    assign image_width = 900
+  elsif desktop_columns == 5
+    assign image_width = 600
+  endif
+
+  assign products_per_page = 24
+%}
+
+<section
+  id="Search-{{ section.id }}"
+  class="cosme-search full-width color-{{ section.settings.color_scheme }}"
+  style="--search-grid-columns-desktop: {{ desktop_columns }}; --search-grid-columns-mobile: {{ mobile_columns }};"
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-search__inner">
+    <header class="cosme-search__intro">
+      {% if intro_eyebrow != blank %}
+        <p class="cosme-search__eyebrow">{{ intro_eyebrow | escape }}</p>
+      {% endif %}
+
+      <h1 class="cosme-search__heading" id="{{ heading_id }}">{{ intro_heading | escape }}</h1>
+    </header>
+
+    <form
+      class="cosme-search__form"
+      action="{{ routes.search_url }}"
+      method="get"
+      role="search"
+    >
+      <input type="hidden" name="type" value="product">
+      <input type="hidden" name="options[prefix]" value="last">
+      {% if sort_by != blank %}
+        <input type="hidden" name="sort_by" value="{{ sort_by | escape }}">
+      {% endif %}
+
+      <label class="cosme-visually-hidden" for="{{ input_id }}">
+        {{ 'search.label' | t }}
+      </label>
+
+      <div class="cosme-search__field">
+        <input
+          class="cosme-search__input"
+          type="text"
+          id="{{ input_id }}"
+          name="q"
+          value="{{ search.terms | escape }}"
+          placeholder="{{ placeholder | escape }}"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          {% if show_results_toolbar %}
+            aria-describedby="{{ count_id }}"
+          {% endif %}
+        >
+
+        {% if has_query %}
+          <a
+            class="cosme-search__clear"
+            href="{{ routes.search_url }}"
+          >
+            {% render 'cosme-icon', icon: 'close', size: 'sm' %}
+            <span class="cosme-visually-hidden">{{ 'search.clear' | t }}</span>
+          </a>
+        {% endif %}
+
+        <button type="submit" class="cosme-search__submit">
+          {% render 'cosme-icon', icon: 'search', size: 'md' %}
+          <span class="cosme-visually-hidden">{{ 'search.submit' | t }}</span>
+        </button>
+      </div>
+    </form>
+
+    {% if show_results_toolbar %}
+      {% render 'cosme-search-facets',
+        section: section,
+        results_count: results_count,
+        count_id: count_id,
+        color_scheme: section.settings.color_scheme
+      %}
+    {% endif %}
+
+    {% if is_empty_filters %}
+      {% liquid
+        assign encoded_terms = search.terms | url_param_escape
+        assign clear_filters_url = routes.search_url | append: '?q=' | append: encoded_terms | append: '&type=product&options[prefix]=last'
+        if sort_by != blank
+          if sort_by != search.default_sort_by
+            assign clear_filters_url = clear_filters_url | append: '&sort_by=' | append: sort_by
+          endif
+        endif
+      %}
+      <div class="cosme-search__empty">
+        <h2 class="cosme-search__empty-heading">{{ 'search.empty_filters' | t }}</h2>
+        <a class="cosme-search__cta" href="{{ clear_filters_url }}">
+          <span class="cosme-search__cta-label">{{ 'search.clear_filters' | t }}</span>
+          {% render 'cosme-icon', icon: 'arrow-right', size: 'sm', class: 'cosme-search__cta-icon' %}
+        </a>
+        <p class="cosme-visually-hidden" role="status" aria-live="polite">
+          {{ 'search.empty_filters' | t }}
+        </p>
+      </div>
+    {% endif %}
+
+    {% if is_no_results %}
+      <div class="cosme-search__empty">
+        <h2 class="cosme-search__empty-heading">{{ no_results_heading | escape }}</h2>
+        <p class="cosme-search__empty-text">{{ no_results_text | escape }}</p>
+        {% if no_results_cta_label != blank %}
+          <a class="cosme-search__cta" href="{{ routes.collections_url }}">
+            <span class="cosme-search__cta-label">{{ no_results_cta_label | escape }}</span>
+            {% render 'cosme-icon', icon: 'arrow-right', size: 'sm', class: 'cosme-search__cta-icon' %}
+          </a>
+        {% endif %}
+        <p class="cosme-visually-hidden" role="status" aria-live="polite">
+          {{ 'search.status_no_results' | t: terms: search_terms }}
+        </p>
+      </div>
+    {% endif %}
+
+    {% unless has_query %}
+      {% if section.settings.show_popular_searches %}
+        {% liquid
+          assign popular_count = 0
+          for block in section.blocks
+            if block.type == 'popular_search'
+              assign popular_term = block.settings.term | strip
+              if popular_term != blank
+                assign popular_count = popular_count | plus: 1
+              endif
+            endif
+          endfor
+        %}
+        {% if popular_count > 0 %}
+          <nav class="cosme-search__popular" aria-label="{{ 'search.popular_searches' | t }}">
+            <h2 class="cosme-search__popular-heading">{{ 'search.popular_searches' | t }}</h2>
+            <ul class="cosme-search__popular-list" role="list">
+              {% for block in section.blocks %}
+                {% if block.type == 'popular_search' %}
+                  {% liquid
+                    assign popular_term = block.settings.term | strip
+                    assign popular_label = block.settings.label | strip
+                    if popular_label == blank
+                      assign popular_label = popular_term
+                    endif
+                    assign encoded_term = popular_term | url_param_escape
+                    assign popular_url = routes.search_url | append: '?q=' | append: encoded_term | append: '&type=product'
+                  %}
+                  {% if popular_term != blank %}
+                    <li class="cosme-search__popular-item" {{ block.shopify_attributes }}>
+                      <a class="cosme-search__popular-link" href="{{ popular_url }}">
+                        <span class="cosme-search__popular-label">{{ popular_label | escape }}</span>
+                        {% render 'cosme-icon', icon: 'arrow-right', size: 'sm', class: 'cosme-search__popular-icon' %}
+                      </a>
+                    </li>
+                  {% endif %}
                 {% endif %}
-              </p>
-            </div>
-          </div>
-        {% endfor %}
+              {% endfor %}
+            </ul>
+          </nav>
+        {% endif %}
+      {% endif %}
+    {% endunless %}
 
-        {{ paginate | default_pagination }}
+    {% if has_results %}
+      {% paginate search.results by products_per_page %}
+        <ul class="cosme-search__grid" role="list">
+          {% for result in search.results %}
+            {% if result.object_type == 'product' %}
+              {% liquid
+                if paginate.current_page == 1
+                  if forloop.index <= desktop_columns
+                    assign card_loading = 'eager'
+                  else
+                    assign card_loading = 'lazy'
+                  endif
+                else
+                  assign card_loading = 'lazy'
+                endif
+
+                if paginate.current_page == 1
+                  if forloop.first
+                    assign card_fetchpriority = 'high'
+                  else
+                    assign card_fetchpriority = blank
+                  endif
+                else
+                  assign card_fetchpriority = blank
+                endif
+              %}
+
+              <li class="cosme-search__item">
+                {% render 'cosme-product-card',
+                  product: result,
+                  layout: 'editorial',
+                  aspect_ratio: '3/4',
+                  image_width: image_width,
+                  sizes: card_sizes,
+                  loading: card_loading,
+                  fetchpriority: card_fetchpriority,
+                  show_vendor: true,
+                  show_price: true,
+                  show_badge: true,
+                  show_secondary_image: true,
+                  show_quick_view: true,
+                  show_add_to_cart: true
+                %}
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+
+        {% if paginate.pages > 1 %}
+          <nav class="cosme-search__pagination" aria-label="{{ 'search.pagination' | t }}">
+            {% if paginate.previous %}
+              <a
+                class="cosme-search__page-link"
+                href="{{ paginate.previous.url }}"
+                rel="prev"
+                aria-label="{{ 'search.previous' | t }}"
+              >
+                {{ 'search.previous' | t }}
+              </a>
+            {% endif %}
+
+            <ol class="cosme-search__pages" role="list">
+              {% assign current_page_label = paginate.current_page | append: '' %}
+              {% for part in paginate.parts %}
+                <li class="cosme-search__page-item">
+                  {% if part.is_link %}
+                    <a
+                      class="cosme-search__page-link"
+                      href="{{ part.url }}"
+                      aria-label="{{ 'search.page' | t: page: part.title }}"
+                    >
+                      {{ part.title }}
+                    </a>
+                  {% elsif part.title == current_page_label %}
+                    <span
+                      class="cosme-search__page-link cosme-search__page-link--current"
+                      aria-current="page"
+                      aria-label="{{ 'search.page' | t: page: part.title }}"
+                    >
+                      {{ part.title }}
+                    </span>
+                  {% else %}
+                    <span class="cosme-search__page-ellipsis" aria-hidden="true">{{ part.title }}</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ol>
+
+            {% if paginate.next %}
+              <a
+                class="cosme-search__page-link"
+                href="{{ paginate.next.url }}"
+                rel="next"
+                aria-label="{{ 'search.next' | t }}"
+              >
+                {{ 'search.next' | t }}
+              </a>
+            {% endif %}
+          </nav>
+        {% endif %}
       {% endpaginate %}
-    </div>
-  {% endif %}
-{% endif %}
+    {% endif %}
+  </div>
+</section>
 
 {% stylesheet %}
-  .search-results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  .cosme-search {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
   }
-  .search-results .prev,
-  .search-results .page,
-  .search-results .next {
-    grid-column: 1 / -1;
+
+  .cosme-search__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: var(--spacing-2xl) var(--page-margin) var(--spacing-2xl);
+    min-width: 0;
+  }
+
+  .cosme-search__intro {
+    max-width: min(40rem, var(--content-width));
+    margin-block-end: var(--spacing-lg);
+  }
+
+  .cosme-search__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-search__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2.25rem, 6vw, 4rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-search__form {
+    margin: 0 0 var(--spacing-xl);
+    max-width: min(36rem, var(--content-width));
+  }
+
+  .cosme-search__field {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-width: 0;
+    border-bottom: var(--border-width) solid var(--color-border);
+    transition: border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-search__field:focus-within {
+    border-bottom-color: var(--color-foreground);
+  }
+
+  .cosme-search__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    padding: var(--spacing-md) 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.0625rem, 2.2vw, 1.375rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-body);
+  }
+
+  .cosme-search__input::placeholder {
+    color: var(--color-muted);
+    font-weight: 400;
+  }
+
+  .cosme-search__input:focus {
+    outline: none;
+  }
+
+  .cosme-search__input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-search__clear,
+  .cosme-search__submit {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--color-foreground);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .cosme-search__clear:hover,
+  .cosme-search__submit:hover,
+  .cosme-search__clear:focus-visible,
+  .cosme-search__submit:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-search__clear:focus-visible,
+  .cosme-search__submit:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-search__popular {
+    max-width: min(40rem, var(--content-width));
+    min-width: 0;
+    margin: 0 0 var(--spacing-md);
+  }
+
+  .cosme-search__popular-heading {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-search__popular-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-xs) 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-search__popular-item {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .cosme-search__popular-item:not(:last-child)::after {
+    content: '';
+    display: block;
+    width: 1px;
+    height: 0.75em;
+    margin-inline: var(--spacing-md);
+    background-color: var(--color-border);
+  }
+
+  .cosme-search__popular-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-search__popular-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-height: 2.75rem;
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    letter-spacing: var(--letter-spacing-body);
+  }
+
+  .cosme-search__popular-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--color-muted);
+    transition: transform var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-search__popular-link:hover,
+  .cosme-search__popular-link:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-search__popular-link:hover .cosme-search__popular-icon,
+  .cosme-search__popular-link:focus-visible .cosme-search__popular-icon {
+    color: var(--color-accent);
+    transform: translateX(0.15em);
+  }
+
+  .cosme-search__popular-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-search__empty {
+    max-width: 32rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-search__empty-heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-search__empty-text {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 1rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-search__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin-block-start: var(--spacing-sm);
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+  }
+
+  .cosme-search__cta-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-search__cta:hover,
+  .cosme-search__cta:focus-visible {
+    color: var(--color-accent);
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-search__cta:hover .cosme-search__cta-icon,
+  .cosme-search__cta:focus-visible .cosme-search__cta-icon {
+    transform: translateX(0.2em);
+  }
+
+  .cosme-search__cta:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-search__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--search-grid-columns-mobile), minmax(0, 1fr));
+    gap: var(--spacing-xl) var(--grid-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+  }
+
+  .cosme-search__item {
+    min-width: 0;
+  }
+
+  .cosme-search .cosme-product-card__title,
+  .cosme-search .cosme-product-card__vendor,
+  .cosme-search .cosme-product-card__price {
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-search .cosme-product-card__meta-row {
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-search__pagination,
+  .cosme-search__pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-search__pagination {
+    margin-block-start: var(--spacing-2xl);
+  }
+
+  .cosme-search__page-item {
+    display: flex;
+    min-width: 0;
+  }
+
+  .cosme-search__page-link,
+  .cosme-search__page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    letter-spacing: var(--letter-spacing-body);
+    text-decoration: none;
+  }
+
+  .cosme-search__page-link:hover {
+    color: var(--color-foreground);
+  }
+
+  .cosme-search__page-link--current {
+    color: var(--color-foreground);
+  }
+
+  .cosme-search__page-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-search__inner {
+      padding-block: var(--spacing-2xl);
+    }
+
+    .cosme-search__intro {
+      margin-block-end: var(--spacing-xl);
+    }
+
+    .cosme-search__form {
+      margin-block-end: var(--spacing-xl);
+    }
+
+    .cosme-search__grid {
+      grid-template-columns: repeat(min(var(--search-grid-columns-desktop), 3), minmax(0, 1fr));
+      gap: var(--spacing-2xl) var(--grid-gap);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-search__inner {
+      padding-block-start: clamp(var(--spacing-2xl), 6vw, var(--spacing-section));
+    }
+
+    .cosme-search__grid {
+      grid-template-columns: repeat(var(--search-grid-columns-desktop), minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-search__field,
+    .cosme-search__popular-icon,
+    .cosme-search__popular-link,
+    .cosme-search__cta,
+    .cosme-search__cta-icon {
+      transition: none;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.search",
-  "settings": []
+  "tag": "section",
+  "class": "cosme-search-section",
+  "enabled_on": {
+    "templates": ["search"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.search.settings.eyebrow",
+      "default": "Search"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:labels.heading",
+      "default": "What are you looking for?"
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "t:sections.search.settings.placeholder",
+      "default": "Search skincare, products, collections..."
+    },
+    {
+      "type": "text",
+      "id": "no_results_heading",
+      "label": "t:sections.search.settings.no_results_heading",
+      "default": "Nothing matched your search"
+    },
+    {
+      "type": "textarea",
+      "id": "no_results_text",
+      "label": "t:sections.search.settings.no_results_text",
+      "default": "Try another search or explore our collections."
+    },
+    {
+      "type": "text",
+      "id": "no_results_cta_label",
+      "label": "t:sections.search.settings.no_results_cta_label",
+      "default": "Explore collections"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_popular_searches",
+      "label": "t:sections.search.settings.show_popular_searches",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.list_collections.settings.grid_header"
+    },
+    {
+      "type": "select",
+      "id": "desktop_columns",
+      "label": "t:sections.search.settings.desktop_columns",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" },
+        { "value": "5", "label": "5" }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "popular_search",
+      "name": "t:sections.search.blocks.popular_search",
+      "settings": [
+        {
+          "type": "text",
+          "id": "term",
+          "label": "t:sections.search.blocks.term"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "t:sections.search.blocks.label"
+        }
+      ]
+    }
+  ]
 }
 {% endschema %}

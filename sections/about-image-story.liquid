@@ -1,0 +1,671 @@
+{% liquid
+  assign heading_id = 'AboutImageStoryHeading-' | append: section.id
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign heading = section.settings.heading | strip
+  assign body_text = section.settings.body | strip
+  assign primary_alt = section.settings.primary_image_alt | strip
+  assign secondary_alt = section.settings.secondary_image_alt | strip
+  assign cta_label = section.settings.cta_label | strip
+  assign cta_link = section.settings.cta_link
+
+  assign section_spacing = section.settings.section_spacing | default: 'large'
+  assign image_position = section.settings.image_position | default: 'left'
+
+  assign has_primary = false
+  if section.settings.primary_image != blank
+    assign has_primary = true
+  endif
+
+  assign has_secondary_image = false
+  if section.settings.secondary_image != blank
+    assign has_secondary_image = true
+  endif
+
+  assign show_secondary = false
+  if section.settings.show_secondary_image
+    assign show_secondary = true
+  endif
+
+  if primary_alt == blank
+    if has_primary
+      if section.settings.primary_image.alt != blank
+        assign primary_alt = section.settings.primary_image.alt
+      endif
+    endif
+  endif
+  if primary_alt == blank
+    if heading != blank
+      assign primary_alt = heading
+    endif
+  endif
+
+  assign primary_decorative = false
+  if primary_alt == blank
+    assign primary_decorative = true
+  endif
+
+  assign secondary_decorative = true
+  if secondary_alt != blank
+    assign secondary_decorative = false
+  endif
+  if secondary_decorative
+    if has_secondary_image
+      if section.settings.secondary_image.alt != blank
+        assign secondary_alt = section.settings.secondary_image.alt
+        assign secondary_decorative = false
+      endif
+    endif
+  endif
+
+  case section.settings.image_ratio
+    when 'landscape'
+      assign primary_ratio = '3/2'
+      assign secondary_ratio = '4/5'
+    when 'square'
+      assign primary_ratio = '1/1'
+      assign secondary_ratio = '4/5'
+    when 'wide'
+      assign primary_ratio = '16/9'
+      assign secondary_ratio = '1/1'
+    when 'adapt'
+      if has_primary
+        assign primary_ratio = section.settings.primary_image.aspect_ratio
+      else
+        assign primary_ratio = '4/5'
+      endif
+      if has_secondary_image
+        assign secondary_ratio = section.settings.secondary_image.aspect_ratio
+      else
+        assign secondary_ratio = '1/1'
+      endif
+    else
+      assign primary_ratio = '4/5'
+      assign secondary_ratio = '1/1'
+  endcase
+
+  assign show_cta = false
+  if cta_label != blank
+    if cta_link != blank
+      assign show_cta = true
+    endif
+  endif
+
+  assign primary_sizes = '(min-width: 990px) 52vw, (min-width: 750px) 58vw, 100vw'
+  assign secondary_sizes = '(min-width: 990px) 22vw, (min-width: 750px) 28vw, 72vw'
+%}
+
+<section
+  id="AboutImageStory-{{ section.id }}"
+  class="
+    cosme-about-image-story
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-about-image-story--spacing-{{ section_spacing }}
+    cosme-about-image-story--image-{{ image_position }}
+    {% if show_secondary %}cosme-about-image-story--has-secondary{% endif %}
+    {% if settings.enable_animations %}cosme-about-image-story--animated{% endif %}
+  "
+  style="
+    --about-image-story-primary-ratio: {{ primary_ratio }};
+    --about-image-story-secondary-ratio: {{ secondary_ratio }};
+  "
+  {% if heading != blank %}
+    aria-labelledby="{{ heading_id }}"
+  {% else %}
+    aria-label="{{ 'sections.about_image_story.landmark_label' | t }}"
+  {% endif %}
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-about-image-story__inner">
+    <div class="cosme-about-image-story__composition">
+      <div
+        class="cosme-about-image-story__primary"
+        {% if primary_decorative %}
+          aria-hidden="true"
+        {% endif %}
+      >
+        {%- if has_primary -%}
+          {% if primary_decorative %}
+            {{
+              section.settings.primary_image
+              | image_url: width: 1800
+              | image_tag:
+                class: 'cosme-about-image-story__img',
+                alt: '',
+                loading: 'lazy',
+                widths: '500, 750, 990, 1200, 1500, 1800',
+                sizes: primary_sizes
+            }}
+          {% else %}
+            {% render 'cosme-image',
+              image: section.settings.primary_image,
+              alt: primary_alt,
+              class: 'cosme-about-image-story__image',
+              width: 1800,
+              sizes: primary_sizes,
+              loading: 'lazy',
+              aspect_ratio: primary_ratio
+            %}
+          {% endif %}
+        {%- else -%}
+          <div class="cosme-about-image-story__fallback cosme-about-image-story__fallback--primary" aria-hidden="true">
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-about-image-story__placeholder-svg' }}
+            {% if request.design_mode %}
+              <p class="cosme-about-image-story__fallback-hint">
+                {{ 'sections.about_image_story.primary_placeholder' | t }}
+              </p>
+            {% endif %}
+          </div>
+        {%- endif -%}
+      </div>
+
+      {% if show_secondary %}
+        <div
+          class="cosme-about-image-story__secondary"
+          {% if secondary_decorative %}
+            aria-hidden="true"
+          {% endif %}
+        >
+          {%- if has_secondary_image -%}
+            {% if secondary_decorative %}
+              {{
+                section.settings.secondary_image
+                | image_url: width: 900
+                | image_tag:
+                  class: 'cosme-about-image-story__img',
+                  alt: '',
+                  loading: 'lazy',
+                  widths: '360, 540, 720, 900',
+                  sizes: secondary_sizes
+              }}
+            {% else %}
+              {% render 'cosme-image',
+                image: section.settings.secondary_image,
+                alt: secondary_alt,
+                class: 'cosme-about-image-story__image',
+                width: 900,
+                sizes: secondary_sizes,
+                loading: 'lazy',
+                aspect_ratio: secondary_ratio
+              %}
+            {% endif %}
+          {%- else -%}
+            <div class="cosme-about-image-story__fallback cosme-about-image-story__fallback--secondary" aria-hidden="true">
+              {{ 'lifestyle-2' | placeholder_svg_tag: 'cosme-about-image-story__placeholder-svg' }}
+              {% if request.design_mode %}
+                <p class="cosme-about-image-story__fallback-hint">
+                  {{ 'sections.about_image_story.secondary_placeholder' | t }}
+                </p>
+              {% endif %}
+            </div>
+          {%- endif -%}
+        </div>
+      {% endif %}
+
+      <div class="cosme-about-image-story__copy">
+        {% if eyebrow != blank %}
+          <p class="cosme-about-image-story__eyebrow">{{ eyebrow | escape }}</p>
+        {% endif %}
+
+        {% if heading != blank %}
+          <h2 class="cosme-about-image-story__heading" id="{{ heading_id }}">{{ heading | escape }}</h2>
+        {% endif %}
+
+        {% if body_text != blank %}
+          <p class="cosme-about-image-story__body">
+            {{ body_text | escape | newline_to_br }}
+          </p>
+        {% endif %}
+
+        {% if show_cta %}
+          {% render 'cosme-button',
+            label: cta_label,
+            url: cta_link,
+            style: 'outline',
+            class: 'cosme-about-image-story__cta'
+          %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-about-image-story {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-about-image-story__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-about-image-story--spacing-small .cosme-about-image-story__inner {
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .cosme-about-image-story--spacing-medium .cosme-about-image-story__inner {
+    padding-block: clamp(2.75rem, 6.5vw, 5.25rem);
+  }
+
+  .cosme-about-image-story--spacing-large .cosme-about-image-story__inner {
+    padding-block: clamp(3.25rem, 8vw, 7.25rem);
+  }
+
+  .cosme-about-image-story__composition {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .cosme-about-image-story__primary,
+  .cosme-about-image-story__secondary,
+  .cosme-about-image-story__copy,
+  .cosme-about-image-story__image,
+  .cosme-about-image-story__fallback {
+    min-width: 0;
+  }
+
+  .cosme-about-image-story__primary {
+    width: 100%;
+  }
+
+  .cosme-about-image-story__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--about-image-story-primary-ratio);
+    object-fit: cover;
+    
+  }
+
+  .cosme-about-image-story__secondary .cosme-about-image-story__img {
+    aspect-ratio: var(--about-image-story-secondary-ratio);
+  }
+
+  .cosme-about-image-story__image.cosme-image {
+    border-radius: 0;
+  }
+
+  .cosme-about-image-story__fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 100%;
+    padding: var(--spacing-lg);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-about-image-story__fallback--primary {
+    aspect-ratio: var(--about-image-story-primary-ratio);
+  }
+
+  .cosme-about-image-story__fallback--secondary {
+    aspect-ratio: var(--about-image-story-secondary-ratio);
+  }
+
+  .cosme-about-image-story__fallback-hint {
+    margin: 0;
+    max-width: 16rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-image-story__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .color-scheme-2 .cosme-about-image-story__placeholder-svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.25;
+  }
+
+  .cosme-about-image-story__secondary {
+    width: min(74%, 19rem);
+    margin-block-start: calc(var(--spacing-md) * -1.15);
+    margin-inline-start: auto;
+    z-index: 1;
+  }
+
+  .cosme-about-image-story--image-right .cosme-about-image-story__secondary {
+    margin-inline-start: 0;
+    margin-inline-end: auto;
+  }
+
+  .cosme-about-image-story__copy {
+    max-width: 32rem;
+    padding-block-start: var(--spacing-lg);
+  }
+
+  .cosme-about-image-story__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-image-story__heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.875rem, 6vw, 2.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-about-image-story__body {
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--color-foreground);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-about-image-story__cta {
+    margin-block-start: var(--spacing-lg);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-about-image-story__composition {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.95fr);
+      grid-template-rows: minmax(0, auto) minmax(0, auto);
+      align-items: start;
+    }
+
+    .cosme-about-image-story__primary {
+      grid-column: 1;
+      grid-row: 1 / 3;
+      width: 90%;
+      align-self: stretch;
+    }
+
+    .cosme-about-image-story__copy {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: end;
+      max-width: none;
+      margin-inline-start: -18%;
+      margin-block-end: var(--spacing-md);
+      padding: clamp(1.25rem, 2.4vw, 2rem) 0 clamp(0.75rem, 1.5vw, 1.25rem) clamp(1.5rem, 3vw, 2.75rem);
+      background-color: var(--color-background);
+      z-index: 2;
+    }
+
+    .cosme-about-image-story__secondary {
+      grid-column: 2;
+      grid-row: 2;
+      width: 64%;
+      max-width: 18.5rem;
+      margin-block-start: -12%;
+      margin-inline-start: 16%;
+      margin-inline-end: 0;
+      z-index: 3;
+    }
+
+    .cosme-about-image-story:not(.cosme-about-image-story--has-secondary) .cosme-about-image-story__copy {
+      grid-row: 1 / 3;
+      align-self: center;
+      margin-block-end: 0;
+      padding-block: clamp(1.5rem, 3vw, 2.75rem);
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__composition {
+      grid-template-columns: minmax(16rem, 0.95fr) minmax(0, 1.35fr);
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__primary {
+      grid-column: 2;
+      width: 90%;
+      justify-self: end;
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__copy {
+      grid-column: 1;
+      margin-inline-start: 0;
+      margin-inline-end: -18%;
+      padding-inline: 0 clamp(1.5rem, 3vw, 2.75rem);
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__secondary {
+      grid-column: 1;
+      justify-self: start;
+      margin-inline-start: 0;
+      margin-inline-end: 20%;
+    }
+
+    .cosme-about-image-story__heading {
+      font-size: clamp(2rem, 3.4vw, 2.85rem);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-about-image-story--spacing-large .cosme-about-image-story__inner {
+      padding-block: clamp(4rem, 8vw, 8rem);
+    }
+
+    .cosme-about-image-story__composition {
+      grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.9fr);
+    }
+
+    .cosme-about-image-story__primary {
+      width: 86%;
+    }
+
+    .cosme-about-image-story__copy {
+      margin-inline-start: -20%;
+      padding-inline-start: clamp(2rem, 3.5vw, 3.25rem);
+    }
+
+    .cosme-about-image-story__secondary {
+      width: 58%;
+      max-width: 20rem;
+      margin-block-start: -1%;
+      margin-inline-start: 22%;
+    
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__composition {
+      grid-template-columns: minmax(18rem, 0.9fr) minmax(0, 1.4fr);
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__copy {
+      margin-inline-end: -22%;
+    }
+
+    .cosme-about-image-story--image-right .cosme-about-image-story__secondary {
+      margin-inline-end: 22%;
+    }
+
+    .cosme-about-image-story__heading {
+      font-size: clamp(2.25rem, 3.2vw, 3.35rem);
+    }
+
+    .cosme-about-image-story__body {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-about-image-story--animated .cosme-about-image-story__primary,
+    .cosme-about-image-story--animated .cosme-about-image-story__secondary,
+    .cosme-about-image-story--animated .cosme-about-image-story__copy {
+      animation: cosme-about-image-story-enter 0.85s var(--transition-easing, ease) both;
+    }
+
+    .cosme-about-image-story--animated .cosme-about-image-story__copy {
+      animation-delay: 0.12s;
+    }
+
+    .cosme-about-image-story--animated .cosme-about-image-story__secondary {
+      animation-delay: 0.2s;
+    }
+  }
+
+  @keyframes cosme-about-image-story-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.7rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.about_image_story",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.about_image_story.settings.eyebrow",
+      "default": "THE RITUAL"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.about_image_story.settings.heading",
+      "default": "Designed for the moments in between."
+    },
+    {
+      "type": "textarea",
+      "id": "body",
+      "label": "t:sections.about_image_story.settings.body",
+      "default": "Skincare is more than a list of products. It is the small ritual that begins and ends your day.\n\nCosme is designed around those moments — textures, formulas and details that make a routine feel considered rather than complicated."
+    },
+    {
+      "type": "header",
+      "content": "t:labels.image"
+    },
+    {
+      "type": "image_picker",
+      "id": "primary_image",
+      "label": "t:sections.about_image_story.settings.primary_image"
+    },
+    {
+      "type": "text",
+      "id": "primary_image_alt",
+      "label": "t:sections.about_image_story.settings.primary_image_alt",
+      "info": "t:sections.about_image_story.settings.image_alt_info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "t:sections.about_image_story.settings.show_secondary_image",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "secondary_image",
+      "label": "t:sections.about_image_story.settings.secondary_image",
+      "visible_if": "{{ section.settings.show_secondary_image }}"
+    },
+    {
+      "type": "text",
+      "id": "secondary_image_alt",
+      "label": "t:sections.about_image_story.settings.secondary_image_alt",
+      "info": "t:sections.about_image_story.settings.secondary_image_alt_info",
+      "visible_if": "{{ section.settings.show_secondary_image }}"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "t:sections.about_image_story.settings.image_ratio",
+      "options": [
+        { "value": "portrait", "label": "t:sections.blog.settings.ratio_portrait" },
+        { "value": "square", "label": "t:sections.blog.settings.ratio_square" },
+        { "value": "landscape", "label": "t:sections.blog.settings.ratio_landscape" },
+        { "value": "wide", "label": "t:sections.blog.settings.ratio_wide" },
+        { "value": "adapt", "label": "t:sections.about.settings.ratio_adapt" }
+      ],
+      "default": "portrait"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "t:sections.about_image_story.settings.image_position",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "right", "label": "t:options.alignment.right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "t:general.actions"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "t:sections.about_image_story.settings.cta_label"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.about_image_story.settings.cta_link"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.about_image_story"
+    }
+  ]
+}
+{% endschema %}

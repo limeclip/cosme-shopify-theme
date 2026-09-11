@@ -1,47 +1,570 @@
-{% comment %}
-  This section is used in the collection template to render collection page
-  listing all products within a collection.
+{% liquid
+  assign desktop_columns = section.settings.desktop_columns | default: '4' | plus: 0
+  assign mobile_columns = section.settings.mobile_columns | default: '2' | plus: 0
+  assign aspect_ratio = section.settings.image_aspect_ratio | default: '3/4'
+  assign heading_id = 'CollectionProductsHeading-' | append: section.id
+  assign product_count = collection.products_count | default: 0
+  assign products_per_page = section.settings.products_per_page | default: '12' | plus: 0
+  assign product_loading = section.settings.product_loading | default: 'pagination'
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/collection
-{% endcomment %}
+  if products_per_page < 8
+    assign products_per_page = 12
+  endif
 
-<h1>{{ collection.title }}</h1>
+  assign desktop_vw = 100 | divided_by: desktop_columns
+  assign mobile_vw = 100 | divided_by: mobile_columns
+  assign card_sizes = '(min-width: 990px) ' | append: desktop_vw | append: 'vw, (min-width: 768px) 33vw, ' | append: mobile_vw | append: 'vw'
 
-<div class="collection-products">
-  {% paginate collection.products by 20 %}
-    {% for product in collection.products %}
-      <div class="collection-product">
-        {% if product.featured_image %}
-          {% render 'image',
-            class: 'collection-product__image',
-            image: product.featured_image,
-            url: product.url,
-            width: 400,
-            height: 400,
-            crop: 'center'
-          %}
+  assign image_width = 720
+  if desktop_columns == 3
+    assign image_width = 900
+  endif
+%}
+
+<section
+  id="CollectionProducts-{{ section.id }}"
+  class="cosme-collection-grid full-width color-{{ section.settings.color_scheme }}"
+  style="--collection-grid-columns-desktop: {{ desktop_columns }}; --collection-grid-columns-mobile: {{ mobile_columns }};"
+  data-collection-grid
+  data-section-id="{{ section.id }}"
+  data-product-loading="{{ product_loading }}"
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-collection-grid__inner">
+    <h2 class="cosme-visually-hidden" id="{{ heading_id }}">
+      {{ 'collections.product_grid' | t: title: collection.title }}
+    </h2>
+
+    <p
+      class="cosme-visually-hidden"
+      data-collection-grid-status
+      role="status"
+      aria-live="polite"
+    ></p>
+
+    {% paginate collection.products by products_per_page %}
+      {% liquid
+        assign show_pagination = false
+        assign show_load_more = false
+        assign current_page_label = paginate.current_page | append: ''
+
+        if paginate.pages > 1
+          if product_loading == 'load_more'
+            if paginate.next
+              assign show_load_more = true
+            endif
+          else
+            assign show_pagination = true
+          endif
+        endif
+      %}
+
+      {% if product_count > 0 %}
+        <ul class="cosme-collection-grid__list" role="list" data-collection-grid-list>
+          {% for product in collection.products %}
+            {% liquid
+              if paginate.current_page == 1
+                if forloop.index <= desktop_columns
+                  assign card_loading = 'eager'
+                else
+                  assign card_loading = 'lazy'
+                endif
+              else
+                assign card_loading = 'lazy'
+              endif
+
+              if paginate.current_page == 1
+                if forloop.first
+                  assign card_fetchpriority = 'high'
+                else
+                  assign card_fetchpriority = blank
+                endif
+              else
+                assign card_fetchpriority = blank
+              endif
+            %}
+
+            <li class="cosme-collection-grid__item" data-product-id="{{ product.id }}">
+              {% render 'cosme-product-card',
+                product: product,
+                layout: 'editorial',
+                aspect_ratio: aspect_ratio,
+                image_width: image_width,
+                sizes: card_sizes,
+                loading: card_loading,
+                fetchpriority: card_fetchpriority,
+                show_vendor: section.settings.show_vendor,
+                show_price: section.settings.show_price,
+                show_badge: section.settings.show_badge,
+                show_secondary_image: section.settings.show_secondary_image,
+                show_quick_view: section.settings.show_quick_view,
+                show_add_to_cart: section.settings.show_add_to_cart
+              %}
+            </li>
+          {% endfor %}
+        </ul>
+
+        {% if show_pagination %}
+          <nav
+            class="cosme-collection-grid__pagination"
+            aria-label="{{ 'collections.pagination' | t }}"
+          >
+            {% if paginate.previous %}
+              <a
+                class="cosme-collection-grid__page-link cosme-collection-grid__page-link--prev"
+                href="{{ paginate.previous.url }}"
+                rel="prev"
+                aria-label="{{ 'collections.previous' | t }}"
+              >
+                <span aria-hidden="true">←</span>
+                {{ 'collections.previous' | t }}
+              </a>
+            {% endif %}
+
+            <ol class="cosme-collection-grid__pages" role="list">
+              {% for part in paginate.parts %}
+                <li class="cosme-collection-grid__page-item">
+                  {% if part.is_link %}
+                    <a
+                      class="cosme-collection-grid__page-link"
+                      href="{{ part.url }}"
+                      aria-label="{{ 'collections.page' | t: page: part.title }}"
+                    >
+                      {{ part.title }}
+                    </a>
+                  {% elsif part.title == current_page_label %}
+                    <span
+                      class="cosme-collection-grid__page-link cosme-collection-grid__page-link--current"
+                      aria-current="page"
+                      aria-label="{{ 'collections.page' | t: page: part.title }}"
+                    >
+                      {{ part.title }}
+                    </span>
+                  {% else %}
+                    <span class="cosme-collection-grid__page-ellipsis" aria-hidden="true">
+                      {{ part.title }}
+                    </span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ol>
+
+            {% if paginate.next %}
+              <a
+                class="cosme-collection-grid__page-link cosme-collection-grid__page-link--next"
+                href="{{ paginate.next.url }}"
+                rel="next"
+                aria-label="{{ 'collections.next' | t }}"
+              >
+                {{ 'collections.next' | t }}
+                <span aria-hidden="true">→</span>
+              </a>
+            {% endif %}
+          </nav>
         {% endif %}
-        <div class="collection-product__content">
-          <p>{{ product.title | escape | link_to: product.url }}</p>
-          <p>{{ product.price | money }}</p>
-        </div>
-      </div>
-    {% endfor %}
 
-    {{ paginate | default_pagination }}
-  {% endpaginate %}
-</div>
+        {% if show_load_more %}
+          <div class="cosme-collection-grid__more-wrap">
+            <a
+              class="cosme-collection-grid__more"
+              href="{{ paginate.next.url }}"
+              data-collection-load-more
+              data-loading-label="{{ 'collections.loading' | t | escape }}"
+              data-loaded-label="{{ 'collections.products_loaded' | t: count: '__COUNT__' | escape }}"
+            >
+              {{ 'collections.load_more' | t }}
+            </a>
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="cosme-collection-grid__empty">
+          {{ 'collections.empty' | t }}
+        </p>
+      {% endif %}
+    {% endpaginate %}
+  </div>
+</section>
 
 {% stylesheet %}
-  .collection-products {
+  .cosme-collection-grid {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-collection-grid__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: var(--spacing-xl) var(--page-margin) var(--spacing-2xl);
+    min-width: 0;
+  }
+
+  .cosme-collection-grid__list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    grid-template-columns: repeat(var(--collection-grid-columns-mobile), minmax(0, 1fr));
+    gap: var(--spacing-xl) var(--grid-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    min-width: 0;
+  }
+
+  .cosme-collection-grid__item {
+    min-width: 0;
+  }
+
+  .cosme-collection-grid .cosme-product-card__title,
+  .cosme-collection-grid .cosme-product-card__vendor,
+  .cosme-collection-grid .cosme-product-card__price {
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-collection-grid .cosme-product-card__meta-row {
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-collection-grid .cosme-product-card--editorial .cosme-product-card__vendor {
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .cosme-collection-grid__empty {
+    margin: 0;
+    max-width: 36rem;
+    color: var(--color-muted);
+    font-size: 1rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-collection-grid__pagination,
+  .cosme-collection-grid__pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-collection-grid__pagination {
+    margin-block-start: var(--spacing-2xl);
+  }
+
+  .cosme-collection-grid__page-item {
+    display: flex;
+    min-width: 0;
+  }
+
+  .cosme-collection-grid__page-link,
+  .cosme-collection-grid__page-ellipsis,
+  .cosme-collection-grid__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    min-height: 2rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font: inherit;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    letter-spacing: var(--letter-spacing-body);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .cosme-collection-grid__page-link:hover,
+  .cosme-collection-grid__more:hover {
+    color: var(--color-foreground);
+  }
+
+  .cosme-collection-grid__page-link--current {
+    color: var(--color-foreground);
+    cursor: default;
+  }
+
+  .cosme-collection-grid__page-link:focus-visible,
+  .cosme-collection-grid__more:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-collection-grid__more-wrap {
+    display: flex;
+    justify-content: center;
+    margin-block-start: var(--spacing-2xl);
+  }
+
+  .cosme-collection-grid__more {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .cosme-collection-grid.is-loading .cosme-collection-grid__more {
+    opacity: 0.55;
+    pointer-events: none;
+    cursor: wait;
+    text-decoration: none;
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-collection-grid__inner {
+      padding-block: var(--spacing-2xl);
+    }
+
+    .cosme-collection-grid__list {
+      grid-template-columns: repeat(min(var(--collection-grid-columns-desktop), 3), minmax(0, 1fr));
+      gap: var(--spacing-2xl) var(--grid-gap);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-collection-grid__list {
+      grid-template-columns: repeat(var(--collection-grid-columns-desktop), minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-collection-grid.is-loading .cosme-collection-grid__more {
+      opacity: 1;
+    }
   }
 {% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const initCollectionGrid = (root) => {
+      if (!root || root.dataset.gridReady === 'true') return;
+      root.dataset.gridReady = 'true';
+
+      if (root.dataset.productLoading !== 'load_more') return;
+
+      const list = root.querySelector('[data-collection-grid-list]');
+      const status = root.querySelector('[data-collection-grid-status]');
+      const loadMore = root.querySelector('[data-collection-load-more]');
+      if (!list || !loadMore) return;
+
+      const strings = {
+        loading: loadMore.dataset.loadingLabel || 'Loading',
+        loaded: loadMore.dataset.loadedLabel || '__COUNT__ products loaded',
+        loadMore: loadMore.textContent.trim(),
+      };
+
+      let loading = false;
+
+      const setStatus = (message) => {
+        if (status) status.textContent = message;
+      };
+
+      const existingIds = () => {
+        return new Set(
+          Array.from(list.querySelectorAll('[data-product-id]')).map((item) => item.getAttribute('data-product-id'))
+        );
+      };
+
+      const loadNext = async (event) => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (loading) {
+          event.preventDefault();
+          return;
+        }
+
+        const href = loadMore.getAttribute('href');
+        if (!href) return;
+
+        event.preventDefault();
+        loading = true;
+        root.classList.add('is-loading');
+        root.setAttribute('aria-busy', 'true');
+        loadMore.setAttribute('aria-disabled', 'true');
+        loadMore.textContent = strings.loading;
+        setStatus(strings.loading);
+
+        try {
+          const url = new URL(href, window.location.origin);
+          url.searchParams.set('section_id', root.dataset.sectionId || '');
+
+          const response = await fetch(url.toString(), {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          });
+
+          if (!response.ok) throw new Error('Load more failed');
+
+          const html = await response.text();
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+          const nextItems = Array.from(parsed.querySelectorAll('[data-collection-grid-list] > [data-product-id]'));
+          const seen = existingIds();
+          const added = [];
+
+          nextItems.forEach((item) => {
+            const id = item.getAttribute('data-product-id');
+            if (!id || seen.has(id)) return;
+            seen.add(id);
+            const imported = document.importNode(item, true);
+            list.append(imported);
+            added.push(imported);
+          });
+
+          const nextLink = parsed.querySelector('[data-collection-load-more]');
+          if (nextLink && nextLink.getAttribute('href')) {
+            loadMore.setAttribute('href', nextLink.getAttribute('href'));
+            loadMore.hidden = false;
+          } else {
+            loadMore.removeAttribute('href');
+            loadMore.hidden = true;
+          }
+
+          if (added.length > 0) {
+            setStatus(strings.loaded.replace('__COUNT__', String(added.length)));
+          } else {
+            loadMore.hidden = true;
+          }
+
+          if (loadMore.hidden) {
+            const focusTarget = added[0] ? added[0].querySelector('a') : null;
+            loadMore.remove();
+            if (focusTarget) focusTarget.focus();
+          } else {
+            loadMore.textContent = strings.loadMore;
+            loadMore.removeAttribute('aria-disabled');
+            loadMore.focus();
+          }
+        } catch (error) {
+          window.location.assign(href);
+        } finally {
+          loading = false;
+          root.classList.remove('is-loading');
+          root.removeAttribute('aria-busy');
+        }
+      };
+
+      loadMore.addEventListener('click', loadNext);
+    };
+
+    document.querySelectorAll('[data-collection-grid]').forEach(initCollectionGrid);
+
+    document.addEventListener('shopify:section:load', (event) => {
+      const root = event.target.querySelector('[data-collection-grid]') || event.target.closest('[data-collection-grid]');
+      if (root) initCollectionGrid(root);
+    });
+  })();
+{% endjavascript %}
 
 {% schema %}
 {
   "name": "t:general.collection",
-  "settings": []
+  "tag": "section",
+  "class": "cosme-collection-grid-section",
+  "enabled_on": {
+    "templates": ["collection"]
+  },
+  "settings": [
+    {
+      "type": "select",
+      "id": "desktop_columns",
+      "label": "t:sections.collection.settings.desktop_columns",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "select",
+      "id": "mobile_columns",
+      "label": "t:sections.collection.settings.mobile_columns",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "2", "label": "2" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "select",
+      "id": "image_aspect_ratio",
+      "label": "t:sections.collection.settings.image_aspect_ratio",
+      "options": [
+        { "value": "3/4", "label": "t:sections.collection.settings.aspect_3_4" },
+        { "value": "1/1", "label": "t:sections.collection.settings.aspect_1_1" },
+        { "value": "4/5", "label": "t:sections.collection.settings.aspect_4_5" }
+      ],
+      "default": "3/4"
+    },
+    {
+      "type": "select",
+      "id": "product_loading",
+      "label": "t:sections.collection.settings.product_loading",
+      "options": [
+        { "value": "pagination", "label": "t:sections.collection.settings.loading_pagination" },
+        { "value": "load_more", "label": "t:sections.collection.settings.loading_load_more" }
+      ],
+      "default": "pagination"
+    },
+    {
+      "type": "select",
+      "id": "products_per_page",
+      "label": "t:sections.collection.settings.products_per_page",
+      "options": [
+        { "value": "8", "label": "8" },
+        { "value": "12", "label": "12" },
+        { "value": "16", "label": "16" },
+        { "value": "20", "label": "20" },
+        { "value": "24", "label": "24" }
+      ],
+      "default": "12"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.collection.settings.show_vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_price",
+      "label": "t:sections.main_popular_products.settings.show_price",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_popular_products.settings.product_card_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_badge",
+      "label": "t:sections.main_popular_products.settings.show_badge",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "t:sections.collection.settings.show_secondary_image",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_view",
+      "label": "t:sections.main_popular_products.settings.show_quick_view",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_add_to_cart",
+      "label": "t:sections.main_popular_products.settings.show_add_to_cart",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ]
 }
 {% endschema %}

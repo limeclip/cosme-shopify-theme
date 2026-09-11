@@ -1,0 +1,524 @@
+{% liquid
+  assign heading_id = 'AboutStoryHeading-' | append: section.id
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign heading = section.settings.heading | strip
+  assign body_text = section.settings.body | strip
+  assign secondary_text = section.settings.secondary_text | strip
+  assign image_alt = section.settings.image_alt | strip
+  assign cta_label = section.settings.cta_label | strip
+  assign cta_link = section.settings.cta_link
+
+  assign text_alignment = section.settings.text_alignment | default: 'left'
+  assign content_width = section.settings.content_width | default: 'medium'
+  assign section_spacing = section.settings.section_spacing | default: 'medium'
+  assign image_position = section.settings.image_position | default: 'left'
+
+  assign has_image = false
+  if section.settings.image != blank
+    assign has_image = true
+  endif
+
+  if image_alt == blank
+    if has_image
+      if section.settings.image.alt != blank
+        assign image_alt = section.settings.image.alt
+      endif
+    endif
+  endif
+  if image_alt == blank
+    if heading != blank
+      assign image_alt = heading
+    endif
+  endif
+
+  case section.settings.image_ratio
+    when 'landscape'
+      assign image_aspect_ratio = '3/2'
+    when 'square'
+      assign image_aspect_ratio = '1/1'
+    when 'wide'
+      assign image_aspect_ratio = '16/9'
+    when 'adapt'
+      if has_image
+        assign image_aspect_ratio = section.settings.image.aspect_ratio
+      else
+        assign image_aspect_ratio = '4/5'
+      endif
+    else
+      assign image_aspect_ratio = '4/5'
+  endcase
+
+  if cta_link == blank
+    assign cta_link = routes.collections_url
+  endif
+
+  assign show_cta = false
+  if section.settings.show_cta
+    if cta_label != blank
+      assign show_cta = true
+    endif
+  endif
+
+  assign image_sizes = '(min-width: 990px) 58vw, (min-width: 750px) 55vw, 100vw'
+%}
+
+<section
+  id="AboutStory-{{ section.id }}"
+  class="
+    cosme-about-story
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-about-story--align-{{ text_alignment }}
+    cosme-about-story--width-{{ content_width }}
+    cosme-about-story--spacing-{{ section_spacing }}
+    cosme-about-story--image-{{ image_position }}
+    {% if has_image %}cosme-about-story--has-image{% endif %}
+    {% if settings.enable_animations %}cosme-about-story--animated{% endif %}
+  "
+  style="--about-story-ratio: {{ image_aspect_ratio }};"
+  {% if heading != blank %}
+    aria-labelledby="{{ heading_id }}"
+  {% else %}
+    aria-label="{{ 'sections.about_story.landmark_label' | t }}"
+  {% endif %}
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-about-story__inner">
+    <div class="cosme-about-story__layout">
+      <div class="cosme-about-story__media">
+        {%- if has_image -%}
+          {% render 'cosme-image',
+            image: section.settings.image,
+            alt: image_alt,
+            class: 'cosme-about-story__image',
+            width: 1800,
+            sizes: image_sizes,
+            loading: 'lazy',
+            aspect_ratio: image_aspect_ratio
+          %}
+        {%- else -%}
+          <div class="cosme-about-story__fallback" aria-hidden="true">
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-about-story__placeholder-svg' }}
+            {% if request.design_mode %}
+              <p class="cosme-about-story__fallback-hint">
+                {{ 'sections.about_story.image_placeholder' | t }}
+              </p>
+            {% endif %}
+          </div>
+        {%- endif -%}
+      </div>
+
+      <div class="cosme-about-story__content">
+        <div class="cosme-about-story__copy">
+          {% if eyebrow != blank %}
+            <p class="cosme-about-story__eyebrow">{{ eyebrow | escape }}</p>
+          {% endif %}
+
+          {% if heading != blank %}
+            <h2 class="cosme-about-story__heading" id="{{ heading_id }}">{{ heading | escape }}</h2>
+          {% endif %}
+
+          {% if body_text != blank %}
+            <p class="cosme-about-story__body">
+              {{ body_text | escape | newline_to_br }}
+            </p>
+          {% endif %}
+
+          {% if secondary_text != blank %}
+            <p class="cosme-about-story__secondary">
+              {{ secondary_text | escape | newline_to_br }}
+            </p>
+          {% endif %}
+
+          {% if show_cta %}
+            {% render 'cosme-button',
+              label: cta_label,
+              url: cta_link,
+              style: 'outline',
+              class: 'cosme-about-story__cta'
+            %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-about-story {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-about-story__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-about-story--spacing-small .cosme-about-story__inner {
+    padding-block: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .cosme-about-story--spacing-medium .cosme-about-story__inner {
+    padding-block: clamp(2.25rem, 5.5vw, 4.5rem);
+  }
+
+  .cosme-about-story--spacing-large .cosme-about-story__inner {
+    padding-block: clamp(2.75rem, 7vw, 6.25rem);
+  }
+
+  .cosme-about-story__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-lg);
+    align-items: start;
+    min-width: 0;
+  }
+
+  .cosme-about-story__media,
+  .cosme-about-story__content,
+  .cosme-about-story__image,
+  .cosme-about-story__fallback {
+    min-width: 0;
+  }
+
+  .cosme-about-story__fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: var(--about-story-ratio);
+    padding: var(--spacing-lg);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-about-story__fallback-hint {
+    margin: 0;
+    max-width: 18rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-story__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .color-scheme-2 .cosme-about-story__placeholder-svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.25;
+  }
+
+  .cosme-about-story__image.cosme-image {
+    border-radius: 0;
+  }
+
+  .cosme-about-story__copy {
+    max-width: 28rem;
+  }
+
+  .cosme-about-story--width-medium .cosme-about-story__copy {
+    max-width: 34rem;
+  }
+
+  .cosme-about-story--width-wide .cosme-about-story__copy {
+    max-width: 40rem;
+  }
+
+  .cosme-about-story--align-center .cosme-about-story__copy {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-about-story--align-right .cosme-about-story__copy {
+    margin-inline-start: auto;
+    text-align: right;
+  }
+
+  .cosme-about-story__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-story__heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.875rem, 5vw, 3rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-about-story__body,
+  .cosme-about-story__secondary {
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--color-foreground);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-about-story__secondary {
+    color: var(--color-muted);
+  }
+
+  .cosme-about-story__cta {
+    margin-block-start: var(--spacing-lg);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  .cosme-about-story--align-center .cosme-about-story__cta {
+    margin-inline: auto;
+  }
+
+  .cosme-about-story--align-right .cosme-about-story__cta {
+    margin-inline-start: auto;
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-about-story__layout {
+      grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+      gap: clamp(1.75rem, 4vw, 3.5rem);
+      align-items: center;
+    }
+
+    .cosme-about-story--image-right .cosme-about-story__layout {
+      grid-template-columns: minmax(16rem, 0.85fr) minmax(0, 1.15fr);
+    }
+
+    .cosme-about-story--image-right .cosme-about-story__media {
+      order: 2;
+    }
+
+    .cosme-about-story--image-right .cosme-about-story__content {
+      order: 1;
+    }
+
+    .cosme-about-story__heading {
+      font-size: clamp(2rem, 3.6vw, 2.75rem);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-about-story--spacing-medium .cosme-about-story__inner {
+      padding-block: clamp(3rem, 6vw, 5.5rem);
+    }
+
+    .cosme-about-story--spacing-large .cosme-about-story__inner {
+      padding-block: clamp(3.5rem, 7vw, 7rem);
+    }
+
+    .cosme-about-story__layout {
+      grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+      gap: clamp(2.5rem, 5vw, 5.5rem);
+    }
+
+    .cosme-about-story--image-right .cosme-about-story__layout {
+      grid-template-columns: minmax(18rem, 0.8fr) minmax(0, 1.2fr);
+    }
+
+    .cosme-about-story__heading {
+      font-size: clamp(2.25rem, 3.4vw, 3.25rem);
+    }
+
+    .cosme-about-story__body,
+    .cosme-about-story__secondary {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-about-story--animated .cosme-about-story__media,
+    .cosme-about-story--animated .cosme-about-story__copy {
+      animation: cosme-about-story-enter 0.8s var(--transition-easing, ease) both;
+    }
+
+    .cosme-about-story--animated .cosme-about-story__copy {
+      animation-delay: 0.1s;
+    }
+  }
+
+  @keyframes cosme-about-story-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.about_story",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.about_story.settings.eyebrow",
+      "default": "OUR STORY"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.about_story.settings.heading",
+      "default": "Beauty begins with intention."
+    },
+    {
+      "type": "textarea",
+      "id": "body",
+      "label": "t:sections.about_story.settings.body",
+      "default": "Cosme was created around a simple idea: beauty should feel considered.\n\nFrom the formulas we choose to the rituals we build around them, every detail should have a purpose. We believe effective beauty can also feel beautiful to use — quiet, tactile and effortless."
+    },
+    {
+      "type": "textarea",
+      "id": "secondary_text",
+      "label": "t:sections.about_story.settings.secondary_text",
+      "default": "We create products for modern rituals: uncomplicated, thoughtful and made to become part of everyday life."
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:sections.about_story.settings.text_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" },
+        { "value": "right", "label": "t:options.alignment.right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "content_width",
+      "label": "t:sections.about_story.settings.content_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.about_story.settings.image"
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "t:sections.about_story.settings.image_alt",
+      "info": "t:sections.about_story.settings.image_alt_info"
+    },
+    {
+      "type": "select",
+      "id": "image_position",
+      "label": "t:sections.about_story.settings.image_position",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "right", "label": "t:options.alignment.right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "t:sections.about_story.settings.image_ratio",
+      "options": [
+        { "value": "portrait", "label": "t:sections.blog.settings.ratio_portrait" },
+        { "value": "square", "label": "t:sections.blog.settings.ratio_square" },
+        { "value": "landscape", "label": "t:sections.blog.settings.ratio_landscape" },
+        { "value": "wide", "label": "t:sections.blog.settings.ratio_wide" },
+        { "value": "adapt", "label": "t:sections.about.settings.ratio_adapt" }
+      ],
+      "default": "portrait"
+    },
+    {
+      "type": "header",
+      "content": "t:general.actions"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "t:sections.about_story.settings.show_cta",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "t:sections.about_story.settings.cta_label",
+      "default": "EXPLORE THE COLLECTION",
+      "visible_if": "{{ section.settings.show_cta }}"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.about_story.settings.cta_link",
+      "visible_if": "{{ section.settings.show_cta }}"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.about_story"
+    }
+  ]
+}
+{% endschema %}

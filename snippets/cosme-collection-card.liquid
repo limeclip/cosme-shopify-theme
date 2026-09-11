@@ -1,0 +1,276 @@
+{% doc %}
+  Renders an editorial collection card for the collections list page.
+
+  The parent must wrap this snippet in a single link to `collection.url`.
+  This snippet does not output an `<a>` so nested links are never created.
+
+  @param {object} collection - The collection to render
+  @param {string} aspect_ratio - CSS aspect ratio, e.g. `4/5`
+  @param {number} image_width - Maximum image width in pixels
+  @param {number} image_height - Cropped image height in pixels
+  @param {string} sizes - Responsive `sizes` attribute
+  @param {number} card_index - 1-based rendered position used for the editorial index
+  @param {string} [loading] - `lazy` or `eager`
+  @param {string} [fetchpriority] - `high`, `low`, or `auto`
+  @param {boolean} [show_description] - Show a truncated collection description
+  @param {boolean} [show_product_count] - Show the collection product count
+  @param {boolean} [show_cta] - Show the explore collection call to action
+  @param {string} [placeholder_name] - Shopify placeholder SVG name
+
+  @example
+  {% render 'cosme-collection-card', collection: collection, aspect_ratio: '4/5', image_width: 800, image_height: 1000, sizes: '92vw', card_index: 1 %}
+{% enddoc %}
+
+{% liquid
+  assign card_image = collection.featured_image
+  assign card_alt = collection.title | escape
+  if card_image != blank
+    if card_image.alt != blank
+      assign card_alt = card_image.alt | escape
+    endif
+  endif
+
+  assign card_loading = loading | default: 'lazy'
+  assign placeholder = placeholder_name | default: 'collection-1'
+  assign description_text = collection.description | strip_html | strip | truncatewords: 18
+  assign product_count = collection.products_count | default: 0
+  assign index_number = card_index | default: 1 | plus: 0
+  if index_number < 10
+    assign index_label = index_number | prepend: '0'
+  else
+    assign index_label = index_number
+  endif
+%}
+
+<div class="cosme-collection-card">
+  <div class="cosme-collection-card__media">
+    {% if card_image != blank %}
+      {% render 'cosme-image',
+        image: card_image,
+        alt: card_alt,
+        class: 'cosme-collection-card__image',
+        width: image_width,
+        height: image_height,
+        crop: 'center',
+        sizes: sizes,
+        loading: card_loading,
+        fetchpriority: fetchpriority,
+        aspect_ratio: aspect_ratio
+      %}
+    {% else %}
+      <div
+        class="cosme-collection-card__placeholder"
+        style="--cosme-image-ratio: {{ aspect_ratio }};"
+        aria-hidden="true"
+      >
+        {{ placeholder | placeholder_svg_tag: 'cosme-collection-card__placeholder-svg' }}
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="cosme-collection-card__content">
+    <p class="cosme-collection-card__index" aria-hidden="true">{{ index_label }}</p>
+
+    <h2 class="cosme-collection-card__title">{{ collection.title | escape }}</h2>
+
+    {% if show_description %}
+      {% if description_text != blank %}
+        <p class="cosme-collection-card__description">{{ description_text | escape }}</p>
+      {% endif %}
+    {% endif %}
+
+    {% if show_product_count %}
+      <p class="cosme-collection-card__count">
+        {{ 'collections.products_count' | t: count: product_count }}
+      </p>
+    {% endif %}
+
+    {% if show_cta %}
+      <p class="cosme-collection-card__cta" aria-hidden="true">
+        <span class="cosme-collection-card__cta-label">{{ 'sections.list_collections.explore' | t }}</span>
+        {% render 'cosme-icon', icon: 'arrow-right', size: 'sm', class: 'cosme-collection-card__cta-icon' %}
+      </p>
+    {% endif %}
+  </div>
+</div>
+
+{% stylesheet %}
+  .cosme-collection-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-width: 0;
+    height: 100%;
+  }
+
+  .cosme-collection-card__media {
+    overflow: hidden;
+    width: 100%;
+    border-radius: var(--radius-card);
+    background-color: var(--color-background);
+  }
+
+  .cosme-collection-card__image,
+  .cosme-collection-card__placeholder {
+    width: 100%;
+  }
+
+  .cosme-collection-card__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: var(--cosme-image-ratio, 4 / 5);
+    color: var(--color-muted);
+    background-color: var(--color-background);
+  }
+
+  .cosme-collection-card__placeholder-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0);
+    opacity: 0.35;
+  }
+
+  .color-scheme-2 .cosme-collection-card__placeholder-svg {
+    filter: brightness(0) invert(1);
+    opacity: 0.25;
+  }
+
+  .cosme-collection-card__image .cosme-image__img,
+  .cosme-collection-card__placeholder-svg {
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-collection-card__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    min-width: 0;
+    padding-block-end: var(--spacing-sm);
+  }
+
+  .cosme-collection-card__index {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    color: var(--color-muted);
+  }
+
+  .cosme-collection-card__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.375rem, 5.5vw, 1.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-collection-card__title {
+      font-size: clamp(1.1875rem, 1.7vw, 1.5rem);
+    }
+  }
+
+  .cosme-collection-card__description {
+    margin: var(--spacing-xs) 0 0;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-collection-card__count {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-collection-card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) 0 0;
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--color-foreground);
+    transition: gap var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-collection-card__cta-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-list-collections--hover a:hover .cosme-collection-card__title,
+  .cosme-list-collections--hover a:focus-visible .cosme-collection-card__title {
+    color: var(--color-accent);
+  }
+
+  .cosme-list-collections--hover a:hover .cosme-collection-card__cta,
+  .cosme-list-collections--hover a:focus-visible .cosme-collection-card__cta {
+    gap: var(--spacing-sm);
+    color: var(--color-accent);
+  }
+
+  .cosme-list-collections--hover a:hover .cosme-collection-card__cta-icon,
+  .cosme-list-collections--hover a:focus-visible .cosme-collection-card__cta-icon {
+    transform: translateX(0.2em);
+  }
+
+  .cosme-list-collections--hover a:focus-visible .cosme-collection-card__image .cosme-image__img,
+  .cosme-list-collections--hover a:focus-visible .cosme-collection-card__placeholder-svg {
+    transform: scale(1.03);
+  }
+
+  @media (hover: hover) {
+    .cosme-list-collections--hover a:hover .cosme-collection-card__image .cosme-image__img,
+    .cosme-list-collections--hover a:hover .cosme-collection-card__placeholder-svg {
+      transform: scale(1.03);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-collection-card__image .cosme-image__img,
+    .cosme-collection-card__placeholder-svg,
+    .cosme-collection-card__title,
+    .cosme-collection-card__cta,
+    .cosme-collection-card__cta-icon {
+      transition: none;
+    }
+
+    .cosme-list-collections--hover a:hover .cosme-collection-card__image .cosme-image__img,
+    .cosme-list-collections--hover a:hover .cosme-collection-card__placeholder-svg,
+    .cosme-list-collections--hover a:focus-visible .cosme-collection-card__image .cosme-image__img,
+    .cosme-list-collections--hover a:focus-visible .cosme-collection-card__placeholder-svg {
+      transform: none;
+    }
+
+    .cosme-list-collections--hover a:hover .cosme-collection-card__cta,
+    .cosme-list-collections--hover a:focus-visible .cosme-collection-card__cta {
+      gap: var(--spacing-xs);
+    }
+
+    .cosme-list-collections--hover a:hover .cosme-collection-card__cta-icon,
+    .cosme-list-collections--hover a:focus-visible .cosme-collection-card__cta-icon {
+      transform: none;
+    }
+  }
+{% endstylesheet %}

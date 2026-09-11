@@ -1,106 +1,914 @@
 {% doc %}
-  Renders cart drawer line items, subtotal, and actions.
+  Renders cart drawer line items, discounts, subtotal, checkout actions, and free shipping progress.
+
+  @param {string} [heading] - Optional drawer heading from the overlay cart drawer section
+  @param {boolean} [show_compare_at] - Show compare-at prices when on sale (default: true)
+  @param {boolean} [show_free_shipping] - Show the free shipping progress bar (default: true)
+  @param {number} [free_shipping_threshold] - Free shipping threshold in store currency
+  @param {string} [free_shipping_message] - Message shown before the threshold is reached
+  @param {string} [free_shipping_unlocked] - Message shown after the threshold is reached
+  @param {string} [empty_heading] - Empty cart heading
+  @param {string} [empty_message] - Empty cart supporting copy
+  @param {string} [empty_button_label] - Shop all button label
+  @param {string} [empty_button_link] - Shop all button URL
+  @param {boolean} [show_order_note] - Show the order note field
+  @param {string} [order_note_label] - Order note label
+  @param {string} [order_note_placeholder] - Order note placeholder
+  @param {boolean} [show_discount] - Show the discount code field
+  @param {string} [discount_label] - Discount label
+  @param {string} [discount_placeholder] - Discount placeholder
+  @param {string} [discount_button] - Discount apply button label
+  @param {boolean} [show_trust] - Show the trust row below checkout
+  @param {string} [trust_message] - Trust message
 
   @example
   {% render 'cosme-cart-drawer-content' %}
 {% enddoc %}
 
-<div class="cosme-cart-drawer__content" data-cart-drawer-content>
-  {%- if cart.item_count == 0 -%}
-    <p class="cosme-cart-drawer__empty">{{ 'cart.empty' | t }}</p>
-  {%- else -%}
-    <ul class="cosme-cart-drawer__items" role="list">
-      {%- for item in cart.items -%}
-        <li class="cosme-cart-drawer__item" data-cart-item data-line-key="{{ item.key }}">
-          <a class="cosme-cart-drawer__item-media" href="{{ item.url }}">
-            {%- if item.image -%}
-              {% render 'cosme-image',
-                image: item.image,
-                width: 120,
-                aspect_ratio: '1',
-                alt: item.product.title
-              %}
-            {%- endif -%}
-          </a>
+{%- liquid
+  assign show_compare = true
+  if show_compare_at == false
+    assign show_compare = false
+  endif
 
-          <div class="cosme-cart-drawer__item-details">
-            <a class="cosme-cart-drawer__item-title" href="{{ item.url }}">
-              {{ item.product.title | escape }}
+  assign drawer_heading = heading | strip
+  assign item_count = cart.item_count
+  assign checkout_label = 'cart.checkout' | t
+  assign view_cart_label = 'cart.view_cart' | t
+  assign discount_amount = cart.total_discount | money
+-%}
+
+<div
+  class="cosme-cart-drawer__content"
+  data-cart-drawer-content
+  data-item-count="{{ item_count }}"
+  data-cart-total="{{ cart.total_price }}"
+  {% if cart.items.first %}
+    data-first-product-id="{{ cart.items.first.product.id }}"
+  {% endif %}
+  {% if drawer_heading != blank %}
+    data-heading="{{ drawer_heading | escape }}"
+  {% endif %}
+>
+  {% render 'cosme-cart-drawer-shipping',
+    enabled: show_free_shipping,
+    threshold: free_shipping_threshold,
+    message: free_shipping_message,
+    unlocked_message: free_shipping_unlocked
+  %}
+
+  {%- if item_count == 0 -%}
+    {%- liquid
+      assign empty_heading_text = empty_heading | strip
+      if empty_heading_text == blank
+        assign empty_heading_text = 'cart.empty_heading' | t
+      endif
+
+      assign empty_message_text = empty_message | strip
+      if empty_message_text == blank
+        assign empty_message_text = 'cart.empty_message' | t
+      endif
+
+      assign empty_cta_label = empty_button_label | strip
+      if empty_cta_label == blank
+        assign empty_cta_label = 'cart.empty_shop_all' | t
+      endif
+
+      assign empty_cta_url = empty_button_link
+      if empty_cta_url == blank
+        assign empty_cta_url = routes.all_products_collection_url
+      endif
+    -%}
+    <div class="cosme-cart-drawer__empty" data-cart-drawer-empty>
+      <div class="cosme-cart-drawer__empty-copy">
+        <p class="cosme-cart-drawer__empty-heading" data-empty-heading>{{ empty_heading_text | escape }}</p>
+        <p class="cosme-cart-drawer__empty-message" data-empty-message>{{ empty_message_text | escape }}</p>
+        {% render 'cosme-button',
+          label: empty_cta_label,
+          url: empty_cta_url,
+          style: 'primary',
+          class: 'cosme-cart-drawer__empty-cta'
+        %}
+      </div>
+      <div data-cart-drawer-empty-recs-slot></div>
+    </div>
+  {%- else -%}
+    <div class="cosme-cart-drawer__scroll">
+      <ul class="cosme-cart-drawer__items" role="list">
+        {%- for item in cart.items -%}
+          {%- liquid
+            assign show_variant = false
+            unless item.product.has_only_default_variant
+              assign show_variant = true
+            endunless
+
+            assign selling_plan_name = ''
+            if item.selling_plan_allocation
+              assign selling_plan_name = item.selling_plan_allocation.selling_plan.name
+            endif
+
+            assign original_line = item.original_line_price
+            assign final_line = item.final_line_price
+            assign compare_line = 0
+            if item.variant.compare_at_price > item.original_price
+              assign compare_line = item.variant.compare_at_price | times: item.quantity
+            endif
+
+            assign compare_display = 0
+            assign show_line_compare = false
+            if show_compare
+              if original_line > final_line
+                assign show_line_compare = true
+                assign compare_display = original_line
+              elsif compare_line > original_line
+                assign show_line_compare = true
+                assign compare_display = compare_line
+              endif
+            endif
+
+            assign image_alt = item.image.alt | default: item.product.title
+          -%}
+          <li
+            class="cosme-cart-drawer__item"
+            data-cart-item
+            data-line-key="{{ item.key | escape }}"
+          >
+            <a class="cosme-cart-drawer__item-media" href="{{ item.url }}">
+              {%- if item.image -%}
+                {% render 'cosme-image',
+                  image: item.image,
+                  width: 240,
+                  aspect_ratio: '1',
+                  sizes: '80px',
+                  alt: image_alt,
+                  loading: 'lazy'
+                %}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'cosme-cart-drawer__item-placeholder' }}
+              {%- endif -%}
             </a>
 
-            {%- unless item.product.has_only_default_variant -%}
-              <p class="cosme-cart-drawer__item-variant">{{ item.variant.title | escape }}</p>
-            {%- endunless -%}
+            <div class="cosme-cart-drawer__item-details">
+              <a class="cosme-cart-drawer__item-title" href="{{ item.url }}">
+                {{ item.product.title | escape }}
+              </a>
 
-            <div class="cosme-cart-drawer__item-price">
-              {% render 'cosme-price', variant: item.variant, show_from: false %}
-            </div>
+              {%- if show_variant -%}
+                <p class="cosme-cart-drawer__item-variant">{{ item.variant.title | escape }}</p>
+              {%- endif -%}
 
-            <div class="cosme-cart-drawer__item-actions">
-              <div class="cosme-cart-drawer__quantity">
-                <button
-                  type="button"
-                  class="cosme-cart-drawer__quantity-btn"
-                  data-cart-quantity-decrease
-                  aria-label="{{ 'cart.decrease_quantity' | t: product: item.product.title }}"
+              {%- if selling_plan_name != blank -%}
+                <p class="cosme-cart-drawer__item-plan">{{ selling_plan_name | escape }}</p>
+              {%- endif -%}
+
+              {%- for property in item.properties -%}
+                {%- liquid
+                  assign property_key = property.first
+                  assign property_value = property.last
+                  assign property_prefix = property_key | slice: 0
+                -%}
+                {%- if property_prefix != '_' -%}
+                  {%- if property_value != blank -%}
+                    <p class="cosme-cart-drawer__item-property">
+                      <span>{{ property_key | escape }}:</span>
+                      {%- if property_value contains '://' -%}
+                        <a href="{{ property_value }}" target="_blank" rel="noopener">
+                          {{ 'cart.property_file' | t }}
+                        </a>
+                      {%- else -%}
+                        {{ property_value | escape }}
+                      {%- endif -%}
+                    </p>
+                  {%- endif -%}
+                {%- endif -%}
+              {%- endfor -%}
+
+              <div class="cosme-cart-drawer__item-price">
+                <div
+                  class="cosme-cart-drawer__price{% if show_line_compare %} cosme-cart-drawer__price--on-sale{% endif %}"
                 >
-                  {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
-                </button>
-                <input
-                  class="cosme-cart-drawer__quantity-input"
-                  type="number"
-                  name="updates[]"
-                  value="{{ item.quantity }}"
-                  min="0"
-                  aria-label="{{ 'cart.quantity' | t: product: item.product.title }}"
-                  data-cart-quantity-input
-                  data-line-key="{{ item.key }}"
-                >
-                <button
-                  type="button"
-                  class="cosme-cart-drawer__quantity-btn"
-                  data-cart-quantity-increase
-                  aria-label="{{ 'cart.increase_quantity' | t: product: item.product.title }}"
-                >
-                  {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
-                </button>
+                  {%- if show_line_compare -%}
+                    <span class="cosme-visually-hidden">{{ 'products.price.regular' | t }}</span>
+                    <s class="cosme-cart-drawer__price-compare">{{ compare_display | money }}</s>
+                    <span class="cosme-visually-hidden">{{ 'products.price.sale' | t }}</span>
+                  {%- endif -%}
+                  <span class="cosme-cart-drawer__price-regular">{{ final_line | money }}</span>
+                </div>
               </div>
 
-              <button
-                type="button"
-                class="cosme-cart-drawer__remove"
-                data-cart-remove
-                data-line-key="{{ item.key }}"
-              >
-                {{ 'cart.remove' | t }}
-              </button>
+              {%- if item.line_level_discount_allocations.size > 0 -%}
+                <ul class="cosme-cart-drawer__item-discounts" role="list">
+                  {%- for discount_allocation in item.line_level_discount_allocations -%}
+                    <li class="cosme-cart-drawer__discount">
+                      {% render 'cosme-icon', icon: 'discount', size: 'sm' %}
+                      <span>
+                        {{ discount_allocation.discount_application.title | escape }}
+                        (−{{ discount_allocation.amount | money }})
+                      </span>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+
+              <div class="cosme-cart-drawer__item-actions">
+                <div class="cosme-cart-drawer__quantity">
+                  <button
+                    type="button"
+                    class="cosme-cart-drawer__quantity-btn"
+                    data-cart-quantity-decrease
+                    aria-label="{{ 'cart.decrease_quantity' | t: product: item.product.title }}"
+                  >
+                    {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+                  </button>
+                  <input
+                    class="cosme-cart-drawer__quantity-input"
+                    type="number"
+                    inputmode="numeric"
+                    name="updates[]"
+                    value="{{ item.quantity }}"
+                    min="0"
+                    step="1"
+                    aria-label="{{ 'cart.quantity' | t: product: item.product.title }}"
+                    data-cart-quantity-input
+                    data-line-key="{{ item.key | escape }}"
+                    data-current-quantity="{{ item.quantity }}"
+                  >
+                  <button
+                    type="button"
+                    class="cosme-cart-drawer__quantity-btn"
+                    data-cart-quantity-increase
+                    aria-label="{{ 'cart.increase_quantity' | t: product: item.product.title }}"
+                  >
+                    {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  class="cosme-cart-drawer__remove"
+                  data-cart-remove
+                  data-line-key="{{ item.key | escape }}"
+                  aria-label="{{ 'cart.remove_item' | t: product: item.product.title }}"
+                >
+                  {% render 'cosme-icon', icon: 'close', size: 'sm' %}
+                  <span class="cosme-visually-hidden">{{ 'cart.remove' | t }}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        </li>
-      {%- endfor -%}
-    </ul>
+          </li>
+        {%- endfor -%}
+      </ul>
+      <div data-cart-drawer-upsell-slot></div>
+      {% render 'cosme-cart-drawer-extras',
+        part: 'tools',
+        show_order_note: show_order_note,
+        order_note_label: order_note_label,
+        order_note_placeholder: order_note_placeholder,
+        show_discount: show_discount,
+        discount_label: discount_label,
+        discount_placeholder: discount_placeholder,
+        discount_button: discount_button
+      %}
+    </div>
 
     <div class="cosme-cart-drawer__footer">
+      {%- if cart.cart_level_discount_applications.size > 0 -%}
+        <ul class="cosme-cart-drawer__cart-discounts" role="list">
+          {%- for discount_application in cart.cart_level_discount_applications -%}
+            <li class="cosme-cart-drawer__discount">
+              {% render 'cosme-icon', icon: 'discount', size: 'sm' %}
+              <span>{{ discount_application.title | escape }}</span>
+              <span>−{{ discount_application.total_allocated_amount | money }}</span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      {%- if cart.total_discount > 0 -%}
+        <p class="cosme-cart-drawer__savings">{{ 'cart.savings' | t: amount: discount_amount }}</p>
+      {%- endif -%}
+
       <div class="cosme-cart-drawer__subtotal">
         <span class="cosme-cart-drawer__subtotal-label">{{ 'cart.subtotal' | t }}</span>
         <span class="cosme-cart-drawer__subtotal-value" data-cart-subtotal>{{ cart.total_price | money }}</span>
       </div>
 
       <div class="cosme-cart-drawer__buttons">
-        {%- assign view_cart_label = 'cart.view_cart' | t -%}
-        {%- assign checkout_label = 'cart.checkout' | t -%}
+        <form action="{{ routes.cart_url }}" method="post" class="cosme-cart-drawer__checkout-form">
+          <button
+            type="submit"
+            name="checkout"
+            formaction="{{ routes.checkout_url }}"
+            class="cosme-button cosme-button--primary cosme-cart-drawer__checkout"
+          >
+            {{ checkout_label | escape }}
+          </button>
+        </form>
         {% render 'cosme-button',
           label: view_cart_label,
           url: routes.cart_url,
           style: 'secondary',
           class: 'cosme-cart-drawer__view-cart'
         %}
-        <form action="{{ routes.cart_url }}" method="post">
-          <button type="submit" name="checkout" class="cosme-button cosme-button--primary cosme-cart-drawer__checkout">
-            {{ checkout_label | escape }}
-          </button>
-        </form>
       </div>
+
+      {% render 'cosme-cart-drawer-extras',
+        part: 'trust',
+        show_trust: show_trust,
+        trust_message: trust_message
+      %}
     </div>
   {%- endif -%}
 </div>
+
+{% stylesheet %}
+  .cosme-cart-drawer__content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .cosme-cart-drawer__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cosme-cart-drawer__empty {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-lg);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cosme-cart-drawer__empty-copy {
+    max-width: 20rem;
+    margin: 0 auto var(--spacing-xl);
+    text-align: center;
+  }
+
+  .cosme-cart-drawer__empty-heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: 1.375rem;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading, 1.3);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-cart-drawer__empty-message {
+    margin: var(--spacing-sm) 0 0;
+    color: var(--color-muted);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  .cosme-cart-drawer__empty-message:empty {
+    display: none;
+  }
+
+  .cosme-cart-drawer__empty-cta {
+    margin-top: var(--spacing-lg);
+    min-width: 10.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cosme-cart-drawer__empty-cta[hidden] {
+    display: none;
+  }
+
+  .cosme-cart-drawer__empty .cosme-cart-drawer__upsell {
+    margin-top: 0;
+    padding-top: var(--spacing-lg);
+    text-align: left;
+  }
+
+  .cosme-cart-drawer__items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-cart-drawer__item {
+    display: grid;
+    grid-template-columns: 5rem minmax(0, 1fr);
+    gap: var(--spacing-md);
+    padding-block: var(--spacing-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__item:first-child {
+    padding-top: 0;
+  }
+
+  .cosme-cart-drawer__item:last-child {
+    border-bottom: 0;
+  }
+
+  .cosme-cart-drawer__item.is-updating {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .cosme-cart-drawer__item-media {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-cart-drawer__item-placeholder {
+    display: block;
+    width: 100%;
+    height: auto;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart-drawer__item-details {
+    min-width: 0;
+  }
+
+  .cosme-cart-drawer__item-title {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-family: var(--font-body--family);
+    font-size: 0.9375rem;
+    font-weight: var(--font-body--weight);
+    letter-spacing: 0.02em;
+    overflow-wrap: anywhere;
+    color: var(--color-heading, var(--color-foreground));
+    text-decoration: none;
+  }
+
+  .cosme-cart-drawer__item-title:hover,
+  .cosme-cart-drawer__item-title:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-cart-drawer__item-variant,
+  .cosme-cart-drawer__item-plan,
+  .cosme-cart-drawer__item-property {
+    margin: 0 0 var(--spacing-xs);
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+  }
+
+  .cosme-cart-drawer__item-price {
+    margin: var(--spacing-sm) 0;
+  }
+
+  .cosme-cart-drawer__price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .cosme-cart-drawer__price--on-sale .cosme-cart-drawer__price-regular {
+    color: var(--color-sale);
+  }
+
+  .cosme-cart-drawer__price-compare {
+    color: var(--color-muted);
+    text-decoration: line-through;
+  }
+
+  .cosme-cart-drawer__item-discounts,
+  .cosme-cart-drawer__cart-discounts {
+    margin: 0 0 var(--spacing-sm);
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-cart-drawer__discount {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+    color: var(--color-sale, var(--color-accent));
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+  }
+
+  .cosme-cart-drawer__item-discounts .cosme-cart-drawer__discount {
+    justify-content: flex-start;
+  }
+
+  .cosme-cart-drawer__item-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+
+  .cosme-cart-drawer__quantity {
+    display: inline-flex;
+    align-items: center;
+    border: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__quantity-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--color-foreground);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .cosme-cart-drawer__quantity-btn:hover,
+  .cosme-cart-drawer__quantity-btn:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-cart-drawer__quantity-btn:disabled,
+  .cosme-cart-drawer__quantity-input:disabled,
+  .cosme-cart-drawer__remove:disabled,
+  .cosme-cart-drawer__checkout:disabled {
+    cursor: wait;
+  }
+
+  .cosme-cart-drawer__quantity-input {
+    width: 2.5rem;
+    height: 2.75rem;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    text-align: center;
+    color: var(--color-foreground);
+    background: transparent;
+    border: 0;
+    -moz-appearance: textfield;
+  }
+
+  .cosme-cart-drawer__quantity-input::-webkit-outer-spin-button,
+  .cosme-cart-drawer__quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .cosme-cart-drawer__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--color-muted);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .cosme-cart-drawer__remove:hover,
+  .cosme-cart-drawer__remove:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-cart-drawer__footer {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: var(--spacing-md) var(--spacing-lg);
+    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+    background-color: var(--color-background);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__extras {
+    display: grid;
+    gap: 0;
+    margin: var(--spacing-md) 0 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__extras:not(:has(.cosme-cart-drawer__extra:not([hidden]))) {
+    display: none;
+  }
+
+  .cosme-cart-drawer__extra[hidden] {
+    display: none;
+  }
+
+  .cosme-cart-drawer__extra {
+    border-bottom: 0;
+  }
+
+  .cosme-cart-drawer__extra:not([hidden]) + .cosme-cart-drawer__extra:not([hidden]) {
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__extra-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    min-height: 2.75rem;
+    padding: var(--spacing-sm) 0;
+    list-style: none;
+    cursor: pointer;
+    font-size: 0.6875rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart-drawer__extra-summary::-webkit-details-marker,
+  .cosme-cart-drawer__extra-summary::marker {
+    display: none;
+    content: '';
+  }
+
+  .cosme-cart-drawer__extra-summary:focus {
+    outline: none;
+  }
+
+  .cosme-cart-drawer__extra-summary:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-cart-drawer__extra-icon {
+    display: inline-flex;
+    color: var(--color-foreground);
+  }
+
+  .cosme-cart-drawer__extra[open] .cosme-cart-drawer__extra-plus,
+  .cosme-cart-drawer__extra:not([open]) .cosme-cart-drawer__extra-minus {
+    display: none;
+  }
+
+  .cosme-cart-drawer__extra-panel {
+    padding: 0 0 var(--spacing-sm);
+  }
+
+  .cosme-cart-drawer__note {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 4.5rem;
+    padding: var(--spacing-sm);
+    resize: vertical;
+    color: var(--color-foreground);
+    background: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
+    font: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .cosme-cart-drawer__note:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-cart-drawer__applied-discounts {
+    display: grid;
+    gap: var(--spacing-xs, 0.25rem);
+    margin: 0 0 var(--spacing-sm);
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-cart-drawer__applied-discount {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs, 0.25rem);
+    font-size: 0.75rem;
+    color: var(--color-foreground);
+  }
+
+  .cosme-cart-drawer__discount-remove {
+    margin-left: auto;
+    padding: 0;
+    color: var(--color-muted);
+    background: none;
+    border: 0;
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .cosme-cart-drawer__discount-remove:hover,
+  .cosme-cart-drawer__discount-remove:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-cart-drawer__discount-remove:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-cart-drawer__discount-row {
+    display: flex;
+    gap: var(--spacing-xs, 0.25rem);
+    align-items: stretch;
+  }
+
+  .cosme-cart-drawer__discount-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 2.75rem;
+    padding: 0 var(--spacing-sm);
+    color: var(--color-foreground);
+    background: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
+    font: inherit;
+    font-size: 0.8125rem;
+  }
+
+  .cosme-cart-drawer__discount-input:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-cart-drawer__discount-apply {
+    flex: 0 0 auto;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding-inline: var(--spacing-md);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cosme-cart-drawer__discount-error {
+    margin: var(--spacing-xs, 0.25rem) 0 0;
+    color: var(--color-error, var(--color-sale, var(--color-foreground)));
+    font-size: 0.75rem;
+  }
+
+  .cosme-cart-drawer__discount-error[hidden] {
+    display: none;
+  }
+
+  .cosme-cart-drawer__trust[hidden] {
+    display: none;
+  }
+
+  .cosme-cart-drawer__trust {
+    margin-top: var(--spacing-md);
+    display: grid;
+    gap: var(--spacing-sm);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .cosme-cart-drawer__trust-message {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs, 0.25rem);
+    margin: 0;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart-drawer__trust-message:empty,
+  .cosme-cart-drawer__trust-message span:empty {
+    display: none;
+  }
+
+  .cosme-cart-drawer__payments {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-cart-drawer__payment-icon {
+    display: block;
+    height: 0.875rem;
+    width: auto;
+  }
+
+  .cosme-cart-drawer__savings {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-sale, var(--color-accent));
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cosme-cart-drawer__subtotal {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .cosme-cart-drawer__subtotal-label {
+    font-family: var(--font-body--family);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart-drawer__subtotal-value {
+    font-family: var(--font-heading--family);
+    font-size: 1.125rem;
+    font-weight: var(--font-heading--weight);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-cart-drawer__buttons {
+    display: grid;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-cart-drawer__buttons .cosme-button,
+  .cosme-cart-drawer__checkout-form {
+    width: 100%;
+  }
+
+  .cosme-cart-drawer__checkout-form .cosme-button {
+    width: 100%;
+  }
+
+  .cosme-cart-drawer__error {
+    margin: 0;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    color: var(--color-error, var(--color-sale, var(--color-foreground)));
+    font-size: 0.8125rem;
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__error[hidden] {
+    display: none;
+  }
+
+  .cosme-cart-drawer__scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-background-2, var(--color-border)) transparent;
+}
+
+.cosme-cart-drawer__scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cosme-cart-drawer__scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cosme-cart-drawer__scroll::-webkit-scrollbar-thumb {
+  background-color: var(--color-background-2, var(--color-border));
+  border-radius: 999px;
+}
+
+.cosme-cart-drawer__scroll::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-border);
+}
+.cosme-cart-drawer__empty {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-background-2, var(--color-border)) transparent;
+}
+
+.cosme-cart-drawer__empty::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cosme-cart-drawer__empty::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cosme-cart-drawer__empty::-webkit-scrollbar-thumb {
+  background-color: var(--color-background-2, var(--color-border));
+  border-radius: 999px;
+}
+
+.cosme-cart-drawer__empty::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-border);
+}
+{% endstylesheet %}

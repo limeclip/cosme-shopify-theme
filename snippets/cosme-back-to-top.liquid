@@ -1,0 +1,174 @@
+{% doc %}
+  Renders the global back-to-top control from the theme layout.
+
+  Shown after a meaningful scroll distance. Hidden when Theme settings disable
+  the feature, and never included in page templates.
+
+  @example
+  {% render 'cosme-back-to-top' %}
+{% enddoc %}
+
+{% if settings.enable_back_to_top %}
+  <button
+    type="button"
+    class="cosme-back-to-top{% if settings.enable_animations %} cosme-back-to-top--animated{% endif %}"
+    data-cosme-back-to-top
+    data-enable-animations="{{ settings.enable_animations }}"
+    aria-label="{{ 'general.back_to_top' | t }}"
+    aria-hidden="true"
+    tabindex="-1"
+  >
+    {% render 'cosme-icon', icon: 'arrow-up', size: 'md' %}
+  </button>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-back-to-top {
+    --cosme-back-to-top-size: 2.75rem;
+    --cosme-back-to-top-inset-end: max(var(--page-margin), env(safe-area-inset-right, 0px));
+    --cosme-back-to-top-inset-bottom: max(var(--page-margin), env(safe-area-inset-bottom, 0px));
+    --cosme-back-to-top-stack: 0px;
+
+    position: fixed;
+    z-index: 28;
+    right: var(--cosme-back-to-top-inset-end);
+    bottom: calc(var(--cosme-back-to-top-inset-bottom) + var(--cosme-back-to-top-stack));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--cosme-back-to-top-size);
+    height: var(--cosme-back-to-top-size);
+    margin: 0;
+    padding: 0;
+    color: var(--color-foreground);
+    background-color: var(--color-background);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(0.35rem);
+    appearance: none;
+  }
+
+  .cosme-back-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .cosme-back-to-top--animated {
+    transition:
+      opacity var(--animation-duration) var(--transition-easing),
+      transform var(--animation-duration) var(--transition-easing),
+      visibility var(--animation-duration) var(--transition-easing),
+      background-color var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing),
+      border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-back-to-top:hover {
+    color: var(--color-heading, var(--color-foreground));
+    background-color: var(--color-background-2, var(--color-background));
+    border-color: var(--color-border);
+  }
+
+  .cosme-back-to-top:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  body:has(.cosme-sticky-atc.is-visible) .cosme-back-to-top {
+    --cosme-back-to-top-stack: 4.75rem;
+  }
+
+  html:has(dialog[open]) .cosme-back-to-top {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  @media screen and (max-width: 767px) {
+    body:has(.cosme-popup__teaser) .cosme-back-to-top {
+      --cosme-back-to-top-inset-end: max(0.75rem, env(safe-area-inset-right, 0px));
+    }
+
+    body:has(.cosme-sticky-atc.is-visible) .cosme-back-to-top {
+      --cosme-back-to-top-stack: 5.25rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-back-to-top,
+    .cosme-back-to-top--animated {
+      transition: none;
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (function () {
+    if (window._cosmeBackToTop) return;
+    window._cosmeBackToTop = true;
+
+    const THRESHOLD = 400;
+    const button = document.querySelector('[data-cosme-back-to-top]');
+    if (!button) return;
+
+    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let ticking = false;
+    let isVisible = false;
+
+    const allowMotion = () =>
+      button.getAttribute('data-enable-animations') !== 'false' && !motionQuery.matches;
+
+    const setVisible = (visible) => {
+      if (visible === isVisible) return;
+      isVisible = visible;
+      button.classList.toggle('is-visible', visible);
+      button.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      if (visible) {
+        button.removeAttribute('tabindex');
+      } else {
+        button.setAttribute('tabindex', '-1');
+      }
+    };
+
+    const update = () => {
+      ticking = false;
+      setVisible(window.scrollY > THRESHOLD);
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    const moveFocus = () => {
+      const header = document.querySelector('[data-header-group]');
+      const target = header instanceof HTMLElement ? header : document.body;
+      if (!target.hasAttribute('tabindex')) {
+        target.setAttribute('tabindex', '-1');
+      }
+      target.focus({ preventScroll: true });
+    };
+
+    button.addEventListener('click', () => {
+      const motion = allowMotion();
+      moveFocus();
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: motion ? 'smooth' : 'auto',
+      });
+      if (!motion) update();
+    });
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+  })();
+{% endjavascript %}

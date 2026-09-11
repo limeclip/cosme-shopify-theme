@@ -1,0 +1,412 @@
+{% liquid
+  assign heading_id = 'AboutPhilosophyHeading-' | append: section.id
+  assign list_id = 'AboutPhilosophyList-' | append: section.id
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign heading = section.settings.heading | strip
+  assign description = section.settings.description | strip
+  assign layout = section.settings.layout | default: 'grid'
+  assign section_spacing = section.settings.section_spacing | default: 'large'
+
+  if heading == blank
+    assign heading = 'sections.about_philosophy.heading_fallback' | t
+  endif
+
+  assign visible_count = 0
+  for block in section.blocks
+    assign block_title = block.settings.title | strip
+    assign block_description = block.settings.description | strip
+    if block_title != blank
+      assign visible_count = visible_count | plus: 1
+    elsif block_description != blank
+      assign visible_count = visible_count | plus: 1
+    endif
+  endfor
+
+  assign principle_index = 0
+%}
+
+<section
+  id="AboutPhilosophy-{{ section.id }}"
+  class="
+    cosme-about-philosophy
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-about-philosophy--layout-{{ layout }}
+    cosme-about-philosophy--count-{{ visible_count }}
+    cosme-about-philosophy--spacing-{{ section_spacing }}
+    {% if settings.enable_animations %}cosme-about-philosophy--animated{% endif %}
+  "
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-about-philosophy__inner">
+    <header class="cosme-about-philosophy__header">
+      {% if eyebrow != blank %}
+        <p class="cosme-about-philosophy__eyebrow">{{ eyebrow | escape }}</p>
+      {% endif %}
+
+      <h2 class="cosme-about-philosophy__heading" id="{{ heading_id }}">
+        {{ heading | escape }}
+      </h2>
+
+      {% if description != blank %}
+        <p class="cosme-about-philosophy__description">
+          {{ description | escape | newline_to_br }}
+        </p>
+      {% endif %}
+    </header>
+
+    {% if visible_count > 0 %}
+      <ol class="cosme-about-philosophy__list" id="{{ list_id }}">
+        {% for block in section.blocks %}
+          {% liquid
+            assign block_title = block.settings.title | strip
+            assign block_description = block.settings.description | strip
+            assign show_item = false
+            if block_title != blank
+              assign show_item = true
+            endif
+            if block_description != blank
+              assign show_item = true
+            endif
+          %}
+
+          {% if show_item %}
+            {% liquid
+              assign principle_index = principle_index | plus: 1
+              assign index_display = principle_index
+              if principle_index < 10
+                assign index_display = principle_index | prepend: '0'
+              endif
+            %}
+
+            <li
+              class="cosme-about-philosophy__item"
+              {{ block.shopify_attributes }}
+            >
+              <span class="cosme-about-philosophy__index" aria-hidden="true">
+                {{ index_display }}
+              </span>
+
+              {% if block_title != blank %}
+                <h3 class="cosme-about-philosophy__title">{{ block_title | escape }}</h3>
+              {% endif %}
+
+              {% if block_description != blank %}
+                <p class="cosme-about-philosophy__text">
+                  {{ block_description | escape | newline_to_br }}
+                </p>
+              {% endif %}
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-about-philosophy {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-about-philosophy__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-about-philosophy--spacing-small .cosme-about-philosophy__inner {
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .cosme-about-philosophy--spacing-medium .cosme-about-philosophy__inner {
+    padding-block: clamp(2.5rem, 6vw, 5rem);
+  }
+
+  .cosme-about-philosophy--spacing-large .cosme-about-philosophy__inner {
+    padding-block: clamp(3rem, 8vw, 6.5rem);
+  }
+
+  .cosme-about-philosophy__header {
+    max-width: 40rem;
+    margin-block-end: clamp(2rem, 5vw, 4rem);
+  }
+
+  .cosme-about-philosophy__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-philosophy__heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-about-philosophy__description {
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-about-philosophy__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-about-philosophy__item {
+    min-width: 0;
+    padding-block: clamp(1.5rem, 4vw, 2.5rem);
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .cosme-about-philosophy__index {
+    display: block;
+    margin-block-end: var(--spacing-sm);
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-philosophy__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.375rem, 3vw, 1.875rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-about-philosophy__text {
+    max-width: 32rem;
+    margin: var(--spacing-sm) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-about-philosophy--layout-grid .cosme-about-philosophy__list {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      column-gap: clamp(2rem, 5vw, 5rem);
+    }
+
+    .cosme-about-philosophy--layout-grid.cosme-about-philosophy--count-1 .cosme-about-philosophy__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cosme-about-philosophy--layout-grid .cosme-about-philosophy__item:nth-child(2) {
+      border-block-start: 1px solid var(--color-border);
+    }
+
+    .cosme-about-philosophy__description,
+    .cosme-about-philosophy__text {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-about-philosophy--spacing-large .cosme-about-philosophy__inner {
+      padding-block: clamp(3.5rem, 7vw, 7.5rem);
+    }
+
+    .cosme-about-philosophy__heading {
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+    }
+
+    .cosme-about-philosophy__title {
+      font-size: clamp(1.625rem, 2.2vw, 2.125rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-about-philosophy--animated .cosme-about-philosophy__header,
+    .cosme-about-philosophy--animated .cosme-about-philosophy__item {
+      animation: cosme-about-philosophy-enter 0.75s var(--transition-easing, ease) both;
+    }
+
+    .cosme-about-philosophy--animated .cosme-about-philosophy__item:nth-child(2) {
+      animation-delay: 0.06s;
+    }
+
+    .cosme-about-philosophy--animated .cosme-about-philosophy__item:nth-child(3) {
+      animation-delay: 0.12s;
+    }
+
+    .cosme-about-philosophy--animated .cosme-about-philosophy__item:nth-child(4) {
+      animation-delay: 0.18s;
+    }
+
+    .cosme-about-philosophy--animated .cosme-about-philosophy__item:nth-child(5) {
+      animation-delay: 0.24s;
+    }
+
+    .cosme-about-philosophy--animated .cosme-about-philosophy__item:nth-child(6) {
+      animation-delay: 0.3s;
+    }
+  }
+
+  @keyframes cosme-about-philosophy-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.6rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.about_philosophy",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.about_philosophy.settings.eyebrow",
+      "default": "WHAT WE BELIEVE"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.about_philosophy.settings.heading",
+      "default": "A considered approach to beauty."
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "t:sections.about_philosophy.settings.description"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.about_philosophy.settings.layout",
+      "options": [
+        { "value": "grid", "label": "t:sections.about_philosophy.settings.layout_grid" },
+        { "value": "list", "label": "t:sections.about_philosophy.settings.layout_list" }
+      ],
+      "default": "grid"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "principle",
+      "name": "t:sections.about_philosophy.blocks.item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.about_philosophy.blocks.title",
+          "default": "Thoughtful Formulas"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "t:sections.about_philosophy.blocks.description",
+          "default": "Ingredients and formulas chosen with purpose, never simply for the sake of more."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.about_philosophy",
+      "blocks": [
+        {
+          "type": "principle",
+          "settings": {
+            "title": "Thoughtful Formulas",
+            "description": "Ingredients and formulas chosen with purpose, never simply for the sake of more."
+          }
+        },
+        {
+          "type": "principle",
+          "settings": {
+            "title": "Skin First",
+            "description": "Beauty starts with understanding what your skin actually needs."
+          }
+        },
+        {
+          "type": "principle",
+          "settings": {
+            "title": "Intentional Rituals",
+            "description": "Simple routines designed to feel as good as they are effective."
+          }
+        },
+        {
+          "type": "principle",
+          "settings": {
+            "title": "Less, Better",
+            "description": "We believe in thoughtful choices over unnecessary complexity."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

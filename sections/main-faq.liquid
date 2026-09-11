@@ -1,0 +1,1905 @@
+{% liquid
+  assign heading_id = 'FaqHeading-' | append: section.id
+  assign list_id = 'FaqList-' | append: section.id
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign heading = section.settings.heading | strip
+  assign description = section.settings.description | strip
+  assign intro_label = section.settings.intro_label | strip
+
+  assign show_eyebrow = false
+  if section.settings.show_eyebrow
+    if eyebrow != blank
+      assign show_eyebrow = true
+    endif
+  endif
+
+  if heading == blank
+    assign heading = page.title | strip
+  endif
+  if heading == blank
+    assign heading = 'sections.faq.heading_fallback' | t
+  endif
+
+  assign hero_alignment = section.settings.hero_alignment | default: 'left'
+  assign heading_size = section.settings.heading_size | default: 'large'
+  assign hero_max_width = section.settings.hero_max_width | default: 'narrow'
+  assign hero_spacing_top = section.settings.hero_spacing_top | default: 'large'
+  assign hero_spacing_bottom = section.settings.hero_spacing_bottom | default: 'medium'
+  assign faq_width = section.settings.faq_width | default: 'wide'
+  assign faq_alignment = section.settings.faq_alignment | default: 'left'
+  assign question_size = section.settings.question_size | default: 'medium'
+  assign answer_size = section.settings.answer_size | default: 'medium'
+  assign desktop_columns = section.settings.desktop_columns | default: '2'
+  assign content_max_width = section.settings.content_max_width | default: 'medium'
+  assign section_spacing_top = section.settings.section_spacing_top | default: 'small'
+  assign section_spacing_bottom = section.settings.section_spacing_bottom | default: 'large'
+
+  assign show_category = false
+  if section.settings.show_category
+    assign show_category = true
+  endif
+
+  assign show_numbering = false
+  if section.settings.show_numbering
+    assign show_numbering = true
+  endif
+
+  assign open_first = false
+  if section.settings.open_first
+    assign open_first = true
+  endif
+
+  assign border_width = section.settings.border_width | default: 1
+  assign border_opacity = section.settings.border_opacity | default: 40 | divided_by: 100.0
+  assign accordion_spacing = section.settings.accordion_spacing | default: 20
+
+  assign enable_search = false
+  if section.settings.enable_search
+    assign enable_search = true
+  endif
+
+  assign enable_category_nav = false
+  if section.settings.enable_category_nav
+    assign enable_category_nav = true
+  endif
+
+  assign show_result_count = false
+  if section.settings.show_result_count
+    assign show_result_count = true
+  endif
+
+  assign search_placeholder = section.settings.search_placeholder | strip
+  if search_placeholder == blank
+    assign search_placeholder = 'sections.faq.search_placeholder' | t
+  endif
+
+  assign search_id = 'FaqSearch-' | append: section.id
+  assign nav_id = 'FaqNav-' | append: section.id
+  assign count_id = 'FaqCount-' | append: section.id
+  assign empty_id = 'FaqEmpty-' | append: section.id
+
+  assign category_keys = '|'
+  assign faq_total = 0
+  for block in section.blocks
+    assign block_question = block.settings.question | strip
+    if block_question != blank
+      assign faq_total = faq_total | plus: 1
+      assign block_category = block.settings.category | strip
+      if block_category != blank
+        assign block_category_key = block_category | handleize
+        assign block_category_token = '|' | append: block_category_key | append: '|'
+        unless category_keys contains block_category_token
+          assign category_keys = category_keys | append: block_category_key | append: '|'
+        endunless
+      endif
+    endif
+  endfor
+
+  assign show_category_nav = false
+  if enable_category_nav
+    if category_keys != '|'
+      assign show_category_nav = true
+    endif
+  endif
+
+  assign enable_filters = false
+  if enable_search
+    assign enable_filters = true
+  endif
+  if show_category_nav
+    assign enable_filters = true
+  endif
+
+  assign show_tools = false
+  if enable_filters
+    assign show_tools = true
+  endif
+  if show_result_count
+    assign show_tools = true
+  endif
+
+  assign enable_note = false
+  if section.settings.enable_note
+    assign enable_note = true
+  endif
+  assign note_title = section.settings.note_title | strip
+  assign note_text = section.settings.note_text | strip
+  assign show_note = false
+  if enable_note
+    if note_title != blank
+      assign show_note = true
+    endif
+    if note_text != blank
+      assign show_note = true
+    endif
+  endif
+
+  assign enable_cta = false
+  if section.settings.enable_cta
+    assign enable_cta = true
+  endif
+  assign cta_eyebrow = section.settings.cta_eyebrow | strip
+  assign cta_heading = section.settings.cta_heading | strip
+  assign cta_description = section.settings.cta_description | strip
+  assign cta_label = section.settings.cta_button_label | strip
+  assign cta_link = section.settings.cta_link | default: '/pages/contact'
+  if cta_link == blank
+    assign cta_link = '/pages/contact'
+  endif
+  assign cta_spacing = section.settings.cta_spacing | default: 'medium'
+  assign cta_heading_id = 'FaqCtaHeading-' | append: section.id
+
+  assign show_cta = false
+  if enable_cta
+    if cta_eyebrow != blank
+      assign show_cta = true
+    endif
+    if cta_heading != blank
+      assign show_cta = true
+    endif
+    if cta_description != blank
+      assign show_cta = true
+    endif
+    if cta_label != blank
+      assign show_cta = true
+    endif
+  endif
+
+  assign first_item_opened = false
+  assign faq_index = 0
+  assign rendered_category_keys = '|'
+%}
+
+<section
+  id="Faq-{{ section.id }}"
+  class="
+    cosme-faq
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-faq--align-{{ hero_alignment }}
+    cosme-faq--heading-{{ heading_size }}
+    cosme-faq--hero-{{ hero_max_width }}
+    cosme-faq--hero-top-{{ hero_spacing_top }}
+    cosme-faq--hero-bottom-{{ hero_spacing_bottom }}
+    cosme-faq--faq-{{ faq_width }}
+    cosme-faq--faq-align-{{ faq_alignment }}
+    cosme-faq--question-{{ question_size }}
+    cosme-faq--answer-{{ answer_size }}
+    cosme-faq--cols-{{ desktop_columns }}
+    cosme-faq--width-{{ content_max_width }}
+    cosme-faq--section-top-{{ section_spacing_top }}
+    cosme-faq--section-bottom-{{ section_spacing_bottom }}
+    {% if show_numbering %}cosme-faq--numbered{% endif %}
+    {% if enable_search %}cosme-faq--has-search{% endif %}
+    {% if show_category_nav %}cosme-faq--has-nav{% endif %}
+    {% if show_cta %}cosme-faq--has-cta{% endif %}
+    {% if settings.enable_animations %}cosme-faq--animated{% endif %}
+  "
+  style="
+    --faq-border-width: {{ border_width }}px;
+    --faq-border-opacity: {{ border_opacity }};
+    --faq-accordion-spacing: {{ accordion_spacing }}px;
+  "
+    data-faq-root
+  {% if enable_filters %}
+    data-faq-filter
+  {% endif %}
+  data-faq-accordion
+  data-count-one="{{ 'sections.faq.result_count.one' | t: count: 1 | escape }}"
+  data-count-other="{{ 'sections.faq.result_count.other' | t: count: 2 | escape }}"
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-faq__inner">
+    <header class="cosme-faq__hero">
+      <div class="cosme-faq__hero-copy">
+        {% if show_eyebrow %}
+          <p class="cosme-faq__eyebrow">{{ eyebrow | escape }}</p>
+        {% endif %}
+
+        <h1 class="cosme-faq__heading" id="{{ heading_id }}">{{ heading | escape }}</h1>
+
+        {% if description != blank %}
+          <p class="cosme-faq__description">{{ description | escape }}</p>
+        {% endif %}
+      </div>
+    </header>
+
+    <div class="cosme-faq__body cosme-faq--faq-align-{{ faq_alignment }}">
+      {% if intro_label != blank %}
+        <p class="cosme-faq__label">{{ intro_label | escape }}</p>
+      {% endif %}
+
+      <div class="cosme-faq__content">
+        {% if show_tools %}
+          <div class="cosme-faq__tools">
+            {% if enable_search %}
+              <form
+                class="cosme-faq__search"
+                role="search"
+                data-faq-search
+                action="{{ request.path }}"
+                method="get"
+              >
+                <label class="cosme-visually-hidden" for="{{ search_id }}">
+                  {{ 'sections.faq.search_label' | t }}
+                </label>
+                <span class="cosme-faq__search-icon" aria-hidden="true">
+                  {% render 'cosme-icon', icon: 'search', size: 'sm' %}
+                </span>
+                <input
+                  id="{{ search_id }}"
+                  class="cosme-faq__search-input"
+                  type="search"
+                  placeholder="{{ search_placeholder | escape }}"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  data-faq-input
+                  aria-controls="{{ list_id }}"
+                >
+                <button
+                  class="cosme-faq__search-clear"
+                  type="button"
+                  data-faq-clear
+                  hidden
+                >
+                  {% render 'cosme-icon', icon: 'close', size: 'sm' %}
+                  <span class="cosme-visually-hidden">{{ 'sections.faq.search_clear' | t }}</span>
+                </button>
+              </form>
+            {% endif %}
+
+            {% if show_category_nav %}
+              <nav
+                class="cosme-faq__nav"
+                id="{{ nav_id }}"
+                aria-label="{{ 'sections.faq.category_nav_label' | t }}"
+                data-faq-nav
+              >
+                <div class="cosme-faq__nav-track">
+                  <button
+                    class="cosme-faq__nav-item is-active"
+                    type="button"
+                    data-faq-category="all"
+                    aria-pressed="true"
+                  >
+                    {{ 'sections.faq.category_all' | t }}
+                  </button>
+                  {% for block in section.blocks %}
+                    {% liquid
+                      assign nav_question = block.settings.question | strip
+                      assign nav_category = block.settings.category | strip
+                    %}
+                    {% if nav_question != blank %}
+                      {% if nav_category != blank %}
+                        {% liquid
+                          assign nav_category_key = nav_category | handleize
+                          assign nav_category_token = '|' | append: nav_category_key | append: '|'
+                        %}
+                        {% unless rendered_category_keys contains nav_category_token %}
+                          {% assign rendered_category_keys = rendered_category_keys | append: nav_category_key | append: '|' %}
+                          <button
+                            class="cosme-faq__nav-item"
+                            type="button"
+                            data-faq-category="{{ nav_category_key | escape }}"
+                            aria-pressed="false"
+                          >
+                            {{ nav_category | escape }}
+                          </button>
+                        {% endunless %}
+                      {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </nav>
+            {% endif %}
+
+            {% if show_result_count %}
+              <p
+                class="cosme-faq__count"
+                id="{{ count_id }}"
+                data-faq-count
+                aria-live="polite"
+              >
+                {% if faq_total == 1 %}
+                  {{ 'sections.faq.result_count.one' | t: count: faq_total }}
+                {% else %}
+                  {{ 'sections.faq.result_count.other' | t: count: faq_total }}
+                {% endif %}
+              </p>
+            {% endif %}
+          </div>
+        {% endif %}
+
+      <div class="cosme-faq__list" id="{{ list_id }}" aria-label="{{ 'sections.faq.landmark_label' | t }}">
+        {% for block in section.blocks %}
+          {% liquid
+            assign question = block.settings.question | strip
+            assign category = block.settings.category | strip
+            assign answer = block.settings.answer
+            assign answer_plain = answer | strip_html | strip
+            assign category_key = category | handleize
+            assign search_blob = question | append: ' ' | append: answer_plain | append: ' ' | append: category | downcase
+          %}
+
+          {% if question != blank %}
+            {% liquid
+              assign faq_index = faq_index | plus: 1
+              assign faq_number = faq_index
+              if faq_index < 10
+                assign faq_number = faq_index | prepend: '0'
+              endif
+
+              assign item_open = false
+              if block.settings.open_by_default
+                assign item_open = true
+              endif
+              if item_open == false
+                if open_first
+                  unless first_item_opened
+                    assign item_open = true
+                  endunless
+                endif
+              endif
+              if item_open
+                assign first_item_opened = true
+              endif
+
+              assign item_id = 'FaqItem-' | append: section.id | append: '-' | append: block.id
+            %}
+
+            <details
+              class="cosme-faq__item"
+              id="{{ item_id }}"
+              data-faq-item
+              data-faq-category="{{ category_key | escape }}"
+              data-faq-search="{{ search_blob | escape }}"
+              {% if item_open %}
+                open
+              {% endif %}
+              {{ block.shopify_attributes }}
+            >
+              <summary class="cosme-faq__summary">
+                {% if show_numbering %}
+                  <span class="cosme-faq__number" aria-hidden="true">{{ faq_number }}</span>
+                {% endif %}
+
+                <span class="cosme-faq__summary-copy">
+                  {% if show_category %}
+                    {% if category != blank %}
+                      <span class="cosme-faq__category">{{ category | escape }}</span>
+                    {% endif %}
+                  {% endif %}
+                  <span class="cosme-faq__question">{{ question | escape }}</span>
+                </span>
+
+                <span class="cosme-faq__icon" aria-hidden="true">
+                  <span class="cosme-faq__icon-plus">
+                    {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+                  </span>
+                  <span class="cosme-faq__icon-minus">
+                    {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+                  </span>
+                </span>
+              </summary>
+
+              <div class="cosme-faq__panel">
+                {% if answer_plain != blank %}
+                  <div class="cosme-faq__answer">{{ answer }}</div>
+                {% endif %}
+              </div>
+            </details>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+        <div
+          class="cosme-faq__empty"
+          id="{{ empty_id }}"
+          data-faq-empty
+          role="status"
+          aria-live="polite"
+          hidden
+        >
+          <p class="cosme-faq__empty-heading">{{ 'sections.faq.empty_heading' | t }}</p>
+          <p class="cosme-faq__empty-text">{{ 'sections.faq.empty_text' | t }}</p>
+        </div>
+
+        {% if show_note %}
+          <aside class="cosme-faq__note" aria-label="{{ 'sections.faq.note_label' | t }}">
+            {% if note_title != blank %}
+              <p class="cosme-faq__note-title">{{ note_title | escape }}</p>
+            {% endif %}
+            {% if note_text != blank %}
+              <p class="cosme-faq__note-text">{{ note_text | escape }}</p>
+            {% endif %}
+          </aside>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if show_cta %}
+    <div
+      class="cosme-faq__cta color-{{ section.settings.cta_color_scheme }} cosme-faq__cta--spacing-{{ cta_spacing }}"
+      {% if cta_heading != blank %}
+        aria-labelledby="{{ cta_heading_id }}"
+      {% else %}
+        aria-label="{{ 'sections.faq.cta_landmark' | t }}"
+      {% endif %}
+    >
+      <div class="cosme-faq__cta-inner">
+        {% if cta_eyebrow != blank %}
+          <p class="cosme-faq__cta-eyebrow">{{ cta_eyebrow | escape }}</p>
+        {% endif %}
+
+        {% if cta_heading != blank %}
+          <h2 class="cosme-faq__cta-heading" id="{{ cta_heading_id }}">{{ cta_heading | escape }}</h2>
+        {% endif %}
+
+        {% if cta_description != blank %}
+          <p class="cosme-faq__cta-description">{{ cta_description | escape }}</p>
+        {% endif %}
+
+        {% if cta_label != blank %}
+          {% render 'cosme-button',
+            label: cta_label,
+            url: cta_link,
+            style: 'primary',
+            class: 'cosme-faq__cta-button'
+          %}
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .cosme-faq {
+    overflow-x: clip;
+    min-width: 0;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-faq__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+  }
+
+  .cosme-faq--width-narrow .cosme-faq__inner {
+    max-width: 52rem;
+  }
+
+  .cosme-faq--width-medium .cosme-faq__inner {
+    max-width: var(--page-width);
+  }
+
+  .cosme-faq--width-wide .cosme-faq__inner {
+    max-width: var(--page-width);
+  }
+
+  .cosme-faq--section-top-small .cosme-faq__inner {
+    padding-block-start: calc(var(--spacing-section) * 0.2);
+  }
+
+  .cosme-faq--section-top-medium .cosme-faq__inner {
+    padding-block-start: clamp(1.5rem, 4vw, calc(var(--spacing-section) * 0.55));
+  }
+
+  .cosme-faq--section-top-large .cosme-faq__inner {
+    padding-block-start: clamp(2rem, 6vw, var(--spacing-section));
+  }
+
+  .cosme-faq--section-bottom-small .cosme-faq__inner {
+    padding-block-end: calc(var(--spacing-section) * 0.35);
+  }
+
+  .cosme-faq--section-bottom-medium .cosme-faq__inner {
+    padding-block-end: clamp(2rem, 5vw, calc(var(--spacing-section) * 0.75));
+  }
+
+  .cosme-faq--section-bottom-large .cosme-faq__inner {
+    padding-block-end: clamp(2.75rem, 7vw, var(--spacing-section));
+  }
+
+  .cosme-faq--has-cta.cosme-faq--section-bottom-small .cosme-faq__inner,
+  .cosme-faq--has-cta.cosme-faq--section-bottom-medium .cosme-faq__inner,
+  .cosme-faq--has-cta.cosme-faq--section-bottom-large .cosme-faq__inner {
+    padding-block-end: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .cosme-faq__hero {
+    padding-block-start: clamp(2rem, 6vw, 5rem);
+    padding-block-end: clamp(1.75rem, 4vw, 3rem);
+  }
+
+  .cosme-faq--hero-top-small .cosme-faq__hero {
+    padding-block-start: clamp(1.5rem, 4vw, 2.5rem);
+  }
+
+  .cosme-faq--hero-top-medium .cosme-faq__hero {
+    padding-block-start: clamp(2.25rem, 6vw, 4rem);
+  }
+
+  .cosme-faq--hero-top-large .cosme-faq__hero {
+    padding-block-start: clamp(3rem, 8vw, 6.25rem);
+  }
+
+  .cosme-faq--hero-bottom-small .cosme-faq__hero {
+    padding-block-end: clamp(1.25rem, 3vw, 2rem);
+  }
+
+  .cosme-faq--hero-bottom-medium .cosme-faq__hero {
+    padding-block-end: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .cosme-faq--hero-bottom-large .cosme-faq__hero {
+    padding-block-end: clamp(2.75rem, 6vw, 4.5rem);
+  }
+
+  .cosme-faq__hero-copy {
+    max-width: 36rem;
+  }
+
+  .cosme-faq--hero-medium .cosme-faq__hero-copy {
+    max-width: 44rem;
+  }
+
+  .cosme-faq--hero-wide .cosme-faq__hero-copy {
+    max-width: 54rem;
+  }
+
+  .cosme-faq--align-center .cosme-faq__hero-copy {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-faq__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-faq--heading-small .cosme-faq__heading {
+    font-size: clamp(1.625rem, 4vw, 2.25rem);
+  }
+
+  .cosme-faq--heading-medium .cosme-faq__heading {
+    font-size: clamp(1.875rem, 5vw, 2.875rem);
+  }
+
+  .cosme-faq--heading-large .cosme-faq__heading {
+    font-size: clamp(2rem, 5.8vw, 3.5rem);
+  }
+
+  .cosme-faq__description {
+    max-width: 34rem;
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq--align-center .cosme-faq__description {
+    margin-inline: auto;
+  }
+
+  .cosme-faq__body {
+    display: grid;
+    gap: var(--spacing-lg);
+    min-width: 0;
+  }
+
+  .cosme-faq--faq-align-center .cosme-faq__body {
+    justify-items: center;
+    margin-inline: auto;
+    width: 100%;
+    max-width: min(100%, 46rem);
+  }
+
+  .cosme-faq--faq-align-center .cosme-faq__content {
+    width: 100%;
+  }
+
+  .cosme-faq__label {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    min-width: 0;
+    width: 100%;
+  
+  }
+
+  .cosme-faq__tools {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-lg);
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .cosme-faq__search {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: 28rem;
+    min-width: 0;
+    padding-block: 0.65rem;
+    padding-inline: 0;
+    border-block-end: var(--faq-border-width, var(--border-width)) solid
+      color-mix(in srgb, var(--color-border) calc(var(--faq-border-opacity, 0.4) * 100%), transparent);
+    background: transparent;
+  }
+
+  .cosme-faq__search-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    appearance: none;
+  }
+
+  .cosme-faq__search-input::-webkit-search-decoration,
+  .cosme-faq__search-input::-webkit-search-cancel-button,
+  .cosme-faq__search-input::-webkit-search-results-button,
+  .cosme-faq__search-input::-webkit-search-results-decoration {
+    appearance: none;
+  }
+
+  .cosme-faq__search-input::placeholder {
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__search-input:focus {
+    outline: none;
+  }
+
+  .cosme-faq__search:focus-within {
+    border-block-end-color: var(--color-foreground);
+  }
+
+  .cosme-faq__search-input:focus-visible {
+    outline: none;
+  }
+
+  .cosme-faq__search-clear {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__search-clear[hidden] {
+    display: none;
+  }
+
+  .cosme-faq__search-clear:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+    color: var(--color-foreground);
+  }
+
+  @media (hover: hover) {
+    .cosme-faq__search-clear:hover {
+      color: var(--color-foreground);
+    }
+  }
+
+  .cosme-faq__nav {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .cosme-faq__nav-track {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: var(--spacing-lg);
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding-block-end: 0.15rem;
+  }
+
+  .cosme-faq__nav-item {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0.2rem 0 0.45rem;
+    border: 0;
+    border-block-end: 1px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 0.6875rem;
+    line-height: 1.3;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cosme-faq__nav-item.is-active {
+    color: var(--color-foreground);
+    border-block-end-color: var(--color-foreground);
+  }
+
+  .cosme-faq__nav-item:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  @media (hover: hover) {
+    .cosme-faq__nav-item:hover {
+      color: var(--color-foreground);
+    }
+  }
+
+  .cosme-faq__count {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__empty {
+    padding-block: var(--spacing-xl) var(--spacing-sm);
+    max-width: 28rem;
+  }
+
+  .cosme-faq__empty[hidden] {
+    display: none;
+  }
+
+  .cosme-faq__empty-heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: 1.25rem;
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-faq__empty-text {
+    margin: var(--spacing-sm) 0 0;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__list {
+    min-width: 0;
+    width: 100%;
+    border-block-start: var(--faq-border-width, var(--border-width)) solid
+      color-mix(in srgb, var(--color-border) calc(var(--faq-border-opacity, 0.4) * 100%), transparent);
+  }
+
+  .cosme-faq__list[hidden] {
+    display: none;
+  }
+
+  .cosme-faq--faq-narrow .cosme-faq__list {
+    max-width: 38rem;
+  }
+
+  .cosme-faq--faq-medium .cosme-faq__list {
+    max-width: 46rem;
+  }
+
+  .cosme-faq__item {
+    border-block-end: var(--faq-border-width, var(--border-width)) solid
+      color-mix(in srgb, var(--color-border) calc(var(--faq-border-opacity, 0.4) * 100%), transparent);
+  }
+
+  .cosme-faq__item[hidden] {
+    display: none;
+  }
+
+  .cosme-faq__summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--spacing-md);
+    width: 100%;
+    padding-block: var(--faq-accordion-spacing, var(--spacing-lg));
+    padding-inline: 0;
+    cursor: pointer;
+    list-style: none;
+    color: var(--color-heading, var(--color-foreground));
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cosme-faq__summary:focus {
+    outline: none;
+  }
+
+  .cosme-faq--numbered .cosme-faq__summary {
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  }
+
+  .cosme-faq__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cosme-faq__summary:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-faq__number {
+    padding-block-start: 0.2rem;
+    font-family: var(--font-heading--family);
+    font-size: 0.6875rem;
+    font-weight: var(--font-heading--weight);
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__summary-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    min-width: 0;
+  }
+
+  .cosme-faq__category {
+    font-size: 0.625rem;
+    line-height: 1.3;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__question {
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 1.3;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-faq--question-small .cosme-faq__question {
+    font-size: 0.9375rem;
+  }
+
+  .cosme-faq--question-medium .cosme-faq__question {
+    font-size: 1.0625rem;
+  }
+
+  .cosme-faq--question-large .cosme-faq__question {
+    font-size: 1.1875rem;
+  }
+
+  .cosme-faq__icon {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-block-start: 0.15rem;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__item[open] .cosme-faq__icon {
+    color: var(--color-foreground);
+  }
+
+  .cosme-faq__icon-minus {
+    display: none;
+  }
+
+  .cosme-faq__item[open] .cosme-faq__icon-plus {
+    display: none;
+  }
+
+  .cosme-faq__item[open] .cosme-faq__icon-minus {
+    display: inline-flex;
+  }
+
+  .cosme-faq__panel {
+    overflow: hidden;
+    max-height: none;
+    opacity: 1;
+    padding-block-end: var(--faq-accordion-spacing, var(--spacing-lg));
+  }
+
+  .cosme-faq--numbered .cosme-faq__panel {
+    padding-inline-start: 2.25rem;
+  }
+
+  .cosme-faq__answer {
+    max-width: 38rem;
+    font-size: 0.9375rem;
+    line-height: 1.75;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-faq--answer-small .cosme-faq__answer {
+    font-size: 0.875rem;
+  }
+
+  .cosme-faq--answer-medium .cosme-faq__answer {
+    font-size: 0.9375rem;
+  }
+
+  .cosme-faq--answer-large .cosme-faq__answer {
+    font-size: 1.0625rem;
+  }
+
+  .cosme-faq__answer > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-faq__answer > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-faq__answer p {
+    margin-block: 0 var(--spacing-sm);
+  }
+
+  .cosme-faq__answer ul,
+  .cosme-faq__answer ol {
+    margin-block: 0 var(--spacing-sm);
+    padding-inline-start: 1.15rem;
+  }
+
+  .cosme-faq__answer li {
+    margin-block-end: 0.35rem;
+  }
+
+  .cosme-faq__answer li:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-faq__answer strong,
+  .cosme-faq__answer b {
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+
+  .cosme-faq__answer em,
+  .cosme-faq__answer i {
+    font-style: italic;
+  }
+
+  .cosme-faq__answer h2,
+  .cosme-faq__answer h3,
+  .cosme-faq__answer h4,
+  .cosme-faq__answer h5,
+  .cosme-faq__answer h6 {
+    margin-block: var(--spacing-md) var(--spacing-sm);
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-faq__answer h2 {
+    font-size: 1.25rem;
+  }
+
+  .cosme-faq__answer h3,
+  .cosme-faq__answer h4,
+  .cosme-faq__answer h5,
+  .cosme-faq__answer h6 {
+    font-size: 1.0625rem;
+  }
+
+  .cosme-faq__answer blockquote {
+    margin-block: 0 var(--spacing-sm);
+    padding-inline-start: var(--spacing-md);
+    border-inline-start: var(--faq-border-width, var(--border-width)) solid var(--color-border);
+    color: var(--color-foreground);
+  }
+
+  .cosme-faq__answer a {
+    color: var(--color-foreground);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .cosme-faq__answer a:focus-visible {
+    color: var(--color-accent);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) {
+    .cosme-faq__answer a:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  .cosme-faq__note {
+    max-width: 22rem;
+    padding-block-start: var(--spacing-sm);
+  }
+
+  .cosme-faq__note-title {
+    margin: 0;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__note-text {
+    margin: var(--spacing-xs) 0 0;
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__cta {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border-block-start: var(--faq-border-width, var(--border-width)) solid
+      color-mix(in srgb, var(--color-border) calc(var(--faq-border-opacity, 0.4) * 100%), transparent);
+  }
+
+  .cosme-faq__cta-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+    text-align: center;
+  }
+
+  .cosme-faq__cta--spacing-small .cosme-faq__cta-inner {
+    padding-block: clamp(2rem, 5vw, 3rem);
+  }
+
+  .cosme-faq__cta--spacing-medium .cosme-faq__cta-inner {
+    padding-block: clamp(2.5rem, 7vw, 4.5rem);
+  }
+
+  .cosme-faq__cta--spacing-large .cosme-faq__cta-inner {
+    padding-block: clamp(3.25rem, 9vw, 6rem);
+  }
+
+  .cosme-faq__cta-eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__cta-heading {
+    margin: 0 auto;
+    max-width: 18ch;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-faq__cta-description {
+    max-width: 28rem;
+    margin: var(--spacing-md) auto 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-faq__cta-button {
+    margin-block-start: var(--spacing-xl);
+    min-width: 10.5rem;
+  }
+
+  .cosme-faq__list:empty {
+    display: none;
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-faq__body {
+      gap: var(--spacing-xl);
+    }
+
+    .cosme-faq__content {
+      gap: var(--spacing-xl);
+    }
+
+    .cosme-faq__tools {
+      gap: var(--spacing-lg);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-faq--cols-2 .cosme-faq__body {
+      grid-template-columns: minmax(6.5rem, 11rem) minmax(0, 1fr);
+      column-gap: clamp(2rem, 6vw, 5.5rem);
+      align-items: start;
+      gap: var(--spacing-xl);
+    }
+
+    .cosme-faq--faq-align-center.cosme-faq--cols-2 .cosme-faq__body {
+      justify-items: stretch;
+      max-width: min(100%, calc(11rem + clamp(2rem, 6vw, 5.5rem) + 46rem));
+    }
+
+    .cosme-faq--cols-2 .cosme-faq__label {
+      position: sticky;
+      top: calc(var(--header-sticky-offset, 0px) + 1.75rem);
+    }
+
+    .cosme-faq--cols-2 .cosme-faq__search {
+      max-width: 32rem;
+    }
+
+    .cosme-faq--faq-wide .cosme-faq__list {
+      max-width: none;
+    }
+
+    .cosme-faq__cta-heading {
+      font-size: clamp(2rem, 3.2vw, 2.75rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-faq--animated .cosme-faq__hero-copy,
+    .cosme-faq--animated .cosme-faq__label,
+    .cosme-faq--animated .cosme-faq__tools,
+    .cosme-faq--animated .cosme-faq__list,
+    .cosme-faq--animated .cosme-faq__note,
+    .cosme-faq--animated .cosme-faq__cta-inner {
+      animation: cosme-faq-enter 0.7s var(--transition-easing, ease) both;
+    }
+
+    .cosme-faq--animated .cosme-faq__label {
+      animation-delay: 0.08s;
+    }
+
+    .cosme-faq--animated .cosme-faq__tools {
+      animation-delay: 0.1s;
+    }
+
+    .cosme-faq--animated .cosme-faq__list {
+      animation-delay: 0.14s;
+    }
+
+    .cosme-faq--animated .cosme-faq__note {
+      animation-delay: 0.18s;
+    }
+
+    .cosme-faq--animated .cosme-faq__panel {
+      max-height: 0;
+      opacity: 0;
+      padding-block-end: 0;
+      transition:
+        max-height 0.4s var(--transition-easing, ease),
+        opacity 0.28s var(--transition-easing, ease),
+        padding-block-end 0.4s var(--transition-easing, ease);
+    }
+
+    .cosme-faq--animated .cosme-faq__item[open] .cosme-faq__panel {
+      max-height: 80rem;
+      opacity: 1;
+      padding-block-end: var(--faq-accordion-spacing, var(--spacing-lg));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-faq--animated .cosme-faq__panel {
+      max-height: none;
+      opacity: 1;
+      padding-block-end: var(--faq-accordion-spacing, var(--spacing-lg));
+      transition: none;
+    }
+
+    .cosme-faq--animated .cosme-faq__hero-copy,
+    .cosme-faq--animated .cosme-faq__label,
+    .cosme-faq--animated .cosme-faq__tools,
+    .cosme-faq--animated .cosme-faq__list,
+    .cosme-faq--animated .cosme-faq__note,
+    .cosme-faq--animated .cosme-faq__cta-inner {
+      animation: none;
+    }
+  }
+
+  @keyframes cosme-faq-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.35rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const instances = new WeakMap();
+
+    const formatCount = (root, count) => {
+      if (count === 1) {
+        return root.dataset.countOne || String(count);
+      }
+
+      const other = root.dataset.countOther || String(count);
+      return other.replace(/2/, String(count));
+    };
+
+    const initFaqAccordion = (root) => {
+      if (!root || root.dataset.faqAccordionReady === 'true') return;
+
+      const items = Array.from(root.querySelectorAll('[data-faq-item]'));
+      if (items.length === 0) return;
+
+      let seenOpen = false;
+      items.forEach((item) => {
+        if (!item.open) return;
+        if (seenOpen) {
+          item.removeAttribute('open');
+        } else {
+          seenOpen = true;
+        }
+      });
+
+      items.forEach((item) => {
+        item.addEventListener('toggle', () => {
+          if (!item.open) return;
+          items.forEach((other) => {
+            if (other !== item && other.open) {
+              other.removeAttribute('open');
+            }
+          });
+        });
+      });
+
+      root.dataset.faqAccordionReady = 'true';
+    };
+
+    const initFaqFilters = (root) => {
+      if (!root || !root.hasAttribute('data-faq-filter') || instances.has(root)) return;
+
+      const items = Array.from(root.querySelectorAll('[data-faq-item]'));
+      if (items.length === 0) return;
+
+      const form = root.querySelector('[data-faq-search]');
+      const input = root.querySelector('[data-faq-input]');
+      const clearButton = root.querySelector('[data-faq-clear]');
+      const nav = root.querySelector('[data-faq-nav]');
+      const countEl = root.querySelector('[data-faq-count]');
+      const emptyEl = root.querySelector('[data-faq-empty]');
+      const listEl = root.querySelector('.cosme-faq__list');
+      const navButtons = nav ? Array.from(nav.querySelectorAll('[data-faq-category]')) : [];
+
+      let activeCategory = 'all';
+
+      const applyFilters = () => {
+        const query = input ? input.value.trim().toLowerCase() : '';
+        let visible = 0;
+
+        items.forEach((item) => {
+          const category = item.getAttribute('data-faq-category') || '';
+          const haystack = item.getAttribute('data-faq-search') || '';
+          let match = true;
+
+          if (activeCategory !== 'all') {
+            if (category !== activeCategory) {
+              match = false;
+            }
+          }
+
+          if (match) {
+            if (query !== '') {
+              if (!haystack.includes(query)) {
+                match = false;
+              }
+            }
+          }
+
+          item.hidden = !match;
+          if (match) visible += 1;
+        });
+
+        if (clearButton) {
+          clearButton.hidden = query === '';
+        }
+
+        if (listEl) {
+          listEl.hidden = visible === 0;
+        }
+
+        if (emptyEl) {
+          emptyEl.hidden = visible !== 0;
+        }
+
+        if (countEl) {
+          countEl.textContent = formatCount(root, visible);
+        }
+      };
+
+      const setCategory = (value) => {
+        activeCategory = value || 'all';
+        navButtons.forEach((button) => {
+          const isActive = button.getAttribute('data-faq-category') === activeCategory;
+          button.classList.toggle('is-active', isActive);
+          button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+        applyFilters();
+      };
+
+      if (form) {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+        });
+      }
+
+      if (input) {
+        input.addEventListener('input', applyFilters);
+      }
+
+      if (clearButton) {
+        clearButton.addEventListener('click', () => {
+          if (!input) return;
+          input.value = '';
+          input.focus();
+          applyFilters();
+        });
+      }
+
+      if (nav) {
+        nav.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-faq-category]');
+          if (!button || !nav.contains(button)) return;
+          setCategory(button.getAttribute('data-faq-category'));
+        });
+      }
+
+      applyFilters();
+      instances.set(root, true);
+    };
+
+    const initAll = (scope) => {
+      const context = scope && scope.querySelectorAll ? scope : document;
+      const roots = context.querySelectorAll ? context.querySelectorAll('[data-faq-root]') : [];
+      roots.forEach((root) => {
+        initFaqAccordion(root);
+        initFaqFilters(root);
+      });
+      if (scope && scope.matches && scope.matches('[data-faq-root]')) {
+        initFaqAccordion(scope);
+        initFaqFilters(scope);
+      }
+    };
+
+    initAll(document);
+
+    document.addEventListener('shopify:section:load', (event) => {
+      initAll(event.target);
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:general.faq",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "t:sections.faq.settings.show_eyebrow",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.faq.settings.eyebrow",
+      "default": "HELP CENTER",
+      "visible_if": "{{ section.settings.show_eyebrow }}"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.faq.settings.heading",
+      "default": "Frequently Asked Questions"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "t:sections.faq.settings.description",
+      "default": "Find answers to questions about our products, orders, shipping, returns and more."
+    },
+    {
+      "type": "select",
+      "id": "hero_alignment",
+      "label": "t:sections.faq.settings.hero_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:sections.faq.settings.heading_size",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "select",
+      "id": "hero_max_width",
+      "label": "t:sections.faq.settings.hero_max_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "narrow"
+    },
+    {
+      "type": "select",
+      "id": "hero_spacing_top",
+      "label": "t:sections.faq.settings.hero_spacing_top",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "select",
+      "id": "hero_spacing_bottom",
+      "label": "t:sections.faq.settings.hero_spacing_bottom",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "text",
+      "id": "intro_label",
+      "label": "t:sections.faq.settings.intro_label",
+      "default": "QUESTIONS"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.faq.settings.faq_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_search",
+      "label": "t:sections.faq.settings.enable_search",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "search_placeholder",
+      "label": "t:sections.faq.settings.search_placeholder",
+      "default": "Search questions...",
+      "visible_if": "{{ section.settings.enable_search }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_category_nav",
+      "label": "t:sections.faq.settings.enable_category_nav",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_result_count",
+      "label": "t:sections.faq.settings.show_result_count",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "faq_width",
+      "label": "t:sections.faq.settings.faq_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "wide"
+    },
+    {
+      "type": "select",
+      "id": "faq_alignment",
+      "label": "t:sections.faq.settings.faq_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "question_size",
+      "label": "t:sections.faq.settings.question_size",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "select",
+      "id": "answer_size",
+      "label": "t:sections.faq.settings.answer_size",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_category",
+      "label": "t:sections.faq.settings.show_category",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_numbering",
+      "label": "t:sections.faq.settings.show_numbering",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "open_first",
+      "label": "t:sections.faq.settings.open_first",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:general.layout"
+    },
+    {
+      "type": "select",
+      "id": "desktop_columns",
+      "label": "t:sections.faq.settings.desktop_columns",
+      "options": [
+        { "value": "1", "label": "t:sections.faq.settings.column_one" },
+        { "value": "2", "label": "t:sections.faq.settings.column_two" }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "select",
+      "id": "content_max_width",
+      "label": "t:sections.faq.settings.content_max_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing_top",
+      "label": "t:sections.faq.settings.section_spacing_top",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "small"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing_bottom",
+      "label": "t:sections.faq.settings.section_spacing_bottom",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    },
+    {
+      "type": "header",
+      "content": "t:general.appearance"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "t:labels.border_width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "default": 1
+    },
+    {
+      "type": "range",
+      "id": "border_opacity",
+      "label": "t:sections.faq.settings.border_opacity",
+      "min": 10,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "accordion_spacing",
+      "label": "t:sections.faq.settings.accordion_spacing",
+      "min": 12,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "t:sections.faq.settings.note_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_note",
+      "label": "t:sections.faq.settings.enable_note",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "note_title",
+      "label": "t:sections.faq.settings.note_title",
+      "default": "Can't find what you're looking for?",
+      "visible_if": "{{ section.settings.enable_note }}"
+    },
+    {
+      "type": "textarea",
+      "id": "note_text",
+      "label": "t:sections.faq.settings.note_text",
+      "default": "Contact our team and we'll be happy to help.",
+      "visible_if": "{{ section.settings.enable_note }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.faq.settings.cta_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_cta",
+      "label": "t:sections.faq.settings.enable_cta",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "cta_eyebrow",
+      "label": "t:sections.faq.settings.cta_eyebrow",
+      "default": "NEED MORE HELP?",
+      "visible_if": "{{ section.settings.enable_cta }}"
+    },
+    {
+      "type": "text",
+      "id": "cta_heading",
+      "label": "t:sections.faq.settings.cta_heading",
+      "default": "Still have questions?",
+      "visible_if": "{{ section.settings.enable_cta }}"
+    },
+    {
+      "type": "textarea",
+      "id": "cta_description",
+      "label": "t:sections.faq.settings.cta_description",
+      "default": "Our team is here to help.",
+      "visible_if": "{{ section.settings.enable_cta }}"
+    },
+    {
+      "type": "text",
+      "id": "cta_button_label",
+      "label": "t:sections.faq.settings.cta_button_label",
+      "default": "Contact Us",
+      "visible_if": "{{ section.settings.enable_cta }}"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.faq.settings.cta_button_link",
+    
+      "visible_if": "{{ section.settings.enable_cta }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "cta_color_scheme",
+      "label": "t:sections.faq.settings.cta_color_scheme",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.enable_cta }}"
+    },
+    {
+      "type": "select",
+      "id": "cta_spacing",
+      "label": "t:sections.faq.settings.cta_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium",
+      "visible_if": "{{ section.settings.enable_cta }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "faq_item",
+      "name": "t:sections.faq.blocks.item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "question",
+          "label": "t:sections.faq.blocks.question",
+          "default": "How long does shipping take?"
+        },
+        {
+          "type": "richtext",
+          "id": "answer",
+          "label": "t:sections.faq.blocks.answer",
+          "default": "<p>Standard shipping typically arrives in 3–6 business days after dispatch.</p>"
+        },
+        {
+          "type": "text",
+          "id": "category",
+          "label": "t:sections.faq.blocks.category",
+          "default": "Shipping"
+        },
+        {
+          "type": "checkbox",
+          "id": "open_by_default",
+          "label": "t:sections.faq.blocks.open_by_default",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.faq",
+      "blocks": [
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I change or cancel my order?",
+            "answer": "<p>We prepare orders quickly to protect freshness. If your order has not yet shipped, contact us with your order number and we will do our best to update or cancel it.</p>",
+            "category": "Orders",
+            "open_by_default": false
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "How long does shipping take?",
+            "answer": "<p>Standard shipping typically arrives in 3–6 business days after dispatch. Express options, where available, usually arrive in 1–2 business days.</p>",
+            "category": "Shipping",
+            "open_by_default": false
+          }
+        },
+        {
+          "type": "faq_item",
+          "settings": {
+            "question": "Are your products suitable for sensitive skin?",
+            "answer": "<p>Many of our formulas are developed with sensitive skin in mind and are dermatologist tested. We recommend reviewing the ingredient list and patch testing if you have known sensitivities.</p>",
+            "category": "Products",
+            "open_by_default": false
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

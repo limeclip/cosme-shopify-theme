@@ -1,0 +1,1198 @@
+{% doc %}
+  Search results toolbar with native Shopify filters, sorting, and filter drawer.
+
+  Reuses the Collection Page filter visual language and interaction pattern.
+
+  @param {object} section - Search section
+  @param {number} results_count - Native search result count
+  @param {string} count_id - ID for the visible result count
+  @param {string} color_scheme - Color scheme class id
+
+  @example
+  {% render 'cosme-search-facets', section: section, results_count: search.results_count, count_id: count_id, color_scheme: section.settings.color_scheme %}
+{% enddoc %}
+
+{% liquid
+  assign sort_by = search.sort_by | default: search.default_sort_by
+  assign sort_options = search.sort_options
+  assign filters = search.filters
+  assign filter_count = filters.size | default: 0
+  assign has_filters = false
+  if filter_count > 0
+    assign has_filters = true
+  endif
+
+  assign show_sorting = false
+  if sort_options.size > 0
+    assign show_sorting = true
+  endif
+
+  assign active_filter_count = 0
+  assign has_price_filter = false
+  for filter in filters
+    assign active_filter_count = active_filter_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value != blank
+        assign has_price_filter = true
+      endif
+      if filter.max_value.value != blank
+        assign has_price_filter = true
+      endif
+    endif
+  endfor
+  if has_price_filter
+    assign active_filter_count = active_filter_count | plus: 1
+  endif
+
+  assign has_active_filters = false
+  if active_filter_count > 0
+    assign has_active_filters = true
+  endif
+
+  assign encoded_terms = search.terms | url_param_escape
+  assign clear_url = routes.search_url | append: '?q=' | append: encoded_terms | append: '&type=product&options[prefix]=last'
+  if sort_by != blank
+    if sort_by != search.default_sort_by
+      assign clear_url = clear_url | append: '&sort_by=' | append: sort_by
+    endif
+  endif
+
+  assign heading_id = 'SearchFiltersHeading-' | append: section.id
+  assign sort_id = 'SearchSort-' | append: section.id
+  assign dialog_id = 'SearchFilters-' | append: section.id
+  assign form_id = 'SearchFilterForm-' | append: section.id
+  assign sort_form_id = 'SearchSortForm-' | append: section.id
+%}
+
+<div
+  class="cosme-search-toolbar{% if settings.enable_animations %} cosme-search-toolbar--animated{% endif %}"
+  data-search-facets
+>
+  <div class="cosme-search-toolbar__bar">
+    <p class="cosme-search-toolbar__count" id="{{ count_id }}">
+      {{ 'search.results_count' | t: count: results_count }}
+    </p>
+    <p class="cosme-visually-hidden" role="status" aria-live="polite">
+      {{ 'search.status_results' | t: count: results_count, terms: search.terms }}
+    </p>
+
+    <div class="cosme-search-toolbar__actions">
+      {% if has_filters %}
+        <button
+          type="button"
+          class="cosme-collection-toolbar__filters-button"
+          data-filter-open
+          aria-expanded="false"
+          aria-controls="{{ dialog_id }}"
+          aria-haspopup="dialog"
+        >
+          <span>{{ 'collections.filters' | t }}</span>
+          {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+          {% if has_active_filters %}
+            <span class="cosme-collection-toolbar__filters-count">{{ active_filter_count }}</span>
+          {% endif %}
+        </button>
+      {% endif %}
+
+      {% if show_sorting %}
+        <form
+          id="{{ sort_form_id }}"
+          class="cosme-collection-toolbar__sort"
+          method="get"
+          action="{{ routes.search_url }}"
+        >
+          <input type="hidden" name="q" value="{{ search.terms | escape }}">
+          <input type="hidden" name="type" value="product">
+          <input type="hidden" name="options[prefix]" value="last">
+
+          {% for filter in filters %}
+            {% if filter.type == 'price_range' %}
+              {% if filter.min_value.value != blank %}
+                <input
+                  type="hidden"
+                  name="{{ filter.min_value.param_name }}"
+                  value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                >
+              {% endif %}
+              {% if filter.max_value.value != blank %}
+                <input
+                  type="hidden"
+                  name="{{ filter.max_value.param_name }}"
+                  value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                >
+              {% endif %}
+            {% else %}
+              {% for value in filter.active_values %}
+                <input type="hidden" name="{{ value.param_name }}" value="{{ value.value }}">
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+
+          <label class="cosme-collection-toolbar__sort-label" id="{{ sort_id }}-label" for="{{ sort_id }}">
+            {{ 'collections.sort_by' | t }}
+          </label>
+          <div class="cosme-dropdown" data-cosme-dropdown>
+            <select
+              id="{{ sort_id }}"
+              name="sort_by"
+              data-sort-select
+              class="cosme-dropdown__native"
+              aria-hidden="true"
+              tabindex="-1"
+            >
+              {% for option in sort_options %}
+                <option
+                  value="{{ option.value | escape }}"
+                  {% if option.value == sort_by %}
+                    selected
+                  {% endif %}
+                >
+                  {{ option.name | escape }}
+                </option>
+              {% endfor %}
+            </select>
+
+            <button
+              type="button"
+              class="cosme-dropdown__trigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-labelledby="{{ sort_id }}-label {{ sort_id }}-value"
+              data-dropdown-trigger
+            >
+              <span id="{{ sort_id }}-value" data-dropdown-label>
+                {% for option in sort_options %}
+                  {% if option.value == sort_by %}
+                    {{ option.name | escape }}
+                  {% endif %}
+                {% endfor %}
+              </span>
+              {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+            </button>
+
+            <div class="cosme-dropdown__menu" data-dropdown-menu role="listbox">
+              {% for option in sort_options %}
+                <button
+                  type="button"
+                  class="cosme-dropdown__option{% if option.value == sort_by %} is-selected{% endif %}"
+                  role="option"
+                  aria-selected="{% if option.value == sort_by %}true{% else %}false{% endif %}"
+                  data-dropdown-option
+                  data-value="{{ option.value | escape }}"
+                >
+                  <span>{{ option.name | escape }}</span>
+                  {% if option.value == sort_by %}
+                    <span class="cosme-dropdown__check">✓</span>
+                  {% endif %}
+                </button>
+              {% endfor %}
+            </div>
+          </div>
+          <button class="cosme-visually-hidden" type="submit">
+            {{ 'collections.sort_by' | t }}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if has_active_filters %}
+    <div class="cosme-collection-toolbar__chips" aria-label="{{ 'collections.active_filters' | t }}">
+      {% for filter in filters %}
+        {% if filter.type == 'price_range' %}
+          {% liquid
+            assign price_chip_value = ''
+            if filter.min_value.value != blank
+              assign price_min = filter.min_value.value | money
+              assign price_chip_value = price_min
+              if filter.max_value.value != blank
+                assign price_max = filter.max_value.value | money
+                assign price_chip_value = price_min | append: '–' | append: price_max
+              endif
+            elsif filter.max_value.value != blank
+              assign price_chip_value = filter.max_value.value | money
+            endif
+          %}
+          {% if price_chip_value != blank %}
+            <a
+              class="cosme-collection-toolbar__chip"
+              href="{{ filter.url_to_remove }}"
+              aria-label="{{ 'collections.remove_filter' | t: label: filter.label, value: price_chip_value }}"
+            >
+              <span>{{ 'collections.filter_chip' | t: label: filter.label, value: price_chip_value }}</span>
+              {% render 'cosme-icon', icon: 'close', size: 'sm' %}
+            </a>
+          {% endif %}
+        {% else %}
+          {% for value in filter.active_values %}
+            <a
+              class="cosme-collection-toolbar__chip"
+              href="{{ value.url_to_remove }}"
+              aria-label="{{ 'collections.remove_filter' | t: label: filter.label, value: value.label }}"
+            >
+              <span>{{ 'collections.filter_chip' | t: label: filter.label, value: value.label }}</span>
+              {% render 'cosme-icon', icon: 'close', size: 'sm' %}
+            </a>
+          {% endfor %}
+        {% endif %}
+      {% endfor %}
+
+      <a class="cosme-collection-toolbar__clear" href="{{ clear_url }}">
+        {{ 'collections.clear_all' | t }}
+      </a>
+    </div>
+  {% endif %}
+
+  {% if has_filters %}
+    <dialog
+      class="cosme-collection-filters color-{{ color_scheme }}"
+      id="{{ dialog_id }}"
+      data-filter-dialog
+      aria-labelledby="{{ heading_id }}"
+      aria-modal="true"
+    >
+      <div class="cosme-collection-filters__panel">
+        <div class="cosme-collection-filters__header">
+          <h2 class="cosme-collection-filters__heading" id="{{ heading_id }}" tabindex="-1">
+            {{ 'collections.filters' | t }}
+          </h2>
+          <button
+            type="button"
+            class="cosme-collection-filters__close"
+            data-filter-close
+            aria-label="{{ 'collections.close_filters' | t }}"
+          >
+            {% render 'cosme-icon', icon: 'close', size: 'md' %}
+          </button>
+        </div>
+
+        <form
+          id="{{ form_id }}"
+          class="cosme-collection-filters__form"
+          method="get"
+          action="{{ routes.search_url }}"
+        >
+          <input type="hidden" name="q" value="{{ search.terms | escape }}">
+          <input type="hidden" name="type" value="product">
+          <input type="hidden" name="options[prefix]" value="last">
+          <input type="hidden" name="sort_by" value="{{ sort_by | escape }}">
+
+          <div class="cosme-collection-filters__body">
+            {% for filter in filters %}
+              {% liquid
+                assign show_group = false
+                assign group_open = false
+                if filter.type == 'price_range'
+                  assign show_group = true
+                  if filter.min_value.value != blank
+                    assign group_open = true
+                  endif
+                  if filter.max_value.value != blank
+                    assign group_open = true
+                  endif
+                endif
+                if filter.values.size > 0
+                  assign show_group = true
+                endif
+                if filter.active_values.size > 0
+                  assign group_open = true
+                endif
+                if forloop.first
+                  assign group_open = true
+                endif
+              %}
+
+              {% if show_group %}
+                <details
+                  class="cosme-collection-filters__group"
+                  {% if group_open %}
+                    open
+                  {% endif %}
+                >
+                  <summary class="cosme-collection-filters__summary">
+                    <span>{{ filter.label | escape }}</span>
+                    {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+                  </summary>
+
+                  <div class="cosme-collection-filters__values">
+                    {% if filter.type == 'price_range' %}
+                      {% liquid
+                        assign min_placeholder = 0 | money_without_currency | replace: ',', ''
+                        assign max_placeholder = filter.range_max | money_without_currency | replace: ',', ''
+                      %}
+                      <div class="cosme-collection-filters__price">
+                        <label class="cosme-collection-filters__price-field">
+                          <span>{{ 'collections.price_from' | t }}</span>
+                          <input
+                            class="cosme-collection-filters__price-input"
+                            type="number"
+                            name="{{ filter.min_value.param_name }}"
+                            inputmode="decimal"
+                            min="0"
+                            max="{{ max_placeholder }}"
+                            placeholder="{{ min_placeholder }}"
+                            {% if filter.min_value.value != blank %}
+                              value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                            {% endif %}
+                          >
+                        </label>
+                        <label class="cosme-collection-filters__price-field">
+                          <span>{{ 'collections.price_to' | t }}</span>
+                          <input
+                            class="cosme-collection-filters__price-input"
+                            type="number"
+                            name="{{ filter.max_value.param_name }}"
+                            inputmode="decimal"
+                            min="0"
+                            max="{{ max_placeholder }}"
+                            placeholder="{{ max_placeholder }}"
+                            {% if filter.max_value.value != blank %}
+                              value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                            {% endif %}
+                          >
+                        </label>
+                      </div>
+                    {% else %}
+                      <ul class="cosme-collection-filters__list" role="list">
+                        {% for value in filter.values %}
+                          {% liquid
+                            assign value_disabled = false
+                            if value.count == 0
+                              unless value.active
+                                assign value_disabled = true
+                              endunless
+                            endif
+                            assign filter_param_id = filter.param_name | replace: '.', '-' | replace: '[', '-' | replace: ']', ''
+                            assign input_id = 'SearchFilter-' | append: section.id | append: '-' | append: filter_param_id | append: '-' | append: forloop.index
+                            assign has_swatch = false
+                            if value.swatch != blank
+                              assign has_swatch = true
+                            endif
+                          %}
+                          <li class="cosme-collection-filters__item">
+                            <label
+                              class="cosme-collection-filters__option{% if value_disabled %} cosme-collection-filters__option--disabled{% endif %}{% if has_swatch %} cosme-collection-filters__option--swatch{% endif %}"
+                              for="{{ input_id }}"
+                            >
+                              <input
+                                id="{{ input_id }}"
+                                class="cosme-collection-filters__checkbox"
+                                type="checkbox"
+                                name="{{ value.param_name }}"
+                                value="{{ value.value }}"
+                                {% if value.active %}
+                                  checked
+                                {% endif %}
+                                {% if value_disabled %}
+                                  disabled
+                                {% endif %}
+                              >
+                              {% if has_swatch %}
+                                <span
+                                  class="cosme-collection-filters__swatch"
+                                  aria-hidden="true"
+                                  {% if value.swatch.image %}
+                                    style="background-image: url({{ value.swatch.image | image_url: width: 80 }});"
+                                  {% elsif value.swatch.color %}
+                                    style="background-color: {{ value.swatch.color }};"
+                                  {% endif %}
+                                ></span>
+                              {% endif %}
+                              <span class="cosme-collection-filters__option-label">{{ value.label | escape }}</span>
+                              {% if value.count != blank %}
+                                <span class="cosme-collection-filters__option-count">{{ value.count }}</span>
+                              {% endif %}
+                            </label>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
+                  </div>
+                </details>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <div class="cosme-collection-filters__footer">
+            <a class="cosme-collection-filters__clear" href="{{ clear_url }}">
+              {{ 'collections.clear_all' | t }}
+            </a>
+            {% assign apply_label = 'collections.apply' | t %}
+            {% render 'cosme-button',
+              label: apply_label,
+              type: 'submit',
+              style: 'primary',
+              class: 'cosme-collection-filters__apply'
+            %}
+          </div>
+        </form>
+      </div>
+    </dialog>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .cosme-search-toolbar {
+    margin: 0 0 var(--spacing-xl);
+    min-width: 0;
+  }
+
+  .cosme-search-toolbar__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md) var(--spacing-lg);
+    min-width: 0;
+  }
+
+  .cosme-search-toolbar__count {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+    letter-spacing: var(--letter-spacing-body);
+  }
+
+  .cosme-search-toolbar__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-lg);
+    margin-inline-start: auto;
+    min-width: 0;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__filters-button,
+  .cosme-search-toolbar .cosme-collection-toolbar__sort {
+    font-family: inherit;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__filters-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__filters-button:hover,
+  .cosme-search-toolbar .cosme-collection-toolbar__chip:hover,
+  .cosme-search-toolbar .cosme-collection-toolbar__clear:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__filters-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background-color: var(--color-background-2, var(--color-background));
+    color: var(--color-foreground);
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__sort {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    min-width: 0;
+    margin: 0;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__sort-label {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 11rem;
+    width: 11rem;
+    min-width: 0;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__trigger > span:first-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__trigger .cosme-icon {
+    flex: 0 0 auto;
+    margin-inline-start: var(--spacing-md);
+    transition: transform 160ms ease;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown.is-open .cosme-dropdown__trigger .cosme-icon {
+    transform: rotate(180deg);
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__trigger:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 7px);
+    right: 0;
+    z-index: 200;
+    width: 100%;
+    min-width: 210px;
+    max-width: min(300px, calc(100vw - 32px));
+    padding: 4px;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 8%), 0 2px 8px rgb(0 0 0 / 4%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown.is-open .cosme-dropdown__menu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-foreground);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__option + .cosme-dropdown__option {
+    margin-block-start: 1px;
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__option:hover {
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__option.is-selected {
+    color: var(--color-accent);
+  }
+
+  .cosme-search-toolbar .cosme-dropdown__check {
+    flex: 0 0 auto;
+    margin-inline-start: var(--spacing-sm);
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-block-start: var(--spacing-md);
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__chip,
+  .cosme-search-toolbar .cosme-collection-toolbar__clear {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-height: 2rem;
+    padding: 0 var(--spacing-sm);
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.8125rem;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__chip {
+    max-width: 100%;
+    background-color: var(--color-background-2, var(--color-background));
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-button);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__clear {
+    padding-inline: 0;
+    color: var(--color-muted);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    overflow: hidden;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters[open] {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters::backdrop {
+    background-color: var(--color-overlay);
+    opacity: 0;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters[open]::backdrop {
+    opacity: var(--overlay-opacity);
+  }
+
+  .cosme-search-toolbar--animated .cosme-collection-filters,
+  .cosme-search-toolbar--animated .cosme-collection-filters::backdrop {
+    transition: opacity var(--transition-duration) var(--transition-easing),
+      overlay var(--transition-duration) var(--transition-easing) allow-discrete,
+      display var(--transition-duration) var(--transition-easing) allow-discrete;
+  }
+
+  .cosme-search-toolbar--animated .cosme-collection-filters__panel {
+    transition: transform var(--transition-duration) var(--transition-easing),
+      opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__panel {
+    display: flex;
+    flex-direction: column;
+    width: min(92vw, 26rem);
+    height: 100%;
+    margin-inline-end: auto;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border-right: var(--border-width) solid var(--color-border);
+    transform: translateX(-100%);
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters[open] .cosme-collection-filters__panel {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  @starting-style {
+    .cosme-search-toolbar .cosme-collection-filters[open]::backdrop {
+      opacity: 0;
+    }
+
+    .cosme-search-toolbar .cosme-collection-filters[open] .cosme-collection-filters__panel {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__header,
+  .cosme-search-toolbar .cosme-collection-filters__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-shrink: 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__footer {
+    border-bottom: 0;
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__heading {
+    margin: 0;
+    font-family: var(--font-body--family);
+    font-size: 0.75rem;
+    font-weight: var(--font-body--weight);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  html.cosme-collection-filters-scroll-lock,
+  body.cosme-collection-filters-scroll-lock {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--color-foreground);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-lg);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__group {
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    min-height: 2.75rem;
+    padding: var(--spacing-sm) 0;
+    cursor: pointer;
+    list-style: none;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__summary .cosme-icon {
+    flex-shrink: 0;
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__group[open] .cosme-collection-filters__summary .cosme-icon {
+    transform: rotate(180deg);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__values {
+    padding-bottom: var(--spacing-md);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__option {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-height: 2.75rem;
+    cursor: pointer;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__option--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__checkbox {
+    flex: 0 0 auto;
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--color-accent);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__swatch {
+    flex: 0 0 auto;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 50%;
+    border: var(--border-width) solid var(--color-border);
+    background-size: cover;
+    background-position: center;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__option-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__option-count {
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__price {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__price-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__price-input {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: var(--spacing-sm);
+    color: var(--color-foreground);
+    background-color: var(--color-input-background);
+    border: var(--border-width) solid var(--color-input-border, var(--color-border));
+    border-radius: var(--radius-input);
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__clear {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .cosme-search-toolbar .cosme-collection-filters__apply {
+    margin-inline-start: auto;
+    min-width: 7.5rem;
+  }
+
+  .cosme-search-toolbar .cosme-collection-toolbar__filters-button:focus-visible,
+  .cosme-search-toolbar .cosme-dropdown__trigger:focus-visible,
+  .cosme-search-toolbar .cosme-dropdown__option:focus-visible,
+  .cosme-search-toolbar .cosme-collection-toolbar__chip:focus-visible,
+  .cosme-search-toolbar .cosme-collection-toolbar__clear:focus-visible,
+  .cosme-search-toolbar .cosme-collection-filters__heading:focus-visible,
+  .cosme-search-toolbar .cosme-collection-filters__close:focus-visible,
+  .cosme-search-toolbar .cosme-collection-filters__summary:focus-visible,
+  .cosme-search-toolbar .cosme-collection-filters__checkbox:focus-visible,
+  .cosme-search-toolbar .cosme-collection-filters__price-input:focus-visible,
+  .cosme-search-toolbar .cosme-collection-filters__clear:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media screen and (max-width: 767px) {
+    .cosme-search-toolbar__bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .cosme-search-toolbar__actions {
+      width: 100%;
+      justify-content: space-between;
+      margin-inline-start: 0;
+      min-width: 0;
+    }
+
+    .cosme-search-toolbar .cosme-dropdown {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+      max-width: 11rem;
+    }
+
+    .cosme-search-toolbar .cosme-collection-toolbar__sort {
+      flex: 1 1 auto;
+      min-width: 0;
+      justify-content: flex-end;
+    }
+  }
+
+  @media screen and (max-width: 429px) {
+    .cosme-search-toolbar .cosme-collection-toolbar__sort-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .cosme-search-toolbar .cosme-dropdown {
+      max-width: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-search-toolbar--animated .cosme-collection-filters,
+    .cosme-search-toolbar--animated .cosme-collection-filters::backdrop,
+    .cosme-search-toolbar--animated .cosme-collection-filters__panel {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const SCROLL_LOCK_CLASS = 'cosme-collection-filters-scroll-lock';
+    const READY_ATTRIBUTE = 'data-search-facets-ready';
+
+    const lockScroll = () => {
+      document.documentElement.classList.add(SCROLL_LOCK_CLASS);
+      document.body.classList.add(SCROLL_LOCK_CLASS);
+    };
+
+    const unlockScroll = () => {
+      document.documentElement.classList.remove(SCROLL_LOCK_CLASS);
+      document.body.classList.remove(SCROLL_LOCK_CLASS);
+    };
+
+    const initFacets = (root) => {
+      if (!root || root.getAttribute(READY_ATTRIBUTE) === 'true') {
+        return;
+      }
+
+      root.setAttribute(READY_ATTRIBUTE, 'true');
+
+      const dialog = root.querySelector('[data-filter-dialog]');
+      const openButton = root.querySelector('[data-filter-open]');
+      const closeButtons = root.querySelectorAll('[data-filter-close]');
+      const sortSelect = root.querySelector('[data-sort-select]');
+      const dropdowns = root.querySelectorAll('[data-cosme-dropdown]');
+      const heading = dialog ? dialog.querySelector('.cosme-collection-filters__heading') : null;
+      const closeButton = dialog ? dialog.querySelector('[data-filter-close]') : null;
+
+      const setExpanded = (expanded) => {
+        if (openButton) {
+          openButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
+        if (dialog) {
+          dialog.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+        }
+      };
+
+      const openFilters = () => {
+        if (!dialog || dialog.open) return;
+        dialog.showModal();
+        setExpanded(true);
+        lockScroll();
+        const focusTarget = heading || closeButton;
+        if (focusTarget) focusTarget.focus();
+      };
+
+      const closeFilters = () => {
+        if (!dialog || !dialog.open) return;
+        dialog.close();
+      };
+
+      if (openButton) {
+        openButton.addEventListener('click', openFilters);
+      }
+
+      closeButtons.forEach((button) => {
+        button.addEventListener('click', closeFilters);
+      });
+
+      if (dialog) {
+        if (!dialog.open) {
+          dialog.setAttribute('aria-hidden', 'true');
+        }
+
+        dialog.addEventListener('click', (event) => {
+          if (event.target === dialog) closeFilters();
+        });
+
+        dialog.addEventListener('close', () => {
+          setExpanded(false);
+          unlockScroll();
+          if (openButton) openButton.focus();
+        });
+
+        dialog.addEventListener('cancel', () => {
+          unlockScroll();
+        });
+      }
+
+      if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+          if (sortSelect.form) sortSelect.form.requestSubmit();
+        });
+      }
+
+      dropdowns.forEach((dropdown) => {
+        const trigger = dropdown.querySelector('[data-dropdown-trigger]');
+        const menu = dropdown.querySelector('[data-dropdown-menu]');
+        const options = dropdown.querySelectorAll('[data-dropdown-option]');
+        const nativeSelect = dropdown.querySelector('[data-sort-select]');
+        const label = dropdown.querySelector('[data-dropdown-label]');
+
+        if (!trigger || !menu) return;
+
+        const close = () => {
+          dropdown.classList.remove('is-open');
+          trigger.setAttribute('aria-expanded', 'false');
+        };
+
+        const open = () => {
+          document.querySelectorAll('[data-cosme-dropdown].is-open').forEach((item) => {
+            if (item !== dropdown) {
+              item.classList.remove('is-open');
+              item.querySelector('[data-dropdown-trigger]')?.setAttribute('aria-expanded', 'false');
+            }
+          });
+          dropdown.classList.add('is-open');
+          trigger.setAttribute('aria-expanded', 'true');
+        };
+
+        trigger.addEventListener('click', (event) => {
+          event.preventDefault();
+          if (dropdown.classList.contains('is-open')) {
+            close();
+          } else {
+            open();
+          }
+        });
+
+        options.forEach((option) => {
+          option.addEventListener('click', () => {
+            const value = option.dataset.value;
+            if (nativeSelect && value) {
+              nativeSelect.value = value;
+              if (label) {
+                label.textContent = option.querySelector('span')?.textContent.trim() || '';
+              }
+              nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            close();
+          });
+        });
+
+        trigger.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') {
+            close();
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            if (dropdown.classList.contains('is-open')) {
+              close();
+            } else {
+              open();
+            }
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            open();
+            options[0]?.focus();
+          }
+        });
+
+        options.forEach((option, index) => {
+          option.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+              close();
+              trigger.focus();
+              return;
+            }
+            if (event.key === 'ArrowDown') {
+              event.preventDefault();
+              options[index + 1]?.focus();
+            }
+            if (event.key === 'ArrowUp') {
+              event.preventDefault();
+              if (index === 0) {
+                trigger.focus();
+              } else {
+                options[index - 1]?.focus();
+              }
+            }
+          });
+        });
+      });
+
+      document.addEventListener('click', (event) => {
+        dropdowns.forEach((dropdown) => {
+          if (!dropdown.contains(event.target)) {
+            dropdown.classList.remove('is-open');
+            dropdown.querySelector('[data-dropdown-trigger]')?.setAttribute('aria-expanded', 'false');
+          }
+        });
+      });
+    };
+
+    document.querySelectorAll('[data-search-facets]').forEach(initFacets);
+
+    document.addEventListener('shopify:section:load', (event) => {
+      const root = event.target.querySelector('[data-search-facets]');
+      if (root) initFacets(root);
+    });
+  })();
+{% endjavascript %}

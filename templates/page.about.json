@@ -1,0 +1,169 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-about-hero",
+      "settings": {
+        "eyebrow": "ABOUT COSME",
+        "heading": "Beauty, thoughtfully considered.",
+        "description": "Cosme is a modern approach to beauty — thoughtful formulas, intentional rituals, and products designed to become part of everyday life.",
+        "text_alignment": "left",
+        "content_width": "medium",
+        "image_alt": "",
+        "image_ratio": "landscape",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "story": {
+      "type": "about-story",
+      "settings": {
+        "eyebrow": "OUR STORY",
+        "heading": "Beauty begins with intention.",
+        "body": "Cosme was created around a simple idea: beauty should feel considered.\n\nFrom the formulas we choose to the rituals we build around them, every detail should have a purpose. We believe effective beauty can also feel beautiful to use — quiet, tactile and effortless.",
+        "secondary_text": "We create products for modern rituals: uncomplicated, thoughtful and made to become part of everyday life.",
+        "text_alignment": "left",
+        "content_width": "medium",
+        "image_alt": "",
+        "image_position": "left",
+        "image_ratio": "portrait",
+        "show_cta": true,
+        "cta_label": "EXPLORE THE COLLECTION",
+        "cta_link": "/collections/all",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "manifesto": {
+      "type": "about-manifesto",
+      "settings": {
+        "eyebrow": "THE COSME PHILOSOPHY",
+        "statement": "Beauty should feel intentional.",
+        "supporting_text": "Less noise. Better rituals. Products chosen for how they work, how they feel, and how naturally they become part of your everyday.",
+        "alignment": "center",
+        "statement_max_width": "medium",
+        "show_index": true,
+        "index_text": "01 / PHILOSOPHY",
+        "show_divider": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "philosophy": {
+      "type": "about-philosophy",
+      "settings": {
+        "eyebrow": "WHAT WE BELIEVE",
+        "heading": "A considered approach to beauty.",
+        "description": "",
+        "layout": "grid",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      },
+      "blocks": {
+        "principle-1": {
+          "type": "principle",
+          "settings": {
+            "title": "Thoughtful Formulas",
+            "description": "Ingredients and formulas chosen with purpose, never simply for the sake of more."
+          }
+        },
+        "principle-2": {
+          "type": "principle",
+          "settings": {
+            "title": "Skin First",
+            "description": "Beauty starts with understanding what your skin actually needs."
+          }
+        },
+        "principle-3": {
+          "type": "principle",
+          "settings": {
+            "title": "Intentional Rituals",
+            "description": "Simple routines designed to feel as good as they are effective."
+          }
+        },
+        "principle-4": {
+          "type": "principle",
+          "settings": {
+            "title": "Less, Better",
+            "description": "We believe in thoughtful choices over unnecessary complexity."
+          }
+        }
+      },
+      "block_order": [
+        "principle-1",
+        "principle-2",
+        "principle-3",
+        "principle-4"
+      ]
+    },
+    "image_story": {
+      "type": "about-image-story",
+      "settings": {
+        "eyebrow": "THE RITUAL",
+        "heading": "Designed for the moments in between.",
+        "body": "Skincare is more than a list of products. It is the small ritual that begins and ends your day.\n\nCosme is designed around those moments — textures, formulas and details that make a routine feel considered rather than complicated.",
+        "primary_image_alt": "",
+        "show_secondary_image": true,
+        "secondary_image_alt": "",
+        "image_ratio": "portrait",
+        "image_position": "left",
+        "cta_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "brand_facts": {
+      "type": "about-brand-facts",
+      "settings": {
+        "enable": true,
+        "eyebrow": "BY THE NUMBERS",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      },
+      "blocks": {
+        "fact-1": {
+          "type": "fact",
+          "settings": {
+            "index": "01",
+            "title": "Thoughtfully Made",
+            "description": "Every product begins with a clear purpose."
+          }
+        },
+        "fact-2": {
+          "type": "fact",
+          "settings": {
+            "index": "02",
+            "title": "Everyday Rituals",
+            "description": "Beauty designed to become part of real routines."
+          }
+        },
+        "fact-3": {
+          "type": "fact",
+          "settings": {
+            "index": "03",
+            "title": "Less, Better",
+            "description": "A considered approach to modern skincare."
+          }
+        }
+      },
+      "block_order": ["fact-1", "fact-2", "fact-3"]
+    },
+    "closing_cta": {
+      "type": "about-cta",
+      "settings": {
+        "enable": true,
+        "eyebrow": "DISCOVER COSME",
+        "heading": "Make beauty part of your ritual.",
+        "description": "Explore our considered collection of skincare and beauty essentials.",
+        "alignment": "left",
+        "primary_label": "SHOP ALL",
+        "primary_link": "/collections/all",
+        "show_secondary_cta": true,
+        "secondary_label": "READ THE JOURNAL",
+        "secondary_link": "/blogs/news",
+        "color_scheme": "scheme-3",
+        "section_spacing": "large"
+      }
+    }
+  },
+  "order": ["main", "story", "manifesto", "philosophy", "image_story", "brand_facts", "closing_cta"]
+}

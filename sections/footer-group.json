@@ -19,7 +19,7 @@
         "density": "default",
         "brand_description": "Quiet formulas and considered rituals for skin that prefers less, done well.",
         "shop_menu_heading": "Shop",
-        "shop_menu": "main-menu",
+        "shop_menu": "footer",
         "care_menu_heading": "Customer care",
         "care_menu": "footer",
         "enable_newsletter": true,
@@ -29,6 +29,7 @@
         "newsletter_button_label": "Subscribe",
         "show_social": true,
         "social_style": "icons",
+        "enable_country_selector": true,
         "show_copyright": true,
         "show_policy_links": true,
         "show_payment_icons": true

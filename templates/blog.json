@@ -11,7 +11,27 @@
   "sections": {
     "main": {
       "type": "blog",
-      "settings": {}
+      "settings": {
+        "eyebrow": "The journal",
+        "show_eyebrow": true,
+        "heading": "Beauty, thoughtfully curated.",
+        "description": "Stories, rituals and insights for a more considered approach to beauty.",
+        "show_description": true,
+        "text_alignment": "left",
+        "show_featured": true,
+        "featured_image_ratio": "landscape",
+        "show_featured_excerpt": true,
+        "columns_desktop": "3",
+        "image_ratio": "portrait",
+        "show_category": true,
+        "show_excerpt": false,
+        "show_date": true,
+        "show_reading_time": false,
+        "show_index": true,
+        "show_cta": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "medium"
+      }
     }
   },
   "order": [

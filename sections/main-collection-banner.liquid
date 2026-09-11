@@ -1,0 +1,488 @@
+{% liquid
+  assign heading_alignment = section.settings.heading_alignment | default: 'left'
+  assign header_spacing = section.settings.header_spacing | default: 'standard'
+  assign heading_id = 'CollectionHeading-' | append: section.id
+  assign product_count = collection.all_products_count | default: 0
+  assign description_plain = collection.description | strip_html | strip
+  assign show_description = false
+  assign show_product_count = false
+  assign show_image = false
+  assign image_alt = collection.title
+
+  if section.settings.show_description
+    if description_plain != blank
+      assign show_description = true
+    endif
+  endif
+
+  if section.settings.show_product_count
+    assign show_product_count = true
+  endif
+
+  if section.settings.show_collection_image
+    if collection.featured_image != blank
+      assign show_image = true
+    endif
+  endif
+
+  if collection.featured_image != blank
+    if collection.featured_image.alt != blank
+      assign image_alt = collection.featured_image.alt
+    endif
+  endif
+%}
+
+<section
+  class="
+    cosme-collection-header
+    full-width
+    color-{{ section.settings.color_scheme }}
+    cosme-collection-header--align-{{ heading_alignment }}
+    cosme-collection-header--spacing-{{ header_spacing }}
+    {% if show_image %}cosme-collection-header--has-image{% endif %}
+    {% if show_image and section.settings.image_fit == 'contain' %}
+      cosme-collection-header--image-contain
+    {% endif %}
+  "
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <div class="cosme-collection-header__inner">
+    <div class="cosme-collection-header__layout">
+      <div class="cosme-collection-header__content">
+        <header class="cosme-collection-header__intro">
+          <h1 class="cosme-collection-header__title" id="{{ heading_id }}">
+            {{ collection.title | escape }}
+          </h1>
+      
+          {% unless show_image %}
+            {% if show_product_count %}
+              <p class="cosme-collection-header__count">
+                {{ 'collections.products_count' | t: count: product_count }}
+              </p>
+            {% endif %}
+          {% endunless %}
+        </header>
+      
+        {% if show_description %}
+          <div class="cosme-collection-header__description">
+            {{ collection.description }}
+          </div>
+        {% endif %}
+      </div>
+      
+      {% if show_image %}
+        <div class="cosme-collection-header__media-column">
+          <div class="cosme-collection-header__media" style="--image-fit: {{ section.settings.image_fit }};">
+            {% render 'cosme-image',
+              image: collection.featured_image,
+              alt: image_alt,
+              class: 'cosme-collection-header__image',
+              width: 1400,
+              loading: 'eager',
+              fetchpriority: 'high',
+              sizes: '(min-width: 990px) 36vw, 100vw'
+            %}
+          </div>
+      
+          {% if show_product_count %}
+            <p class="cosme-collection-header__count cosme-collection-header__count--under-image">
+              {{ 'collections.products_count' | t: count: product_count }}
+            </p>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-collection-header {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-collection-header__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-collection-header--spacing-compact .cosme-collection-header__inner {
+    padding-block: var(--spacing-lg);
+  }
+
+  .cosme-collection-header--spacing-standard .cosme-collection-header__inner {
+    padding-block: var(--spacing-xl);
+  }
+
+  .cosme-collection-header--spacing-spacious .cosme-collection-header__inner {
+    padding-block: var(--spacing-2xl);
+  }
+
+  .cosme-collection-header__layout {
+    display: grid;
+    gap: var(--spacing-lg);
+    min-width: 0;
+  }
+
+  .cosme-collection-header__media-column {
+  min-width: 0;
+}
+
+.cosme-collection-header__count--under-image {
+  margin-block-start: var(--spacing-sm);
+  text-align: right;
+  padding-top: var(--spacing-sm);
+}
+
+  .cosme-collection-header__content,
+.cosme-collection-header__intro,
+.cosme-collection-header__media,
+.cosme-collection-header__media-column {
+  min-width: 0;
+}
+
+.cosme-collection-header--align-center
+  .cosme-collection-header__count--under-image {
+  text-align: center;
+}
+  .cosme-collection-header__intro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-sm) var(--spacing-lg);
+  }
+
+  .cosme-collection-header__title {
+    margin: 0;
+    flex: 1 1 12rem;
+    min-width: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2.25rem, 7vw, 4.5rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-collection-header__count {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    letter-spacing: var(--letter-spacing-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-collection-header__description {
+    max-width: 36rem;
+    margin-block-start: var(--spacing-md);
+    font-size: 1rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-collection-header__description > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-collection-header__description > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-collection-header__description a {
+    color: var(--color-foreground);
+  }
+
+  .cosme-collection-header__media {
+    overflow: hidden;
+    max-height: 12rem;
+    border-radius: var(--radius-card);
+    background-color: var(--color-background);
+    
+  }
+
+  .cosme-collection-header__image,
+  .cosme-collection-header__media .cosme-image {
+    height: 100%;
+    max-height: 12rem;
+  }
+
+  .cosme-collection-header__media .cosme-image__img {
+    width: 100%;
+    height: 100%;
+    max-height: 12rem;
+    object-fit: var(--image-fit, cover);
+  }
+
+  .cosme-collection-header--align-center .cosme-collection-header__intro {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .cosme-collection-header--align-center .cosme-collection-header__title {
+    flex: 1 1 100%;
+  }
+
+  .cosme-collection-header--align-center .cosme-collection-header__description {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+ .cosme-collection-header--align-center .cosme-collection-header__media {
+  justify-self: center;
+}
+
+  @media screen and (min-width: 768px) {
+    .cosme-collection-header__media,
+    .cosme-collection-header__image,
+    .cosme-collection-header__media .cosme-image,
+    .cosme-collection-header__media .cosme-image__img {
+      max-height: 16rem;
+    }
+  }
+  @media screen and (min-width: 990px) {
+  /* =========================================
+     LEFT ALIGNMENT
+     ========================================= */
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left
+    .cosme-collection-header__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(12rem, 0.7fr);
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+
+  /*
+   * COVER:
+   * the image fills the entire right column.
+   */
+  .cosme-collection-header--has-image.cosme-collection-header--align-left
+    .cosme-collection-header__media-column {
+    width: 100%;
+    min-width: 0;
+    justify-self: stretch;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left
+    .cosme-collection-header__media {
+    width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left
+    .cosme-collection-header__media .cosme-image {
+    width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left
+    .cosme-collection-header__media .cosme-image__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+
+  /* =========================================
+     LEFT + CONTAIN
+     ========================================= */
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left.cosme-collection-header--image-contain
+    .cosme-collection-header__media-column {
+    width: fit-content;
+    max-width: 100%;
+    justify-self: end;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left.cosme-collection-header--image-contain
+    .cosme-collection-header__media {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left.cosme-collection-header--image-contain
+    .cosme-collection-header__media .cosme-image {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left.cosme-collection-header--image-contain
+    .cosme-collection-header__media .cosme-image__img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-left.cosme-collection-header--image-contain
+    .cosme-collection-header__count--under-image {
+    width: fit-content;
+    margin-inline-start: auto;
+  }
+
+
+  /* =========================================
+     CENTER ALIGNMENT
+     ========================================= */
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center
+    .cosme-collection-header__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: var(--spacing-lg);
+  }
+
+  /*
+   * CENTER + COVER
+   */
+  .cosme-collection-header--has-image.cosme-collection-header--align-center
+    .cosme-collection-header__media-column {
+    width: 100%;
+    min-width: 0;
+    justify-self: center;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center
+    .cosme-collection-header__media {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center
+    .cosme-collection-header__media .cosme-image {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center
+    .cosme-collection-header__media .cosme-image__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+
+  /* =========================================
+     CENTER + CONTAIN
+     ========================================= */
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center.cosme-collection-header--image-contain
+    .cosme-collection-header__media-column {
+    width: fit-content;
+    max-width: 100%;
+    justify-self: center;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center.cosme-collection-header--image-contain
+    .cosme-collection-header__media {
+    width: fit-content;
+    max-width: 100%;
+    margin-inline: auto;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center.cosme-collection-header--image-contain
+    .cosme-collection-header__media .cosme-image {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center.cosme-collection-header--image-contain
+    .cosme-collection-header__media .cosme-image__img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+  }
+
+  .cosme-collection-header--has-image.cosme-collection-header--align-center.cosme-collection-header--image-contain
+    .cosme-collection-header__count--under-image {
+    width: 100%;
+    margin-inline: 0;
+    text-align: center;
+  }
+}
+ 
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.collection_header",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "settings": [
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "t:sections.collection_header.settings.heading_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "t:sections.collection_header.settings.show_description",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_count",
+      "label": "t:sections.collection_header.settings.show_product_count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_image",
+      "label": "t:sections.collection_header.settings.show_collection_image",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "image_fit",
+      "label": "t:sections.collection_header.settings.image_fit.label",
+      "options": [
+        { "value": "cover", "label": "t:sections.collection_header.settings.image_fit.options.cover" },
+        { "value": "contain", "label": "t:sections.collection_header.settings.image_fit.options.contain" }
+      ],
+      "default": "cover"
+    },
+    {
+      "type": "select",
+      "id": "header_spacing",
+      "label": "t:sections.collection_header.settings.header_spacing",
+      "options": [
+        { "value": "compact", "label": "t:options.density.compact" },
+        { "value": "standard", "label": "t:options.density.standard" },
+        { "value": "spacious", "label": "t:options.density.spacious" }
+      ],
+      "default": "standard"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.collection_header"
+    }
+  ]
+}
+{% endschema %}

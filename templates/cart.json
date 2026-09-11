@@ -11,10 +11,53 @@
   "sections": {
     "main": {
       "type": "cart",
-      "settings": {}
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Your cart",
+        "show_vendor": true,
+        "show_compare_at": true,
+        "show_free_shipping_message": true,
+        "free_shipping_threshold": 100,
+        "show_discount_code": true,
+        "show_payment_methods": true,
+        "show_trust_message": true,
+        "trust_message": "Secure checkout · Fast delivery · Easy returns"
+      }
+    },
+    "recommendations": {
+      "type": "cart-recommendations",
+      "blocks": {
+        "product-1": {
+          "type": "product",
+          "settings": {}
+        },
+        "product-2": {
+          "type": "product",
+          "settings": {}
+        },
+        "product-3": {
+          "type": "product",
+          "settings": {}
+        }
+      },
+      "block_order": [
+        "product-1",
+        "product-2",
+        "product-3"
+      ],
+      "settings": {
+        "heading": "You may also like",
+        "color_scheme": "scheme-1",
+        "products_per_row": "3",
+        "show_vendor": false,
+        "show_secondary_image": true,
+        "image_aspect_ratio": "3/4",
+        "show_badges": true
+      }
     }
   },
   "order": [
-    "main"
+    "main",
+    "recommendations"
   ]
 }

@@ -1,0 +1,668 @@
+{% doc %}
+  Renders the standalone Cosme gift card page.
+
+  Relies on Shopify's native `gift_card` object. Intended for
+  `templates/gift_card.liquid` only.
+
+  @param {object} gift_card - Native Shopify gift card object
+
+  @example
+  {% render 'cosme-gift-card', gift_card: gift_card %}
+{% enddoc %}
+
+{% liquid
+  assign color_scheme = settings.gift_card_color_scheme | default: settings.color_scheme
+  assign editorial_scheme = settings.gift_card_editorial_color_scheme | default: color_scheme
+  assign text_alignment = settings.gift_card_text_alignment | default: 'center'
+
+  assign show_eyebrow = settings.gift_card_show_eyebrow
+  assign eyebrow = settings.gift_card_eyebrow | strip
+  assign heading = settings.gift_card_heading | strip
+  assign description = settings.gift_card_description | strip
+
+  if heading == blank
+    assign heading = 'gift_card.heading' | t
+  endif
+
+  if description == blank
+    assign description = 'gift_card.description' | t
+  endif
+
+  assign show_editorial = settings.gift_card_show_editorial
+  assign editorial_eyebrow = settings.gift_card_editorial_eyebrow | strip
+  assign editorial_heading = settings.gift_card_editorial_heading | strip
+  assign editorial_text = settings.gift_card_editorial_text | strip
+
+  if show_editorial
+    if editorial_eyebrow == blank
+      if editorial_heading == blank
+        if editorial_text == blank
+          assign show_editorial = false
+        endif
+      endif
+    endif
+  endif
+
+  assign continue_label = settings.gift_card_continue_label | strip
+  if continue_label == blank
+    assign continue_label = 'gift_card.continue_shopping' | t
+  endif
+
+  assign copy_label = 'gift_card.copy_code' | t
+  assign copied_label = 'gift_card.copied' | t
+  assign copy_failed_label = 'gift_card.copy_failed' | t
+  assign balance_formatted = gift_card.balance | money
+  assign card_inactive = false
+  if gift_card.enabled == false or gift_card.expired
+    assign card_inactive = true
+  endif
+%}
+
+<a class="cosme-gift-card__skip" href="#MainContent">
+  {{ 'gift_card.skip_to_content' | t }}
+</a>
+
+<div class="cosme-gift-card color-{{ color_scheme }}{% if settings.enable_animations %} cosme-gift-card--animated{% endif %}">
+  <main id="MainContent" class="cosme-gift-card__main">
+    <header class="cosme-gift-card__intro cosme-gift-card__intro--{{ text_alignment }}">
+      {% if show_eyebrow %}
+        {% if eyebrow != blank %}
+          <p class="cosme-gift-card__eyebrow">{{ eyebrow | escape }}</p>
+        {% endif %}
+      {% endif %}
+
+      <h1 class="cosme-gift-card__title">{{ heading | escape }}</h1>
+
+      {% if description != blank %}
+        <p class="cosme-gift-card__description">{{ description | escape }}</p>
+      {% endif %}
+    </header>
+
+    <div class="cosme-gift-card__stage">
+      <div class="cosme-gift-card__visual-col">
+        <figure class="cosme-gift-card__figure{% if card_inactive %} cosme-gift-card__figure--inactive{% endif %}">
+          <div class="cosme-gift-card__face">
+            <p class="cosme-gift-card__shop">{{ shop.name | escape }}</p>
+            <p class="cosme-gift-card__face-balance">
+              <span class="cosme-gift-card__face-label">{{ 'gift_card.balance' | t }}</span>
+              <span class="cosme-gift-card__face-amount">{{ balance_formatted }}</span>
+              <div class="cosme-gift-card__code-block-card">
+              <p
+                class="cosme-gift-card__code-card"
+                id="GiftCardCode"
+                aria-labelledby="GiftCardCodeLabel"
+              >
+                {{ gift_card.code | format_code }}
+              </p>
+              </div>
+            </p>
+            <img
+              class="cosme-gift-card__asset"
+              src="{{ 'gift-card/card.svg' | shopify_asset_url }}"
+              alt="{{ 'gift_card.card' | t }}"
+              width="300"
+              height="200"
+            >
+          </div>
+        </figure>
+      </div>
+
+      <div class="cosme-gift-card__info" data-gift-card-copy>
+        {% if gift_card.enabled == false or gift_card.expired %}
+          <p class="cosme-gift-card__status" role="status">
+            {% if gift_card.expired %}
+              {{ 'gift_card.expired' | t }}
+            {% else %}
+              {{ 'gift_card.disabled' | t }}
+            {% endif %}
+          </p>
+        {% endif %}
+
+        {% if gift_card.expires_on %}
+          {% assign expires_on = gift_card.expires_on | date: '%B %e, %Y' %}
+          <p class="cosme-gift-card__expires">
+            {{ 'gift_card.expires_on' | t: expires_on: expires_on }}
+          </p>
+        {% endif %}
+
+        <p class="cosme-gift-card__balance-block">
+          <span class="cosme-gift-card__meta-label">{{ 'gift_card.balance' | t }}</span>
+          <span class="cosme-gift-card__balance">{{ gift_card.balance | money }}</span>
+        </p>
+
+        <p class="cosme-gift-card__instruction">{{ 'gift_card.use_at_checkout' | t }}</p>
+
+        <div class="cosme-gift-card__code-block">
+          <p class="cosme-gift-card__meta-label" id="GiftCardCodeLabel">
+            {{ 'gift_card.code_label' | t }}
+          </p>
+          <p
+            class="cosme-gift-card__code"
+            id="GiftCardCode"
+            aria-labelledby="GiftCardCodeLabel"
+          >
+            {{ gift_card.code | format_code }}
+          </p>
+          <button
+            type="button"
+            class="cosme-button cosme-button--primary cosme-gift-card__copy"
+            data-gift-card-copy-button
+            data-code="{{ gift_card.code | escape }}"
+            data-label-default="{{ copy_label | escape }}"
+            data-label-copied="{{ copied_label | escape }}"
+            data-label-failed="{{ copy_failed_label | escape }}"
+            aria-describedby="GiftCardCode"
+          >
+            {% render 'cosme-icon', icon: 'copy', size: 'sm' %}
+            <span data-gift-card-copy-label>{{ copy_label | escape }}</span>
+          </button>
+          <p
+            class="cosme-visually-hidden"
+            data-gift-card-copy-status
+            role="status"
+            aria-live="polite"
+          ></p>
+        </div>
+
+        {% if gift_card.pass_url %}
+          <p class="cosme-gift-card__wallet">
+            <a class="cosme-gift-card__wallet-link" href="{{ gift_card.pass_url }}">
+              <img
+                src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}"
+                alt="{{ 'gift_card.add_to_apple_wallet' | t }}"
+                width="200"
+                height="60"
+              >
+            </a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+
+  {% if show_editorial %}
+    <section
+      class="cosme-gift-card__editorial color-{{ editorial_scheme }}"
+      {% if editorial_heading != blank %}
+        aria-labelledby="GiftCardEditorialHeading"
+      {% endif %}
+    >
+      <div class="cosme-gift-card__editorial-inner">
+        {% if editorial_eyebrow != blank %}
+          <p class="cosme-gift-card__eyebrow">{{ editorial_eyebrow | escape }}</p>
+        {% endif %}
+
+        {% if editorial_heading != blank %}
+          <h2 class="cosme-gift-card__editorial-title" id="GiftCardEditorialHeading">
+            {{ editorial_heading | escape }}
+          </h2>
+        {% endif %}
+
+        {% if editorial_text != blank %}
+          <p class="cosme-gift-card__editorial-text">{{ editorial_text | escape }}</p>
+        {% endif %}
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="cosme-gift-card__continue color-{{ color_scheme }}">
+    {% render 'cosme-button',
+      label: continue_label,
+      url: routes.all_products_collection_url,
+      style: 'primary',
+      class: 'cosme-gift-card__continue-btn'
+    %}
+  </div>
+</div>
+
+{% style %}
+  .cosme-gift-card__skip {
+    position: absolute;
+    z-index: 100;
+    inset-block-start: var(--spacing-sm);
+    inset-inline-start: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+
+  .cosme-gift-card__skip:focus,
+  .cosme-gift-card__skip:focus-visible {
+    transform: translateY(0);
+  }
+
+  .cosme-gift-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100svh;
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-gift-card__main {
+    width: 100%;
+    max-width: 74rem;
+    min-width: 0;
+    margin-inline: auto;
+    padding: clamp(3rem, 8vw, 6.5rem) var(--page-margin) clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .cosme-gift-card__intro {
+    max-width: 38rem;
+    margin-block-end: clamp(2.5rem, 6vw, 4.5rem);
+  }
+
+  .cosme-gift-card__intro--center {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-gift-card__intro--left {
+    text-align: start;
+  }
+
+  .cosme-gift-card__intro--right {
+    margin-inline-start: auto;
+    text-align: end;
+  }
+
+  .cosme-gift-card__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-gift-card__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-gift-card__description {
+    max-width: 32rem;
+    margin: var(--spacing-md) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-gift-card__intro--center .cosme-gift-card__description {
+    margin-inline: auto;
+  }
+
+  .cosme-gift-card__intro--right .cosme-gift-card__description {
+    margin-inline-start: auto;
+  }
+
+  .cosme-gift-card__stage {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: clamp(2rem, 5vw, 4rem);
+
+    min-width: 0;
+  }
+
+  .cosme-gift-card__visual-col,
+  .cosme-gift-card__info,
+  .cosme-gift-card__figure {
+    min-width: 0;
+
+  }
+
+  .cosme-gift-card__figure {
+    margin: 0;
+ 
+  }
+
+  .cosme-gift-card__face {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    aspect-ratio: 1.586 / 1;
+    width: 100%;
+    max-width: 32rem;
+    margin-inline: auto;
+    padding: var(--spacing-lg);
+    overflow: hidden;
+    border: var(--border-width) solid var(--color-border);
+    background-color: var(--color-background-2, var(--color-background));
+    border-radius: var(--radius-card);
+    color: var(--color-foreground);
+  }
+
+  .cosme-gift-card__figure--inactive .cosme-gift-card__face {
+    opacity: 0.62;
+  }
+
+  .cosme-gift-card__shop {
+    margin: 0;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-gift-card__face-balance {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-md) 0 auto;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1;
+  }
+
+  .cosme-gift-card__face-label,
+  .cosme-gift-card__meta-label {
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-gift-card__face-amount,
+  .cosme-gift-card__balance {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-gift-card__face-amount {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  .cosme-gift-card__asset {
+    width: min(58%, 11rem);
+    height: auto;
+    margin-block-start: var(--spacing-md);
+    margin-inline-start: auto;
+    opacity: 0.68;
+  }
+
+  .cosme-gift-card__info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    width: 100%;
+    max-width: 28rem;
+  }
+
+  .cosme-gift-card__status {
+    margin: 0;
+    padding: var(--spacing-sm) 0;
+    border-block: var(--border-width) solid var(--color-border);
+    font-size: 0.8125rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-error, var(--color-foreground));
+  }
+
+  .cosme-gift-card__expires,
+  .cosme-gift-card__instruction {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+
+  .cosme-gift-card__balance-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin: 0;
+  }
+
+  .cosme-gift-card__balance {
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  }
+  .cosme-gift-card__code-block-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding-top: var(--spacing-md);
+  
+  }
+
+  .cosme-gift-card__code-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding-block: var(--spacing-md);
+    border-block: var(--border-width) solid var(--color-border);
+  }
+  .cosme-gift-card__code-card {
+    margin: 0;
+    width: 100%;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    letter-spacing: 0.42em;
+    user-select: all;
+    color: var(--color-heading, var(--color-foreground));
+    text-shadow: 0 0 1px var(--color-foreground);
+  }
+  .cosme-gift-card__code {
+    margin: 0;
+    width: 100%;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    letter-spacing: 0.12em;
+    user-select: all;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-gift-card__copy {
+    gap: var(--spacing-sm);
+    min-width: 10.5rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .cosme-gift-card__wallet {
+    margin: var(--spacing-sm) 0 0;
+  }
+
+  .cosme-gift-card__wallet-link {
+    display: inline-flex;
+  }
+
+  .cosme-gift-card__wallet-link img {
+    width: 10.5rem;
+    height: auto;
+  }
+
+  .cosme-gift-card__editorial {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-gift-card__editorial-inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: clamp(2.5rem, 6vw, 4.5rem) var(--page-margin);
+    text-align: center;
+  }
+
+  .cosme-gift-card__editorial-title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-gift-card__editorial-text {
+    max-width: 34rem;
+    margin: var(--spacing-md) auto 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
+
+  .cosme-gift-card__continue {
+    display: flex;
+    justify-content: center;
+    padding: 0 var(--page-margin) clamp(3rem, 8vw, 5.5rem);
+    background-color: var(--color-background);
+    padding-top: var(--spacing-lg);
+  }
+
+  .cosme-gift-card__continue-btn {
+    min-width: 10.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .cosme-gift-card__stage {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: clamp(2.5rem, 5vw, 5rem);
+    }
+
+    .cosme-gift-card__face {
+      margin-inline: 0;
+    }
+  }
+  @media (max-width: 768px) {
+.cosme-gift-card__code-block-card {
+  display: none;
+}
+   }
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-gift-card--animated .cosme-gift-card__intro,
+    .cosme-gift-card--animated .cosme-gift-card__stage,
+    .cosme-gift-card--animated .cosme-gift-card__editorial,
+    .cosme-gift-card--animated .cosme-gift-card__continue {
+      animation: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-gift-card--animated .cosme-gift-card__intro,
+    .cosme-gift-card--animated .cosme-gift-card__stage,
+    .cosme-gift-card--animated .cosme-gift-card__editorial,
+    .cosme-gift-card--animated .cosme-gift-card__continue {
+      animation: cosme-gift-card-fade var(--animation-duration) var(--transition-easing) both;
+    }
+
+    .cosme-gift-card--animated .cosme-gift-card__stage {
+      animation-delay: 80ms;
+    }
+
+    .cosme-gift-card--animated .cosme-gift-card__editorial {
+      animation-delay: 140ms;
+    }
+
+    .cosme-gift-card--animated .cosme-gift-card__continue {
+      animation-delay: 180ms;
+    }
+  }
+
+  @keyframes cosme-gift-card-fade {
+    from {
+      opacity: 0;
+      transform: translateY(0.5rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+{% endstyle %}
+
+<script type="module">
+  (function () {
+    var root = document.querySelector('[data-gift-card-copy]');
+    if (!root) return;
+
+    var button = root.querySelector('[data-gift-card-copy-button]');
+    var label = root.querySelector('[data-gift-card-copy-label]');
+    var live = root.querySelector('[data-gift-card-copy-status]');
+    if (!button || !label) return;
+
+    var defaultLabel = button.getAttribute('data-label-default') || '';
+    var copiedLabel = button.getAttribute('data-label-copied') || '';
+    var failedLabel = button.getAttribute('data-label-failed') || '';
+    var code = button.getAttribute('data-code') || '';
+    var resetTimer;
+
+    function announce(message) {
+      if (!live) return;
+      live.textContent = '';
+      live.textContent = message;
+    }
+
+    function setLabel(text) {
+      label.textContent = text;
+    }
+
+    function copyFallback() {
+      var codeEl = document.getElementById('GiftCardCode');
+      if (!codeEl) return false;
+      var selection = window.getSelection();
+      var range = document.createRange();
+      range.selectNodeContents(codeEl);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      try {
+        return document.execCommand('copy');
+      } catch (error) {
+        return false;
+      }
+    }
+
+    button.addEventListener('click', function () {
+      if (!code) return;
+
+      var onSuccess = function () {
+        setLabel(copiedLabel);
+        announce(copiedLabel);
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(function () {
+          setLabel(defaultLabel);
+        }, 2000);
+      };
+
+      var onFail = function () {
+        copyFallback();
+        announce(failedLabel);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(onSuccess).catch(onFail);
+        return;
+      }
+
+      if (copyFallback()) {
+        onSuccess();
+      } else {
+        onFail();
+      }
+    });
+  })();
+</script>

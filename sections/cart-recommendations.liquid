@@ -1,0 +1,253 @@
+{% liquid
+  assign heading = section.settings.heading | strip
+  if heading == blank
+    assign heading = 'sections.cart_recommendations.heading' | t
+  endif
+
+  assign heading_id = 'CartRecommendationsHeading-' | append: section.id
+  assign desktop_columns_setting = section.settings.products_per_row | default: '3' | plus: 0
+  assign aspect_ratio = section.settings.image_aspect_ratio | default: '3/4'
+  assign recommendation_count = 0
+
+  for block in section.blocks
+    if block.settings.product != blank
+      assign recommendation_count = recommendation_count | plus: 1
+    endif
+  endfor
+
+  assign desktop_columns = desktop_columns_setting | at_least: 1
+  if recommendation_count > 0
+    if recommendation_count < desktop_columns
+      assign desktop_columns = recommendation_count | at_least: 1
+    endif
+  endif
+
+  assign desktop_vw = 100 | divided_by: desktop_columns
+  assign card_sizes = '(min-width: 990px) ' | append: desktop_vw | append: 'vw, (min-width: 768px) 33vw, 62vw'
+  assign image_width = 720
+  if desktop_columns_setting == 4
+    assign image_width = 560
+  endif
+%}
+
+{% if recommendation_count > 0 or request.design_mode %}
+  <section
+    class="cosme-cart-recs full-width color-{{ section.settings.color_scheme }}"
+    style="--cart-recs-columns: {{ desktop_columns }};"
+    aria-labelledby="{{ heading_id }}"
+    {{ section.shopify_attributes }}
+  >
+    <div class="cosme-cart-recs__inner">
+      {% if recommendation_count > 0 %}
+        <header class="cosme-cart-recs__header">
+          <h2 class="cosme-cart-recs__heading" id="{{ heading_id }}">{{ heading | escape }}</h2>
+        </header>
+
+        <div class="cosme-cart-recs__scroller" tabindex="0">
+          <div class="cosme-cart-recs__grid">
+            {% for block in section.blocks %}
+              {% if block.settings.product != blank %}
+                <div class="cosme-cart-recs__item" {{ block.shopify_attributes }}>
+                  {% render 'cosme-product-card',
+                    product: block.settings.product,
+                    aspect_ratio: aspect_ratio,
+                    image_width: image_width,
+                    sizes: card_sizes,
+                    loading: 'lazy',
+                    show_vendor: section.settings.show_vendor,
+                    show_price: true,
+                    show_badge: section.settings.show_badges,
+                    show_secondary_image: section.settings.show_secondary_image
+                  %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <p class="cosme-cart-recs__editor-empty" id="{{ heading_id }}">
+          {{ 'sections.cart_recommendations.editor_empty' | t }}
+        </p>
+      {% endif %}
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+ .cosme-cart-recs {
+  overflow-x: clip;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
+.cosme-cart-recs__inner {
+  width: 100%;
+  max-width: var(--page-width);
+  margin-inline: auto;
+  padding: var(--spacing-xl) var(--page-margin) var(--spacing-2xl);
+}
+
+.cosme-cart-recs__header {
+  margin-block-end: var(--spacing-lg);
+}
+
+.cosme-cart-recs__heading {
+  margin: 0;
+  font-family: var(--font-heading--family);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: var(--font-heading--weight);
+  font-style: var(--font-heading--style);
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-spacing-heading);
+  color: var(--color-heading, var(--color-foreground));
+}
+
+.cosme-cart-recs__editor-empty {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: var(--line-height-body);
+  color: var(--color-muted);
+}
+
+.cosme-cart-recs__scroller {
+  min-width: 0;
+}
+
+.cosme-cart-recs__scroller:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+.cosme-cart-recs__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  width: 100%;
+}
+
+.cosme-cart-recs__item {
+  min-width: 0;
+  max-width: none;
+}
+
+.cosme-cart-recs .cosme-product-card__title,
+.cosme-cart-recs .cosme-product-card__vendor,
+.cosme-cart-recs .cosme-product-card__price {
+  overflow-wrap: anywhere;
+}
+
+/* Планшет (≥768px) — 2 колонки */
+@media screen and (min-width: 768px) {
+  .cosme-cart-recs__inner {
+    padding-block: var(--spacing-2xl);
+  }
+  .cosme-cart-recs__header {
+    margin-block-end: var(--spacing-xl);
+  }
+  .cosme-cart-recs__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Десктоп (≥990px) — 3 или 4 колонки по настройке, без ограничения ширины */
+@media screen and (min-width: 990px) {
+  .cosme-cart-recs__grid {
+    grid-template-columns: repeat(var(--cart-recs-columns), minmax(0, 1fr));
+  }
+}
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.cart_recommendations",
+  "enabled_on": {
+    "templates": ["cart"]
+  },
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:labels.heading",
+      "default": "You may also like"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "products_per_row",
+      "label": "t:sections.cart_recommendations.settings.products_per_row",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.cart_recommendations.settings.products_header"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.cart_recommendations.settings.products_info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.cart_recommendations.settings.show_vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_secondary_image",
+      "label": "t:sections.cart_recommendations.settings.show_secondary_image",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "image_aspect_ratio",
+      "label": "t:sections.cart_recommendations.settings.image_aspect_ratio",
+      "options": [
+        { "value": "3/4", "label": "t:sections.cart_recommendations.settings.aspect_3_4" },
+        { "value": "1/1", "label": "t:sections.cart_recommendations.settings.aspect_1_1" },
+        { "value": "4/5", "label": "t:sections.cart_recommendations.settings.aspect_4_5" }
+      ],
+      "default": "3/4"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_badges",
+      "label": "t:sections.cart_recommendations.settings.show_badges",
+      "default": true
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "t:sections.cart_recommendations.blocks.product.name",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:sections.cart_recommendations.blocks.product.product",
+          "info": "t:sections.cart_recommendations.blocks.product.product_info"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.cart_recommendations",
+      "blocks": [
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" }
+      ]
+    }
+  ]
+}
+{% endschema %}

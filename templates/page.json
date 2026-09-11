@@ -11,7 +11,14 @@
   "sections": {
     "main": {
       "type": "page",
-      "settings": {}
+      "settings": {
+        "show_eyebrow": true,
+        "eyebrow": "THE COSME STORY",
+        "content_alignment": "left",
+        "content_width": "narrow",
+        "color_scheme": "scheme-1",
+        "section_spacing": "medium"
+      }
     }
   },
   "order": [

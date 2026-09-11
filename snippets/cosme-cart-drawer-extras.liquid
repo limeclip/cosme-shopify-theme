@@ -1,0 +1,176 @@
+{% doc %}
+  Renders optional cart drawer extras: order note, discount code, and trust/payment row.
+
+  @param {boolean} [show_order_note] - Show the order note collapsible
+  @param {string} [order_note_label] - Order note toggle label
+  @param {string} [order_note_placeholder] - Order note textarea placeholder
+  @param {boolean} [show_discount] - Show the discount code collapsible
+  @param {string} [discount_label] - Discount toggle label
+  @param {string} [discount_placeholder] - Discount input placeholder
+  @param {string} [discount_button] - Discount apply button label
+  @param {boolean} [show_trust] - Show the trust message and payment icons
+  @param {string} [trust_message] - Trust message shown below checkout
+  @param {string} [part] - `tools` for note/discount, `trust` for the checkout trust row
+
+  @example
+  {% render 'cosme-cart-drawer-extras', part: 'tools', show_order_note: true %}
+{% enddoc %}
+
+{%- liquid
+  assign note_label_text = order_note_label | strip
+  if note_label_text == blank
+    assign note_label_text = 'cart.order_note' | t
+  endif
+
+  assign note_placeholder_text = order_note_placeholder | strip
+  if note_placeholder_text == blank
+    assign note_placeholder_text = 'cart.order_note_placeholder' | t
+  endif
+
+  assign discount_label_text = discount_label | strip
+  if discount_label_text == blank
+    assign discount_label_text = 'cart.discount_prompt' | t
+  endif
+
+  assign discount_placeholder_text = discount_placeholder | strip
+  if discount_placeholder_text == blank
+    assign discount_placeholder_text = 'cart.discount_code' | t
+  endif
+
+  assign discount_button_text = discount_button | strip
+  if discount_button_text == blank
+    assign discount_button_text = 'cart.discount_apply' | t
+  endif
+
+  assign trust_text = trust_message | strip
+  if trust_text == blank
+    assign trust_text = 'cart.secure_checkout' | t
+  endif
+
+  assign payment_count = shop.enabled_payment_types.size
+-%}
+
+{%- if part != 'trust' -%}
+<div class="cosme-cart-drawer__extras">
+  <details
+    class="cosme-cart-drawer__extra"
+    data-cart-drawer-note
+    {% unless show_order_note %}hidden{% endunless %}
+  >
+    <summary class="cosme-cart-drawer__extra-summary">
+      <span data-cart-drawer-note-label>{{ note_label_text | escape }}</span>
+      <span class="cosme-cart-drawer__extra-icon" aria-hidden="true">
+        {% render 'cosme-icon', icon: 'plus', size: 'sm', class: 'cosme-cart-drawer__extra-plus' %}
+        {% render 'cosme-icon', icon: 'minus', size: 'sm', class: 'cosme-cart-drawer__extra-minus' %}
+      </span>
+    </summary>
+    <div class="cosme-cart-drawer__extra-panel">
+      <label class="cosme-visually-hidden" for="CosmeCartDrawerNote">{{ note_label_text | escape }}</label>
+      <textarea
+        id="CosmeCartDrawerNote"
+        class="cosme-cart-drawer__note"
+        name="note"
+        rows="3"
+        maxlength="5000"
+        placeholder="{{ note_placeholder_text | escape }}"
+        data-cart-drawer-note-input
+      >{{ cart.note | escape }}</textarea>
+    </div>
+  </details>
+
+  <details
+    class="cosme-cart-drawer__extra"
+    data-cart-drawer-discount
+    {% unless show_discount %}hidden{% endunless %}
+  >
+    <summary class="cosme-cart-drawer__extra-summary">
+      <span data-cart-drawer-discount-label>{{ discount_label_text | escape }}</span>
+      <span class="cosme-cart-drawer__extra-icon" aria-hidden="true">
+        {% render 'cosme-icon', icon: 'plus', size: 'sm', class: 'cosme-cart-drawer__extra-plus' %}
+        {% render 'cosme-icon', icon: 'minus', size: 'sm', class: 'cosme-cart-drawer__extra-minus' %}
+      </span>
+    </summary>
+    <div class="cosme-cart-drawer__extra-panel">
+      {%- assign has_discount_codes = false -%}
+      {%- for application in cart.discount_applications -%}
+        {%- if application.type == 'discount_code' -%}
+          {%- assign has_discount_codes = true -%}
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- if has_discount_codes -%}
+        <ul class="cosme-cart-drawer__applied-discounts" role="list" data-cart-drawer-applied-discounts>
+          {%- for application in cart.discount_applications -%}
+            {%- if application.type == 'discount_code' -%}
+              <li class="cosme-cart-drawer__applied-discount">
+                {% render 'cosme-icon', icon: 'discount', size: 'sm' %}
+                <span data-cart-drawer-discount-code="{{ application.title | escape }}">{{ application.title | escape }}</span>
+                <button
+                  type="button"
+                  class="cosme-cart-drawer__discount-remove"
+                  data-cart-drawer-discount-remove
+                  data-discount-code="{{ application.title | escape }}"
+                >
+                  {{ 'cart.remove' | t }}
+                </button>
+              </li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <form class="cosme-cart-drawer__discount-form" data-cart-drawer-discount-form>
+        <label class="cosme-visually-hidden" for="CosmeCartDrawerDiscount">{{ discount_placeholder_text | escape }}</label>
+        <div class="cosme-cart-drawer__discount-row">
+          <input
+            id="CosmeCartDrawerDiscount"
+            class="cosme-cart-drawer__discount-input"
+            type="text"
+            name="discount"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            placeholder="{{ discount_placeholder_text | escape }}"
+            data-cart-drawer-discount-input
+            aria-describedby="CosmeCartDrawerDiscountError"
+          >
+          <button
+            type="submit"
+            class="cosme-button cosme-button--secondary cosme-cart-drawer__discount-apply"
+            data-cart-drawer-discount-apply
+          >
+            {{ discount_button_text | escape }}
+          </button>
+        </div>
+        <p
+          id="CosmeCartDrawerDiscountError"
+          class="cosme-cart-drawer__discount-error"
+          role="alert"
+          data-cart-drawer-discount-error
+          hidden
+        ></p>
+      </form>
+    </div>
+  </details>
+</div>
+{%- endif -%}
+
+{%- if part == 'trust' -%}
+<div
+  class="cosme-cart-drawer__trust"
+  data-cart-drawer-trust
+  {% unless show_trust %}hidden{% endunless %}
+>
+  <p class="cosme-cart-drawer__trust-message">
+    {% render 'cosme-icon', icon: 'secure', size: 'sm' %}
+    <span data-cart-drawer-trust-message>{{ trust_text | escape }}</span>
+  </p>
+  {%- if payment_count > 0 -%}
+    <ul class="cosme-cart-drawer__payments" role="list" aria-label="{{ 'cart.payment_methods' | t }}">
+      {%- for type in shop.enabled_payment_types -%}
+        <li>{{ type | payment_type_svg_tag: class: 'cosme-cart-drawer__payment-icon' }}</li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+</div>
+{%- endif -%}

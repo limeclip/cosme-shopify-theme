@@ -1,37 +1,1490 @@
-{% comment %}
-  This section is used in the cart template to render /cart page with an
-  overview of the items in customer's cart.
+{% liquid
+  assign heading = section.settings.heading | strip
+  if heading == blank
+    assign heading = 'cart.title' | t
+  endif
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/cart
-{% endcomment %}
+  assign continue_url = routes.all_products_collection_url
+  if continue_url == blank
+    assign continue_url = routes.root_url
+  endif
 
-<h1>{{ 'cart.title' | t }}</h1>
+  assign continue_label = 'cart.continue_shopping' | t
+  assign checkout_label = 'cart.checkout' | t
+  assign item_count = cart.item_count
+  assign heading_id = 'CartHeading-' | append: section.id
+  assign summary_id = 'CartSummaryHeading-' | append: section.id
+  assign discount_id = 'CartDiscount-' | append: section.id
+  assign show_free_shipping = section.settings.show_free_shipping_message
+  assign threshold_value = section.settings.free_shipping_threshold | default: 100
+  assign threshold_cents = threshold_value | times: 100 | round
+  assign shipping_remaining = threshold_cents | minus: cart.total_price
+  if shipping_remaining < 0
+    assign shipping_remaining = 0
+  endif
+  assign shipping_note = ''
+  if cart.taxes_included
+    if cart.requires_shipping
+      assign shipping_note = 'cart.shipping_at_checkout' | t
+    endif
+  else
+    if cart.requires_shipping
+      assign shipping_note = 'cart.taxes_shipping_at_checkout' | t
+    else
+      assign shipping_note = 'cart.taxes_at_checkout' | t
+    endif
+  endif
+  assign trust_message = section.settings.trust_message | strip
+  assign shipping_progress = 0
+  if threshold_cents > 0
+    assign raw_progress = cart.total_price | times: 100 | divided_by: threshold_cents
+    if raw_progress > 100
+      assign shipping_progress = 100
+    else
+      assign shipping_progress = raw_progress
+    endif
+  endif
+%}
 
-<form action="{{ routes.cart_url }}" method="post">
-  <table>
-    {% for item in cart.items %}
-      <tr>
-        <td>
-          {% render 'image', image: item.image, url: item.url %}
-        </td>
-        <td>
-          <p>{{ item.product.title }}</p>
-          {{ 'cart.remove' | t | link_to: item.url_to_remove }}
-        </td>
-        <td>
-          <input type="text" name="updates[]" value="{{ item.quantity }}">
-          <input type="submit" value="{{ 'cart.update' | t }}">
-        </td>
-      </tr>
-    {% endfor %}
-  </table>
+<section
+  class="cosme-cart full-width color-{{ section.settings.color_scheme }}"
+  aria-labelledby="{{ heading_id }}"
+  data-cosme-cart
+  {{ section.shopify_attributes }}
+>
+  <script type="application/json" data-cosme-cart-config>
+    {
+      "moneyFormat": {{ shop.money_format | json }},
+      "moneyWithCurrencyFormat": {{ shop.money_with_currency_format | json }},
+      "currency": {{ cart.currency.iso_code | json }},
+      "checkoutUrl": {{ routes.checkout_url | json }},
+      "showFreeShipping": {{ show_free_shipping | json }},
+      "freeShippingThreshold": {{ threshold_cents | json }},
+      "strings": {
+        "itemCountOne": {{ 'cart.item_count.one' | t: count: 'COUNT' | json }},
+        "itemCountOther": {{ 'cart.item_count.other' | t: count: 'COUNT' | json }},
+        "headerCartCount": {{ 'header.cart_count' | t: count: 'COUNT' | json }},
+        "updated": {{ 'cart.updated' | t | json }},
+        "quantityUpdated": {{ 'cart.quantity_updated' | t | json }},
+        "itemRemoved": {{ 'cart.item_removed' | t | json }},
+        "error": {{ 'cart.error' | t | json }},
+        "freeShippingAway": {{ 'cart.free_shipping_away' | t: amount: 'AMOUNT' | json }},
+        "freeShippingEligible": {{ 'cart.free_shipping_eligible' | t | json }},
+        "discountEmpty": {{ 'cart.discount_empty' | t | json }}
+      }
+    }
+  </script>
 
-  <input type="submit" name="checkout" value="{{ 'cart.checkout' | t }}">
-</form>
+  <div class="cosme-cart__inner">
+    <header class="cosme-cart__header">
+      <h1 class="cosme-cart__heading" id="{{ heading_id }}">{{ heading | escape }}</h1>
+      <p class="cosme-cart__count" data-cart-count>{{ 'cart.item_count' | t: count: item_count }}</p>
+    </header>
+
+    <p class="cosme-visually-hidden" aria-live="polite" data-cart-status></p>
+    <p class="cosme-cart__error" role="alert" data-cart-error hidden></p>
+
+    {% capture empty_cart_markup %}
+      <div class="cosme-cart__empty" data-cart-empty>
+        <h2 class="cosme-cart__empty-heading">{{ 'cart.empty_heading' | t }}</h2>
+        <p class="cosme-cart__empty-message">{{ 'cart.empty_message' | t }}</p>
+        {% render 'cosme-button',
+          label: continue_label,
+          url: continue_url,
+          style: 'primary',
+          class: 'cosme-cart__empty-button'
+        %}
+      </div>
+    {% endcapture %}
+    <template data-cart-empty-template>{{ empty_cart_markup }}</template>
+    {% if cart.item_count == 0 %}
+      {{ empty_cart_markup }}
+    {% endif %}
+
+    <form
+      action="{{ routes.cart_url }}"
+      method="post"
+      class="cosme-cart__form"
+      id="CartForm"
+      data-cart-form
+      {% if cart.item_count == 0 %}
+        hidden
+      {% endif %}
+    >
+      <div class="cosme-cart__layout">
+        <div class="cosme-cart__items-column">
+          <h2 class="cosme-visually-hidden">{{ 'cart.items_heading' | t }}</h2>
+          <ul class="cosme-cart__items" role="list" data-cart-items>
+            {% for item in cart.items %}
+              {% liquid
+                if forloop.first
+                  assign image_loading = 'eager'
+                  assign image_priority = 'high'
+                else
+                  assign image_loading = 'lazy'
+                  assign image_priority = blank
+                endif
+
+                assign show_variant = false
+                unless item.product.has_only_default_variant
+                  assign show_variant = true
+                endunless
+
+                assign on_sale = false
+                if item.variant.compare_at_price > item.variant.price
+                  assign on_sale = true
+                endif
+
+                assign image_alt = item.image.alt | default: item.product.title
+                assign selling_plan_name = ''
+                if item.selling_plan_allocation
+                  assign selling_plan_name = item.selling_plan_allocation.selling_plan.name
+                endif
+
+                assign public_property_count = 0
+                for property in item.properties
+                  assign property_prefix = property.first | slice: 0
+                  if property_prefix != '_'
+                    if property.last != blank
+                      assign public_property_count = public_property_count | plus: 1
+                    endif
+                  endif
+                endfor
+              %}
+              <li class="cosme-cart__item" data-cart-item data-line-key="{{ item.key | escape }}">
+                <div class="cosme-cart__item-media">
+                  {% if item.image %}
+                    {% render 'cosme-image',
+                      image: item.image,
+                      url: item.url,
+                      class: 'cosme-cart__item-image',
+                      width: 360,
+                      aspect_ratio: '1',
+                      alt: image_alt,
+                      loading: image_loading,
+                      fetchpriority: image_priority,
+                      sizes: '(min-width: 768px) 108px, 76px'
+                    %}
+                  {% else %}
+                    <a class="cosme-cart__item-placeholder" href="{{ item.url }}">
+                      {{ 'product-1' | placeholder_svg_tag: 'cosme-cart__item-placeholder-svg' }}
+                      <span class="cosme-visually-hidden">{{ item.product.title | escape }}</span>
+                    </a>
+                  {% endif %}
+                  {% if on_sale %}
+                    <div class="cosme-cart__item-badge">
+                      {% render 'cosme-product-badge', type: 'sale' %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="cosme-cart__item-info">
+                  {% if section.settings.show_vendor %}
+                    {% if item.vendor != blank %}
+                      <p class="cosme-cart__item-vendor">{{ item.vendor | escape }}</p>
+                    {% endif %}
+                  {% endif %}
+
+                  <a class="cosme-cart__item-title" href="{{ item.url }}">
+                    {{ item.product.title | escape }}
+                  </a>
+
+                  {% if show_variant %}
+                    <p class="cosme-cart__item-variant">{{ item.variant.title | escape }}</p>
+                  {% endif %}
+
+                  {% if selling_plan_name != blank %}
+                    <p class="cosme-cart__item-plan">{{ selling_plan_name | escape }}</p>
+                  {% endif %}
+
+                  {% if public_property_count > 0 %}
+                    <dl class="cosme-cart__item-properties">
+                      {% for property in item.properties %}
+                        {% assign property_key = property.first %}
+                        {% assign property_value = property.last %}
+                        {% assign property_prefix = property_key | slice: 0 %}
+                        {% if property_prefix != '_' %}
+                          {% if property_value != blank %}
+                            <div class="cosme-cart__item-property">
+                              <dt>{{ property_key | escape }}</dt>
+                              <dd>
+                                {% if property_value contains '://' %}
+                                  <a href="{{ property_value }}" target="_blank" rel="noopener">
+                                    {{ 'cart.property_file' | t }}
+                                  </a>
+                                {% else %}
+                                  {{ property_value | escape }}
+                                {% endif %}
+                              </dd>
+                            </div>
+                          {% endif %}
+                        {% endif %}
+                      {% endfor %}
+                    </dl>
+                  {% endif %}
+
+                  <div class="cosme-cart__item-price">
+                    {% render 'cosme-price',
+                      variant: item.variant,
+                      show_from: false,
+                      show_compare_at: section.settings.show_compare_at,
+                      show_unit_price: true
+                    %}
+                  </div>
+                </div>
+
+                <div class="cosme-cart__item-controls">
+                  <div class="cosme-cart__quantity">
+                    <button
+                      type="button"
+                      class="cosme-cart__quantity-btn"
+                      data-cart-decrease
+                      aria-label="{{ 'cart.decrease_quantity' | t: product: item.product.title }}"
+                    >
+                      {% render 'cosme-icon', icon: 'minus', size: 'sm' %}
+                    </button>
+                    <input
+                      class="cosme-cart__quantity-input"
+                      type="number"
+                      name="updates[]"
+                      value="{{ item.quantity }}"
+                      min="1"
+                      id="CartQuantity-{{ section.id }}-{{ forloop.index }}"
+                      data-cart-quantity
+                      aria-label="{{ 'cart.quantity' | t: product: item.product.title }}"
+                    >
+                    <button
+                      type="button"
+                      class="cosme-cart__quantity-btn"
+                      data-cart-increase
+                      aria-label="{{ 'cart.increase_quantity' | t: product: item.product.title }}"
+                    >
+                      {% render 'cosme-icon', icon: 'plus', size: 'sm' %}
+                    </button>
+                  </div>
+
+                  <a
+                    class="cosme-cart__remove"
+                    href="{{ item.url_to_remove }}"
+                    data-cart-remove
+                    aria-label="{{ 'cart.remove_item' | t: product: item.product.title }}"
+                  >
+                    {% render 'cosme-icon', icon: 'close', size: 'sm' %}
+                    <span class="cosme-cart__remove-label">{{ 'cart.remove' | t }}</span>
+                  </a>
+                </div>
+
+                <p class="cosme-cart__item-total">
+                  <span class="cosme-visually-hidden">{{ 'cart.line_total' | t }}</span>
+                  <span data-cart-line-price>{{ item.final_line_price | money }}</span>
+                </p>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <aside class="cosme-cart__summary" aria-labelledby="{{ summary_id }}">
+          <h2 class="cosme-cart__summary-heading" id="{{ summary_id }}">{{ 'cart.order_summary' | t }}</h2>
+
+          {% if show_free_shipping %}
+            <div class="cosme-cart__shipping" data-cart-free-shipping>
+              <p class="cosme-cart__shipping-message" data-shipping-message>
+                {% if shipping_remaining > 0 %}
+                  {% assign remaining_money = shipping_remaining | money %}
+                  {{ 'cart.free_shipping_away' | t: amount: remaining_money }}
+                {% else %}
+                  {{ 'cart.free_shipping_eligible' | t }}
+                {% endif %}
+              </p>
+              {% if section.settings.show_free_shipping_bar %}
+                <div
+                  class="cosme-cart__shipping-bar"
+                  data-shipping-bar
+                  role="progressbar"
+                  aria-valuenow="{{ shipping_progress }}"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <span class="cosme-cart__shipping-fill" data-shipping-fill style="width: {{ shipping_progress }}%;"></span>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <dl class="cosme-cart__totals">
+            <div class="cosme-cart__total-row">
+              <dt>{{ 'cart.subtotal' | t }}</dt>
+              <dd data-cart-subtotal>{{ cart.items_subtotal_price | money }}</dd>
+            </div>
+            {% if section.settings.show_discount_code %}
+              <div
+                class="cosme-cart__total-row"
+                data-cart-discount-row
+                {% if cart.total_discount == 0 %}
+                  hidden
+                {% endif %}
+              >
+                <dt>{{ 'cart.discount' | t }}</dt>
+                <dd data-cart-discount>−{{ cart.total_discount | money }}</dd>
+              </div>
+            {% endif %}
+            <div class="cosme-cart__total-row cosme-cart__total-row--grand">
+              <dt>{{ 'cart.total' | t }}</dt>
+              <dd>
+                <span data-cart-total>{{ cart.total_price | money_with_currency }}</span>
+                <span class="cosme-visually-hidden" data-cart-currency>{{ cart.currency.iso_code }}</span>
+              </dd>
+            </div>
+          </dl>
+
+          {% if shipping_note != blank %}
+            <p class="cosme-cart__estimate-note" data-cart-shipping-note>{{ shipping_note | escape }}</p>
+          {% endif %}
+
+          {% if section.settings.show_discount_code %}
+            <div class="cosme-cart__discount">
+              <label class="cosme-cart__discount-label" for="{{ discount_id }}">
+                {{ 'cart.discount_code' | t }}
+              </label>
+              <div class="cosme-cart__discount-row">
+                <input
+                  id="{{ discount_id }}"
+                  class="cosme-cart__discount-input"
+                  type="text"
+                  autocomplete="off"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                  data-cart-discount-input
+                >
+                <button
+                  type="button"
+                  class="cosme-button cosme-button--secondary cosme-cart__discount-apply"
+                  data-cart-discount-apply
+                >
+                  {{ 'cart.discount_apply' | t }}
+                </button>
+              </div>
+              <p class="cosme-cart__discount-error" role="alert" data-cart-discount-error hidden></p>
+            </div>
+          {% endif %}
+
+          <button
+            type="submit"
+            name="checkout"
+            formaction="{{ routes.checkout_url }}"
+            class="cosme-button cosme-button--primary cosme-cart__checkout"
+          >
+            {{ checkout_label | escape }}
+          </button>
+
+          {% render 'cosme-button',
+            label: continue_label,
+            url: continue_url,
+            style: 'tertiary',
+            class: 'cosme-cart__continue'
+          %}
+
+          {% if section.settings.show_payment_methods %}
+            {% if shop.enabled_payment_types.size > 0 %}
+              <div class="cosme-cart__payments" aria-label="{{ 'cart.payment_methods' | t }}">
+                <ul class="cosme-cart__payment-list" role="list">
+                  {% for type in shop.enabled_payment_types %}
+                    <li class="cosme-cart__payment-item">
+                      {{ type | payment_type_svg_tag: class: 'cosme-cart__payment-icon' }}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+          {% endif %}
+
+          {% if section.settings.show_trust_message %}
+            {% if trust_message != blank %}
+              <p class="cosme-cart__trust">{{ trust_message | escape }}</p>
+            {% endif %}
+          {% endif %}
+        </aside>
+      </div>
+    </form>
+  </div>
+</section>
+
+{% stylesheet %}
+  .cosme-cart {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-cart__inner,
+  .cosme-cart__form,
+  .cosme-cart__layout,
+  .cosme-cart__items-column {
+    min-width: 0;
+  }
+
+  .cosme-cart__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: var(--spacing-xl) var(--page-margin) var(--spacing-2xl);
+  }
+
+  .cosme-cart__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-block-end: var(--spacing-xl);
+    padding-block-end: var(--spacing-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-cart__count {
+    margin: 0;
+    color: var(--color-foreground);
+    background-color: var(--color-background-2, var(--color-background));
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-card);
+    border: var(--border-width) solid var(--color-input-border, var(--color-border));
+    transition: border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__error {
+    margin: 0 0 var(--spacing-lg);
+    color: var(--color-error);
+  }
+
+  .cosme-cart__error[hidden] {
+    display: none;
+  }
+
+  .cosme-cart__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    max-width: 32rem;
+    padding-block: var(--spacing-xl);
+  }
+
+  .cosme-cart__empty[hidden],
+  .cosme-cart__form[hidden],
+  .cosme-cart__total-row[hidden] {
+    display: none;
+  }
+
+  .cosme-cart__empty-heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-cart__empty-message {
+    margin: 0;
+    color: var(--color-muted);
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-cart__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-xl);
+    align-items: start;
+  }
+
+  .cosme-cart__items {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-cart__item {
+    display: grid;
+    grid-template-columns: 4.75rem minmax(0, 1fr);
+    grid-template-areas:
+      'media info'
+      'controls total';
+    column-gap: var(--spacing-md);
+    row-gap: var(--spacing-md);
+    align-items: start;
+    padding-block: var(--spacing-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+    transition: border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__item:first-child {
+    padding-block-start: 0;
+  }
+
+  .cosme-cart__item-media {
+    grid-area: media;
+    position: relative;
+    overflow: hidden;
+    width: 4.75rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-background-2, var(--color-background));
+    transition: border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__item-image,
+  .cosme-cart__item-placeholder {
+    display: block;
+    width: 100%;
+  }
+
+  .cosme-cart__item-image {
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__item-image:hover {
+    opacity: 0.88;
+  }
+
+  .cosme-cart__item-placeholder {
+    aspect-ratio: 1;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart__item-placeholder-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .cosme-cart__item-badge {
+    position: absolute;
+    top: var(--spacing-xs);
+    left: var(--spacing-xs);
+  }
+
+  .cosme-cart__item-info {
+    grid-area: info;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 0;
+  }
+
+  .cosme-cart__item-vendor {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart__item-title {
+    color: var(--color-heading, var(--color-foreground));
+    text-decoration: none;
+    font-family: var(--font-heading--family);
+    font-size: 1rem;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    overflow-wrap: anywhere;
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__item-title:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-cart__item-variant,
+  .cosme-cart__item-plan,
+  .cosme-cart__item-properties {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-cart__item-properties {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-cart__item-property {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--spacing-sm);
+  }
+
+  .cosme-cart__item-property dt::after {
+    content: ':';
+  }
+
+  .cosme-cart__item-property dd {
+    margin: 0;
+  }
+
+  .cosme-cart__item-price {
+    margin-block-start: var(--spacing-xs);
+  }
+
+  .cosme-cart__item-controls {
+    grid-area: controls;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    min-width: 0;
+  }
+
+  .cosme-cart__quantity {
+    display: inline-flex;
+    align-items: center;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-input);
+    background-color: var(--color-input-background);
+    transition: border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__quantity:hover {
+    border-color: var(--color-input-border-hover, var(--color-foreground));
+  }
+
+  .cosme-cart__quantity-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    transition: background-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__quantity-btn:hover {
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-cart__quantity-input {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: center;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .cosme-cart__quantity-input::-webkit-outer-spin-button,
+  .cosme-cart__quantity-input::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  .cosme-cart__remove {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-height: 2.5rem;
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    text-decoration: none;
+    transition: color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__remove:hover {
+    color: var(--color-foreground);
+  }
+
+  .cosme-cart__item-total {
+    grid-area: total;
+    margin: 0;
+    align-self: center;
+    font-size: 0.9375rem;
+    text-align: end;
+  }
+
+  .cosme-cart__summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    background-color: var(--color-background-2, var(--color-background));
+  }
+
+  .cosme-cart__summary-heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: 1.25rem;
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-cart__totals {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    margin: 0;
+  }
+
+  .cosme-cart__total-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin: 0;
+  }
+
+  .cosme-cart__total-row dt,
+  .cosme-cart__total-row dd {
+    margin: 0;
+  }
+
+  .cosme-cart__total-row--grand {
+    padding-block-start: var(--spacing-md);
+    border-top: var(--border-width) solid var(--color-border);
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+  }
+
+  .cosme-cart__checkout {
+    width: 100%;
+  }
+
+  .cosme-cart__continue {
+    align-self: center;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart__shipping {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) 0;
+  }
+
+  .cosme-cart__shipping-message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-muted);
+    text-align: center;
+    padding-bottom: var(--spacing-sm);
+  }
+
+  .cosme-cart__shipping-message strong {
+    color: var(--color-heading);
+    font-weight: 600;
+  }
+
+  .cosme-cart__shipping-bar {
+    width: 100%;
+    height: 0.35rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background-color: var(--color-secondary, var(--color-border));
+  }
+
+  .cosme-cart__shipping-fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background-color: var(--color-foreground);
+    transition: width 0.6s var(--transition-easing);
+  }
+
+  .cosme-cart__shipping-fill.is-complete {
+    background-color: var(--color-success);
+  }
+
+  .cosme-cart__estimate-note,
+  .cosme-cart__trust {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-cart__discount {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-cart__discount .cosme-button--secondary {
+    border-color: var(--color-input-border-hover, var(--color-foreground));
+  }
+  .cosme-cart__discount-label {
+    color: var(--color-input-label, var(--color-foreground));
+  }
+
+  .cosme-cart__discount-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-cart__discount-input {
+    flex: 1 1 8rem;
+    min-height: 2.75rem;
+    min-width: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-input);
+    background-color: var(--color-input-background);
+    transition: border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__discount-apply {
+    flex: 0 0 auto;
+  }
+
+  .cosme-cart__discount-error {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--color-error);
+  }
+
+  .cosme-cart__discount-error[hidden] {
+    display: none;
+  }
+
+  .cosme-cart__payments {
+    padding: var(--spacing-sm);
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-cart__payment-list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-cart__payment-icon {
+    display: block;
+    width: auto;
+    height: 1.25rem;
+  }
+
+  .cosme-cart__trust {
+    text-align: center;
+  }
+
+  .cosme-cart__item.is-updating {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .cosme-cart__item.is-removing {
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart__quantity-btn:disabled,
+  .cosme-cart__quantity-input:disabled {
+    cursor: wait;
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-cart__inner {
+      padding-block: var(--spacing-2xl);
+    }
+
+    .cosme-cart__item {
+      grid-template-columns: 6.75rem minmax(0, 1fr) auto auto;
+      grid-template-areas: 'media info controls total';
+      column-gap: var(--spacing-lg);
+      align-items: start;
+    }
+
+    .cosme-cart__item-media {
+      width: 6.75rem;
+    }
+
+    .cosme-cart__item-controls {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-block-start: 0.15rem;
+    }
+
+    .cosme-cart__item-total {
+      min-width: 5.5rem;
+      padding-block-start: 0.15rem;
+      align-self: start;
+      font-size: 1rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-cart__layout {
+      grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+      gap: var(--spacing-2xl);
+    }
+
+    .cosme-cart__summary {
+      position: sticky;
+      top: calc(var(--header-sticky-offset, 0px) + var(--spacing-lg));
+      max-width: 22rem;
+    }
+
+    .cosme-cart__checkout {
+      width: 100%;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const boundRoots = new WeakSet();
+
+    const formatMoney = (cents, format) => {
+      if (cents == null || Number.isNaN(Number(cents))) return '';
+
+      const value = Number(cents);
+      const formatString = format || '$' + '{' + '{' + 'amount' + '}' + '}';
+      const placeholderMatch = formatString.match(new RegExp('\\{\\{\\s*(\\w+)\\s*\\}\\}'));
+
+      if (!placeholderMatch) return String(value);
+
+      const formatWithDelimiters = (number, precision, thousands, decimal) => {
+        const safePrecision = precision == null ? 2 : precision;
+        const thousandSep = thousands == null ? ',' : thousands;
+        const decimalSep = decimal == null ? '.' : decimal;
+
+        const normalized = (number / 100).toFixed(safePrecision);
+        const parts = normalized.split('.');
+        const dollars = parts[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, `$1${thousandSep}`);
+        const centsPart = parts[1] ? decimalSep + parts[1] : '';
+
+        return dollars + centsPart;
+      };
+
+      let formatted = '';
+
+      switch (placeholderMatch[1]) {
+        case 'amount':
+          formatted = formatWithDelimiters(value, 2);
+          break;
+        case 'amount_no_decimals':
+          formatted = formatWithDelimiters(value, 0);
+          break;
+        case 'amount_with_comma_separator':
+          formatted = formatWithDelimiters(value, 2, '.', ',');
+          break;
+        case 'amount_no_decimals_with_comma_separator':
+          formatted = formatWithDelimiters(value, 0, '.', ',');
+          break;
+        case 'amount_with_apostrophe_separator':
+          formatted = formatWithDelimiters(value, 2, "'", '.');
+          break;
+        default:
+          formatted = formatWithDelimiters(value, 2);
+      }
+
+      return formatString.replace(new RegExp('\\{\\{\\s*\\w+\\s*\\}\\}'), formatted);
+    };
+
+    const interpolateCount = (template, count) => String(template || '').replace(/COUNT/g, String(count));
+
+    const customerErrorMessage = (payload, fallback) => {
+      if (!payload || typeof payload !== 'object') return fallback;
+
+      const description = payload.description;
+      if (typeof description !== 'string') return fallback;
+
+      const trimmed = description.trim();
+      if (!trimmed) return fallback;
+      if (trimmed.length > 180) return fallback;
+      if (/stack|trace|undefined|null|\{|\}/i.test(trimmed)) return fallback;
+
+      return trimmed;
+    };
+
+    const initCartPage = (root) => {
+      if (!root || boundRoots.has(root)) return;
+      boundRoots.add(root);
+
+      const configNode = root.querySelector('[data-cosme-cart-config]');
+      let config = { strings: {} };
+
+      try {
+        config = JSON.parse(configNode ? configNode.textContent : '{}');
+      } catch (error) {
+        config = { strings: {} };
+      }
+
+      const strings = config.strings || {};
+      const form = root.querySelector('[data-cart-form]');
+      const countEl = root.querySelector('[data-cart-count]');
+      const statusEl = root.querySelector('[data-cart-status]');
+      const errorEl = root.querySelector('[data-cart-error]');
+      const subtotalEl = root.querySelector('[data-cart-subtotal]');
+      const totalEl = root.querySelector('[data-cart-total]');
+      const currencyEl = root.querySelector('[data-cart-currency]');
+      const discountRow = root.querySelector('[data-cart-discount-row]');
+      const discountEl = root.querySelector('[data-cart-discount]');
+      const freeShippingEl = root.querySelector('[data-cart-free-shipping]');
+      const discountInput = root.querySelector('[data-cart-discount-input]');
+      const discountErrorEl = root.querySelector('[data-cart-discount-error]');
+
+      let requestInFlight = false;
+
+      const announce = (message) => {
+        if (!statusEl || !message) return;
+        statusEl.textContent = '';
+        window.requestAnimationFrame(() => {
+          statusEl.textContent = message;
+        });
+      };
+
+      const showError = (message) => {
+        if (!errorEl) return;
+        errorEl.hidden = false;
+        errorEl.textContent = message || strings.error;
+      };
+
+      const clearError = () => {
+        if (!errorEl) return;
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+      };
+
+      const setLineBusy = (item, busy) => {
+        if (!item) return;
+
+        item.classList.toggle('is-updating', busy);
+        item.setAttribute('aria-busy', busy ? 'true' : 'false');
+
+        item
+          .querySelectorAll('[data-cart-decrease], [data-cart-increase], [data-cart-quantity], [data-cart-remove]')
+          .forEach((control) => {
+            if (control.tagName === 'A') {
+              control.setAttribute('aria-disabled', busy ? 'true' : 'false');
+              control.style.pointerEvents = busy ? 'none' : '';
+            } else {
+              control.disabled = busy;
+            }
+          });
+      };
+
+      const formatItemCount = (count) => {
+        const template = count === 1 ? strings.itemCountOne : strings.itemCountOther;
+        return interpolateCount(template, count);
+      };
+
+      const updateHeaderCount = (count) => {
+        document.querySelectorAll('[data-header-cart-count], .cosme-header__cart-count').forEach((element) => {
+          if (count > 0) {
+            element.textContent = String(count);
+            element.hidden = false;
+          } else {
+            element.hidden = true;
+          }
+        });
+
+        document.querySelectorAll('[data-header-cart-toggle]').forEach((element) => {
+          if (count > 0 && strings.headerCartCount) {
+            element.setAttribute('aria-label', interpolateCount(strings.headerCartCount, count));
+          } else {
+            element.removeAttribute('aria-label');
+          }
+        });
+
+        document.dispatchEvent(new CustomEvent('cart:refresh'));
+      };
+
+      const interpolateAmount = (template, amount) => String(template || '').replace(/AMOUNT/g, amount);
+
+      const updateFreeShipping = (subtotal) => {
+  if (!freeShippingEl || !config.showFreeShipping) return;
+
+  const threshold = Number(config.freeShippingThreshold) || 0;
+  const remaining = threshold - Number(subtotal || 0);
+  const progress = threshold > 0 ? Math.min(100, Math.round((Number(subtotal || 0) / threshold) * 100)) : 0;
+
+  const messageEl = freeShippingEl.querySelector('[data-shipping-message]');
+  const barEl = freeShippingEl.querySelector('[data-shipping-bar]');
+  const fillEl = freeShippingEl.querySelector('[data-shipping-fill]');
+
+  if (remaining > 0) {
+    const formatted = formatMoney(remaining, config.moneyFormat);
+    const boldFormatted = `<strong>${formatted}</strong>`;
+    if (messageEl) messageEl.innerHTML = interpolateAmount(strings.freeShippingAway, boldFormatted);
+    if (fillEl) {
+      fillEl.style.width = progress + '%';
+      fillEl.classList.remove('is-complete');
+    }
+  } else {
+    if (messageEl) messageEl.textContent = strings.freeShippingEligible;
+    if (fillEl) {
+      fillEl.style.width = '100%';
+      fillEl.classList.add('is-complete');
+    }
+  }
+
+  if (barEl) {
+    barEl.setAttribute('aria-valuenow', String(progress));
+  }
+};
+
+      const updateSummary = (cart) => {
+        if (countEl) countEl.textContent = formatItemCount(cart.item_count);
+        if (subtotalEl) subtotalEl.textContent = formatMoney(cart.items_subtotal_price, config.moneyFormat);
+        if (totalEl) totalEl.textContent = formatMoney(cart.total_price, config.moneyWithCurrencyFormat);
+
+        if (currencyEl) {
+          currencyEl.textContent = typeof cart.currency === 'string' ? cart.currency : config.currency || '';
+        }
+
+        if (discountRow && discountEl) {
+          const discount = Number(cart.total_discount) || 0;
+          if (discount > 0) {
+            discountRow.hidden = false;
+            discountEl.textContent = '\u2212' + formatMoney(discount, config.moneyFormat);
+          } else {
+            discountRow.hidden = true;
+          }
+        }
+
+        updateFreeShipping(cart.total_price);
+        updateHeaderCount(cart.item_count);
+      };
+
+      const applyDiscountCode = () => {
+        if (!discountInput) return;
+
+        const code = discountInput.value.trim();
+
+        if (discountErrorEl) {
+          discountErrorEl.hidden = true;
+          discountErrorEl.textContent = '';
+        }
+
+        if (!code) {
+          if (discountErrorEl) {
+            discountErrorEl.hidden = false;
+            discountErrorEl.textContent = strings.discountEmpty || '';
+          }
+          discountInput.focus();
+          return;
+        }
+
+        const checkoutUrl = config.checkoutUrl || '/checkout';
+        window.location.assign(
+          '/discount/' + encodeURIComponent(code) + '?redirect=' + encodeURIComponent(checkoutUrl)
+        );
+      };
+
+      const showEmptyState = () => {
+        if (form) form.hidden = true;
+
+        let emptyNode = root.querySelector('[data-cart-empty]');
+        if (!emptyNode) {
+          const template = root.querySelector('[data-cart-empty-template]');
+          const source = template && template.content ? template.content.firstElementChild : null;
+          if (source) {
+            emptyNode = source.cloneNode(true);
+            emptyNode.hidden = false;
+            template.insertAdjacentElement('afterend', emptyNode);
+          }
+        } else {
+          emptyNode.hidden = false;
+        }
+      };
+
+      const removeLineElement = (item) => {
+        if (!item) return Promise.resolve();
+
+        return new Promise((resolve) => {
+          item.classList.remove('is-updating');
+          item.classList.add('is-removing');
+
+          window.setTimeout(() => {
+            item.remove();
+            resolve();
+          }, 200);
+        });
+      };
+
+      const applyCartState = (cart, lineKey, previousQuantity) => {
+        const line = (cart.items || []).find((entry) => entry.key === lineKey);
+        const item = root.querySelector(`[data-cart-item][data-line-key="${CSS.escape(lineKey)}"]`);
+
+        if (!line || line.quantity === 0) {
+          return removeLineElement(item).then(() => {
+            updateSummary(cart);
+
+            if (cart.item_count === 0) {
+              showEmptyState();
+            }
+
+            announce(strings.itemRemoved);
+          });
+        }
+
+        if (item) {
+          const input = item.querySelector('[data-cart-quantity]');
+          const linePrice = item.querySelector('[data-cart-line-price]');
+
+          if (input) {
+            input.value = String(line.quantity);
+            input.dataset.currentQuantity = String(line.quantity);
+          }
+
+          if (linePrice) {
+            linePrice.textContent = formatMoney(line.final_line_price, config.moneyFormat);
+          }
+        }
+
+        updateSummary(cart);
+
+        const statusMessage = previousQuantity === line.quantity ? strings.updated : strings.quantityUpdated;
+        announce(statusMessage);
+        return Promise.resolve();
+      };
+
+      const changeLine = async (item, quantity, previousQuantity) => {
+        const lineKey = item && item.dataset.lineKey;
+
+        if (!lineKey || requestInFlight) return;
+
+        requestInFlight = true;
+        clearError();
+        setLineBusy(item, true);
+
+        try {
+          const response = await fetch('/cart/change.js', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify({
+              id: lineKey,
+              quantity,
+            }),
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok) {
+            throw payload;
+          }
+
+          await applyCartState(payload, lineKey, previousQuantity);
+        } catch (error) {
+          const input = item.querySelector('[data-cart-quantity]');
+          if (input) input.value = String(previousQuantity);
+
+          showError(customerErrorMessage(error, strings.error));
+        } finally {
+          setLineBusy(item, false);
+          requestInFlight = false;
+        }
+      };
+
+      root.addEventListener('click', (event) => {
+        const decrease = event.target.closest('[data-cart-decrease]');
+        const increase = event.target.closest('[data-cart-increase]');
+        const remove = event.target.closest('[data-cart-remove]');
+        const discountApply = event.target.closest('[data-cart-discount-apply]');
+
+        if (discountApply && root.contains(discountApply)) {
+          event.preventDefault();
+          applyDiscountCode();
+          return;
+        }
+
+        if (!decrease && !increase && !remove) return;
+        if (!root.contains(event.target)) return;
+
+        const item = event.target.closest('[data-cart-item]');
+        if (!item) return;
+
+        if (item.classList.contains('is-updating') || requestInFlight) {
+          event.preventDefault();
+          return;
+        }
+
+        const input = item.querySelector('[data-cart-quantity]');
+        const currentQuantity = Number(input && input.value);
+
+        if (remove) {
+          event.preventDefault();
+          changeLine(item, 0, currentQuantity);
+          return;
+        }
+
+        if (decrease) {
+          const nextQuantity = Math.max(0, currentQuantity - 1);
+          if (nextQuantity === currentQuantity) return;
+          changeLine(item, nextQuantity, currentQuantity);
+          return;
+        }
+
+        if (increase) {
+          changeLine(item, currentQuantity + 1, currentQuantity);
+        }
+      });
+
+      root.addEventListener('change', (event) => {
+        const input = event.target.closest('[data-cart-quantity]');
+        if (!input || !root.contains(input)) return;
+
+        const item = input.closest('[data-cart-item]');
+        if (!item || requestInFlight) {
+          input.value = input.dataset.currentQuantity || input.value;
+          return;
+        }
+
+        const previousQuantity = Number(input.dataset.currentQuantity || input.defaultValue);
+        const nextQuantity = Math.max(0, Math.floor(Number(input.value)));
+
+        if (!Number.isFinite(nextQuantity) || nextQuantity === previousQuantity) {
+          input.value = String(previousQuantity);
+          return;
+        }
+
+        changeLine(item, nextQuantity, previousQuantity);
+      });
+
+      root.addEventListener(
+        'keydown',
+        (event) => {
+          if (event.target.closest('[data-cart-discount-input]') && event.key === 'Enter') {
+            event.preventDefault();
+            applyDiscountCode();
+            return;
+          }
+
+          const input = event.target.closest('[data-cart-quantity]');
+          if (!input || event.key !== 'Enter') return;
+          event.preventDefault();
+          input.blur();
+        },
+        true
+      );
+
+      root.querySelectorAll('[data-cart-quantity]').forEach((input) => {
+        input.dataset.currentQuantity = input.value;
+      });
+    };
+
+    document.querySelectorAll('[data-cosme-cart]').forEach(initCartPage);
+
+    document.addEventListener('shopify:section:load', (event) => {
+      const root = event.target.querySelector('[data-cosme-cart]');
+      if (root) initCartPage(root);
+    });
+  })();
+{% endjavascript %}
 
 {% schema %}
 {
   "name": "t:general.cart",
-  "settings": []
+  "enabled_on": {
+    "templates": ["cart"]
+  },
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:labels.heading",
+      "default": "Your cart"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.cart.settings.show_vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_compare_at",
+      "label": "t:sections.cart.settings.show_compare_at",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_free_shipping_message",
+      "label": "t:sections.cart.settings.show_free_shipping",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_free_shipping_bar",
+      "label": "t:sections.cart.settings.show_free_shipping_bar",
+      "default": true,
+      "visible_if": "{{ section.settings.show_free_shipping_message }}"
+    },
+    {
+      "type": "number",
+      "id": "free_shipping_threshold",
+      "label": "t:sections.cart.settings.free_shipping_threshold",
+      "info": "t:sections.cart.settings.free_shipping_threshold_info",
+      "default": 100,
+      "visible_if": "{{ section.settings.show_free_shipping_message }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_discount_code",
+      "label": "t:sections.cart.settings.show_discount_code",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_methods",
+      "label": "t:sections.cart.settings.show_payment_methods",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_trust_message",
+      "label": "t:sections.cart.settings.show_trust_message",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "trust_message",
+      "label": "t:sections.cart.settings.trust_message",
+      "default": "Secure checkout · Fast delivery · Easy returns",
+      "visible_if": "{{ section.settings.show_trust_message }}"
+    }
+  ]
 }
 {% endschema %}

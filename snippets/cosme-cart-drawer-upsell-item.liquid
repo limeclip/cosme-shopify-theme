@@ -1,0 +1,105 @@
+{% doc %}
+  Compact cart-drawer upsell row using Cosme image, price, and icon conventions.
+
+  @param {product} product - Product to recommend
+  @param {boolean} [show_vendor] - Show the product vendor (default: false)
+
+  @example
+  {% render 'cosme-cart-drawer-upsell-item', product: product %}
+{% enddoc %}
+
+{%- liquid
+  assign show_vendor_label = false
+  if show_vendor
+    assign show_vendor_label = true
+  endif
+
+  assign variant = product.selected_or_first_available_variant
+  assign can_add = false
+  assign use_quick_view = false
+
+  if product.available
+    if product.has_only_default_variant
+      if variant.available
+        assign can_add = true
+      endif
+    else
+      if settings.quick_view_enabled
+        assign use_quick_view = true
+      endif
+    endif
+  endif
+
+  assign image = product.featured_media.preview_image | default: product.featured_image
+  assign image_alt = image.alt | default: product.title
+  assign add_label = 'cart.upsell_add' | t
+  assign adding_label = 'products.add_to_cart_adding' | t
+  assign view_label = 'cart.upsell_choose' | t
+-%}
+
+<li class="cosme-cart-drawer__upsell-item" data-upsell-product-id="{{ product.id }}">
+  {% if image %}
+    {% render 'cosme-image',
+      image: image,
+      url: product.url,
+      class: 'cosme-cart-drawer__upsell-media',
+      width: 160,
+      aspect_ratio: '1/1',
+      sizes: '56px',
+      loading: 'lazy',
+      alt: image_alt
+    %}
+  {% else %}
+    <a href="{{ product.url }}" class="cosme-cart-drawer__upsell-media cosme-cart-drawer__upsell-media--placeholder">
+      {{ 'product-apparel-2' | placeholder_svg_tag: 'cosme-cart-drawer__upsell-placeholder' }}
+    </a>
+  {% endif %}
+
+  <div class="cosme-cart-drawer__upsell-copy">
+    {%- if show_vendor_label -%}
+      {%- if product.vendor != blank -%}
+        <p class="cosme-cart-drawer__upsell-vendor">{{ product.vendor | escape }}</p>
+      {%- endif -%}
+    {%- endif -%}
+    <a href="{{ product.url }}" class="cosme-cart-drawer__upsell-title">{{ product.title | escape }}</a>
+    <div class="cosme-cart-drawer__upsell-price">
+      {% render 'cosme-price', product: product, show_from: true %}
+    </div>
+  </div>
+
+  <div class="cosme-cart-drawer__upsell-action">
+    {%- if can_add -%}
+      {% form 'product', product, class: 'cosme-cart-drawer__upsell-form', data-adding-label: adding_label %}
+        <input type="hidden" name="id" value="{{ variant.id }}">
+        <input type="hidden" name="quantity" value="1">
+        <button
+          type="submit"
+          class="cosme-cart-drawer__upsell-add"
+          data-cart-upsell-add
+          aria-label="{{ 'products.add_to_cart' | t: title: product.title }}"
+        >
+          {{ add_label | escape }}
+        </button>
+      {% endform %}
+    {%- elsif use_quick_view -%}
+      <button
+        type="button"
+        class="cosme-cart-drawer__upsell-add"
+        data-quick-view
+        data-product-handle="{{ product.handle }}"
+        data-product-url="{{ product.url }}"
+        aria-label="{{ 'products.quick_view' | t: title: product.title }}"
+      >
+        {{ view_label | escape }}
+      </button>
+    {%- else -%}
+      <a
+        href="{{ product.url }}"
+        class="cosme-cart-drawer__upsell-add cosme-cart-drawer__upsell-add--link"
+        aria-label="{{ 'products.view_product' | t }} — {{ product.title | escape }}"
+      >
+        {{ view_label | escape }}
+      </a>
+    {%- endif -%}
+  </div>
+</li>

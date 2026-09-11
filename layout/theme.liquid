@@ -43,7 +43,11 @@
     {{ content_for_layout }}
 
     {% sections 'footer-group' %}
+    {% sections 'overlay-group' %}
 
     {% render 'cosme-quick-view' %}
+    {% if settings.enable_back_to_top %}
+      {% render 'cosme-back-to-top' %}
+    {% endif %}
   </body>
 </html>

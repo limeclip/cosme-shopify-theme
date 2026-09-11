@@ -14,7 +14,10 @@
 {% enddoc %}
 
 {% liquid
-  assign show_compare = show_compare_at | default: true
+  assign show_compare = true
+  if show_compare_at == false
+    assign show_compare = false
+  endif
   assign show_unit = show_unit_price | default: false
   assign show_from_label = show_from | default: true
   assign on_sale = false

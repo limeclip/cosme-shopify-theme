@@ -1,0 +1,173 @@
+{% doc %}
+  Renders a promotional free shipping progress bar for the cart drawer.
+
+  @param {boolean} [enabled] - Whether to show the bar (default: true)
+  @param {number} [threshold] - Threshold in store currency units (default: 100)
+  @param {string} [message] - Merchant message before threshold; use [amount] for remaining money
+  @param {string} [unlocked_message] - Merchant message after the threshold is reached
+
+  @example
+  {% render 'cosme-cart-drawer-shipping',
+    enabled: section.settings.show_free_shipping,
+    threshold: section.settings.free_shipping_threshold,
+    message: section.settings.free_shipping_message,
+    unlocked_message: section.settings.free_shipping_unlocked
+  %}
+{% enddoc %}
+
+{%- liquid
+  assign show_bar = true
+  if enabled == false
+    assign show_bar = false
+  endif
+
+  assign threshold_value = threshold | default: 100
+  if threshold_value <= 0
+    assign threshold_value = 100
+  endif
+
+  assign threshold_cents = threshold_value | times: 100 | round
+  assign cart_value = cart.total_price
+  assign remaining = threshold_cents | minus: cart_value
+  assign unlocked = false
+  if remaining <= 0
+    assign remaining = 0
+    assign unlocked = true
+  endif
+
+  if cart.item_count == 0
+    assign show_bar = false
+  endif
+
+  assign progress = 0
+  if threshold_cents > 0
+    assign raw_progress = cart_value | times: 100 | divided_by: threshold_cents
+    if raw_progress > 100
+      assign progress = 100
+    else
+      assign progress = raw_progress
+    endif
+  endif
+
+  if unlocked
+    assign progress = 100
+  endif
+
+  assign remaining_money = remaining | money
+  assign amount_token = '{' | append: '{ amount }' | append: '}'
+  assign amount_token_tight = '{' | append: '{amount}' | append: '}'
+
+  assign away_template = message | strip
+  if away_template == blank
+    assign shipping_message = 'cart.free_shipping_away' | t: amount: remaining_money
+  else
+    assign shipping_message = away_template | replace: '[amount]', remaining_money | replace: amount_token, remaining_money | replace: amount_token_tight, remaining_money
+  endif
+
+  assign unlocked_template = unlocked_message | strip
+  if unlocked_template == blank
+    assign unlocked_text = 'cart.free_shipping_unlocked' | t
+  else
+    assign unlocked_text = unlocked_template
+  endif
+
+  if unlocked
+    assign shipping_message = unlocked_text
+  endif
+-%}
+
+{%- if cart.item_count > 0 -%}
+  {%- if show_bar -%}
+  <div
+    class="cosme-cart-drawer__shipping{% if unlocked %} cosme-cart-drawer__shipping--unlocked{% endif %}"
+    data-cart-drawer-shipping
+  >
+    <p class="cosme-cart-drawer__shipping-label">{{ 'cart.free_shipping_label' | t }}</p>
+    <div
+      class="cosme-cart-drawer__shipping-bar"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="{{ progress }}"
+      aria-valuetext="{{ shipping_message | escape }}"
+      aria-label="{{ 'cart.free_shipping_label' | t }}"
+      data-shipping-bar
+    >
+      <span
+        class="cosme-cart-drawer__shipping-fill{% if unlocked %} is-complete{% endif %}"
+        style="width: {{ progress }}%;"
+        data-shipping-fill
+      ></span>
+    </div>
+    <p class="cosme-cart-drawer__shipping-message">
+      <span data-shipping-icon {% unless unlocked %}hidden{% endunless %}>
+        {% render 'cosme-icon', icon: 'shipping', size: 'sm' %}
+      </span>
+      <span data-shipping-text>{{ shipping_message | escape }}</span>
+    </p>
+  </div>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .cosme-cart-drawer__shipping {
+    flex-shrink: 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-cart-drawer__shipping[hidden] {
+    display: none;
+  }
+
+  .cosme-cart-drawer__shipping-label {
+    margin: 0 0 var(--spacing-sm);
+    font-family: var(--font-body--family);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-cart-drawer__shipping-bar {
+    width: 100%;
+    height: 0.125rem;
+    overflow: hidden;
+    background-color: var(--color-border);
+  }
+
+  .cosme-cart-drawer__shipping-fill {
+    display: block;
+    height: 100%;
+    max-width: 100%;
+    background-color: var(--color-accent);
+  }
+
+  .cosme-cart-drawer__shipping-fill.is-complete {
+    background-color: var(--color-accent);
+  }
+
+  .cosme-header__cart-dialog--animated .cosme-cart-drawer__shipping-fill {
+    transition: width var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-cart-drawer__shipping-message {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) 0 0;
+    color: var(--color-foreground);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .cosme-cart-drawer__shipping--unlocked .cosme-cart-drawer__shipping-message {
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-header__cart-dialog--animated .cosme-cart-drawer__shipping-fill {
+      transition: none;
+    }
+  }
+{% endstylesheet %}

@@ -1,68 +1,1516 @@
-{% comment %}
-  This section is used in the article template to render the article page, which
-  displays the full content of the blog post and can optionally include a
-  comments section for customers (not shown in this example).
+{% liquid
+  assign heading_id = 'ArticleHeading-' | append: section.id
+  assign section_spacing = section.settings.section_spacing | default: 'medium'
+  assign journal_url = article.blog.url | default: blog.url
+  assign journal_title = article.blog.title | default: blog.title
+  assign eyebrow_label = journal_title
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/article
-{% endcomment %}
+  assign excerpt_text = article.excerpt | strip_html | strip
+  assign show_excerpt = false
+  if section.settings.show_excerpt
+    if excerpt_text != blank
+      assign show_excerpt = true
+    endif
+  endif
 
-{% if article.image %}
-  {{ article.image | image_url: width: 1000 | image_tag }}
-{% endif %}
+  assign author_name = article.author | strip
+  assign show_author = false
+  if section.settings.show_author
+    if author_name != blank
+      assign show_author = true
+    endif
+  endif
 
-<h1>{{ article.title }}</h1>
+  assign reading_minutes = 0
+  if section.settings.show_reading_time
+    assign article_plain = article.content | strip_html | strip
+    if article_plain != blank
+      assign word_count = article_plain | split: ' ' | size
+      assign reading_minutes = word_count | plus: 199 | divided_by: 200
+      if reading_minutes < 1
+        assign reading_minutes = 1
+      endif
+    endif
+  endif
 
-{% assign date = article.published_at | time_tag: format: 'date' %}
-<p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
+  assign show_date = section.settings.show_date
+  assign show_meta = false
+  if show_date
+    if article.published_at != blank
+      assign show_meta = true
+    endif
+  endif
+  if show_author
+    assign show_meta = true
+  endif
+  if reading_minutes > 0
+    assign show_meta = true
+  endif
 
-{{ article.content }}
+  assign hero_alt = article.title
+  if article.image != blank
+    if article.image.alt != blank
+      assign hero_alt = article.image.alt
+    endif
+  endif
 
-{% if blog.comments_enabled? %}
-  <h2>{{ 'blog.article_comments' | t }}</h2>
+  case section.settings.hero_image_ratio
+    when 'wide'
+      assign hero_ratio = '16/9'
+      assign hero_height = 900
+    when 'square'
+      assign hero_ratio = '1/1'
+      assign hero_height = 1200
+    else
+      assign hero_ratio = '16/10'
+      assign hero_height = 1000
+  endcase
 
-  <div id="comments">
-    {% paginate article.comments by 10 %}
-      {% for comment in article.comments %}
-        <div>
-          <p>{{ comment.author }}</p>
-          <p>
-            {{- comment.created_at | time_tag: format: 'date' -}}
+  assign share_url = canonical_url | default: article.url
+  assign share_title = article.title | strip_html
+  assign share_url_encoded = share_url | url_encode
+  assign share_title_encoded = share_title | url_encode
+  assign pin_media = blank
+  if article.image != blank
+    assign pin_media = article.image | image_url: width: 1600
+  endif
+
+  assign previous_article = blog.previous_article
+  assign next_article = blog.next_article
+  assign show_pager = false
+  if previous_article != blank
+    assign show_pager = true
+  endif
+  if next_article != blank
+    assign show_pager = true
+  endif
+
+  assign related_limit = section.settings.related_count | default: 3 | plus: 0
+  if related_limit < 1
+    assign related_limit = 1
+  endif
+  assign related_handles = ','
+  assign related_found = 0
+  assign show_related = false
+  assign related_heading = section.settings.related_heading | strip
+  if related_heading == blank
+    assign related_heading = 'blog.related_stories' | t
+  endif
+  assign related_description = section.settings.related_description | strip
+  assign related_heading_id = 'ArticleRelated-' | append: section.id
+
+  if section.settings.show_related
+    for related_article in blog.articles
+      if related_found >= related_limit
+        break
+      endif
+      unless related_article.id == article.id
+        assign tagged_match = false
+        if article.tags.size > 0
+          if related_article.tags.size > 0
+            for tag in related_article.tags
+              if article.tags contains tag
+                assign tagged_match = true
+              endif
+            endfor
+          endif
+        endif
+        if tagged_match
+          assign related_handles = related_handles | append: related_article.handle | append: ','
+          assign related_found = related_found | plus: 1
+        endif
+      endunless
+    endfor
+
+    for related_article in blog.articles
+      if related_found >= related_limit
+        break
+      endif
+      unless related_article.id == article.id
+        assign related_token = ',' | append: related_article.handle | append: ','
+        assign already_related = false
+        if related_handles contains related_token
+          assign already_related = true
+        endif
+        unless already_related
+          assign related_handles = related_handles | append: related_article.handle | append: ','
+          assign related_found = related_found | plus: 1
+        endunless
+      endunless
+    endfor
+
+    if related_found > 0
+      assign show_related = true
+    endif
+  endif
+
+  assign related_cols = related_found
+  if related_cols > 3
+    assign related_cols = 3
+  endif
+  assign related_handle_list = related_handles | split: ','
+
+  assign show_newsletter = section.settings.show_newsletter
+  assign newsletter_eyebrow = section.settings.newsletter_eyebrow | strip
+  assign newsletter_heading = section.settings.newsletter_heading | strip
+  assign newsletter_description = section.settings.newsletter_description | strip
+  assign newsletter_button_label = section.settings.newsletter_button_label | strip
+  if newsletter_button_label == blank
+    assign newsletter_button_label = 'blog.newsletter_submit' | t
+  endif
+  assign newsletter_email_label = 'blog.newsletter_email_label' | t
+  assign newsletter_form_id = 'ArticleNewsletter-' | append: section.id
+  assign newsletter_email_id = 'ArticleNewsletterEmail-' | append: section.id
+  assign newsletter_success_id = 'ArticleNewsletterSuccess-' | append: section.id
+  assign newsletter_heading_id = 'ArticleNewsletterHeading-' | append: section.id
+%}
+
+<article
+  id="Article-{{ section.id }}"
+  class="cosme-article full-width color-{{ section.settings.color_scheme }} cosme-article--spacing-{{ section_spacing }}{% if settings.enable_animations %} cosme-article--animated{% endif %}"
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
+>
+  <script type="application/ld+json">
+    {{ article | structured_data }}
+  </script>
+
+  <div class="cosme-article__inner">
+    {% if section.settings.show_back_link %}
+      {% if journal_url != blank %}
+        <a class="cosme-article__back" href="{{ journal_url }}">
+          {% render 'cosme-icon', icon: 'chevron-left', size: 'sm', class: 'cosme-article__back-icon' %}
+          <span>{{ 'blog.back_to_journal' | t }}</span>
+        </a>
+      {% endif %}
+    {% endif %}
+
+    <header class="cosme-article__header">
+      {% if eyebrow_label != blank %}
+        <p class="cosme-article__eyebrow">{{ eyebrow_label | escape }}</p>
+      {% endif %}
+
+      <h1 class="cosme-article__title" id="{{ heading_id }}">{{ article.title | escape }}</h1>
+
+      {% if show_excerpt %}
+        <p class="cosme-article__excerpt">{{ excerpt_text | escape }}</p>
+      {% endif %}
+
+      {% if show_meta %}
+        <p class="cosme-article__meta">
+          {% if show_date %}
+            {% if article.published_at != blank %}
+              {{ article.published_at | time_tag: format: 'date' }}
+            {% endif %}
+          {% endif %}
+          {% if show_date %}
+            {% if article.published_at != blank %}
+              {% if show_author %}
+                <span class="cosme-article__meta-sep" aria-hidden="true">·</span>
+              {% elsif reading_minutes > 0 %}
+                <span class="cosme-article__meta-sep" aria-hidden="true">·</span>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+          {% if show_author %}
+            <span>{{ author_name | escape }}</span>
+            {% if reading_minutes > 0 %}
+              <span class="cosme-article__meta-sep" aria-hidden="true">·</span>
+            {% endif %}
+          {% endif %}
+          {% if reading_minutes > 0 %}
+            <span>{{ 'blog.reading_time' | t: count: reading_minutes }}</span>
+          {% endif %}
+        </p>
+      {% endif %}
+    </header>
+
+    {% if article.image != blank %}
+      <div class="cosme-article__hero">
+        {% render 'cosme-image',
+          image: article.image,
+          alt: hero_alt,
+          class: 'cosme-article__hero-image',
+          width: 1800,
+          height: hero_height,
+          crop: 'center',
+          sizes: '(min-width: 990px) min(92vw, 1200px), 100vw',
+          loading: 'eager',
+          fetchpriority: 'high',
+          aspect_ratio: hero_ratio
+        %}
+      </div>
+    {% endif %}
+
+    <div class="cosme-article__layout">
+      {% if section.settings.show_share %}
+        <div
+          class="cosme-article__share"
+          data-article-share-root
+          data-share-url="{{ share_url | escape }}"
+          data-share-title="{{ share_title | escape }}"
+          data-string-copied="{{ 'blog.share_copied' | t | escape }}"
+          data-string-copy-failed="{{ 'blog.share_copy_failed' | t | escape }}"
+        >
+          <p class="cosme-article__share-label" id="ArticleShareLabel-{{ section.id }}">
+            {{ 'blog.share' | t }}
           </p>
-          <p>{{ comment.content }}</p>
+          <ul class="cosme-article__share-list" role="list" aria-labelledby="ArticleShareLabel-{{ section.id }}">
+            <li>
+              <a
+                class="cosme-article__share-link"
+                href="https://www.facebook.com/sharer/sharer.php?u={{ share_url_encoded }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {% render 'cosme-icon', icon: 'facebook', size: 'xl' %}
+                <span class="cosme-visually-hidden">{{ 'blog.share_facebook' | t }}</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="cosme-article__share-link"
+                href="https://twitter.com/intent/tweet?url={{ share_url_encoded }}&text={{ share_title_encoded }}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {% render 'cosme-icon', icon: 'x', size: 'xl' %}
+                <span class="cosme-visually-hidden">{{ 'blog.share_x' | t }}</span>
+              </a>
+            </li>
+            {% if pin_media != blank %}
+              <li>
+                <a
+                  class="cosme-article__share-link"
+                  href="https://pinterest.com/pin/create/button/?url={{ share_url_encoded }}&description={{ share_title_encoded }}&media={{ pin_media | url_encode }}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {% render 'cosme-icon', icon: 'pinterest', size: 'xl' %}
+                  <span class="cosme-visually-hidden">{{ 'blog.share_pinterest' | t }}</span>
+                </a>
+              </li>
+            {% endif %}
+            <li>
+              <button
+                class="cosme-article__share-link"
+                type="button"
+                data-article-share
+                hidden
+              >
+                {% render 'cosme-icon', icon: 'external-link', size: 'xl' %}
+                <span class="cosme-visually-hidden">{{ 'blog.share_native' | t }}</span>
+              </button>
+            </li>
+            <li>
+              <button class="cosme-article__share-link" type="button" data-article-copy>
+                {% render 'cosme-icon', icon: 'copy', size: 'xl' %}
+                <span class="cosme-visually-hidden">{{ 'blog.copy_link' | t }}</span>
+              </button>
+            </li>
+          </ul>
+          <p class="cosme-visually-hidden" data-share-status role="status" aria-live="polite"></p>
         </div>
-      {% endfor %}
+      {% endif %}
 
-      {{ paginate | default_pagination: anchor: 'comments' }}
-    {% endpaginate %}
+      <div class="cosme-article__content">
+        {{ article.content }}
+
+        {% if show_author %}
+          <p class="cosme-article__byline">{{ 'blog.written_by' | t: author: author_name }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if show_pager %}
+      <nav class="cosme-article__pager" aria-label="{{ 'blog.article_navigation' | t }}">
+        {% if previous_article != blank %}
+          <a
+            class="cosme-article__pager-link cosme-article__pager-link--prev"
+            href="{{ previous_article.url }}"
+            aria-label="{{ 'blog.previous_article_label' | t: title: previous_article.title | escape }}"
+          >
+            <span class="cosme-article__pager-label">
+              {% render 'cosme-icon', icon: 'chevron-left', size: 'sm', class: 'cosme-article__pager-icon' %}
+              <span>{{ 'blog.previous_article' | t }}</span>
+            </span>
+            <span class="cosme-article__pager-title">{{ previous_article.title | escape }}</span>
+          </a>
+        {% endif %}
+
+        {% if next_article != blank %}
+          <a
+            class="cosme-article__pager-link cosme-article__pager-link--next"
+            href="{{ next_article.url }}"
+            aria-label="{{ 'blog.next_article_label' | t: title: next_article.title | escape }}"
+          >
+            <span class="cosme-article__pager-label">
+              <span>{{ 'blog.next_article' | t }}</span>
+              {% render 'cosme-icon', icon: 'chevron-right', size: 'sm', class: 'cosme-article__pager-icon' %}
+            </span>
+            <span class="cosme-article__pager-title">{{ next_article.title | escape }}</span>
+          </a>
+        {% endif %}
+      </nav>
+    {% endif %}
+
+    {% if show_related %}
+      <section
+        class="cosme-article__related"
+        style="--related-cols: {{ related_cols }};"
+        aria-labelledby="{{ related_heading_id }}"
+      >
+        <header class="cosme-article__related-header">
+          <h2 class="cosme-article__related-heading" id="{{ related_heading_id }}">
+            {{ related_heading | escape }}
+          </h2>
+          {% if related_description != blank %}
+            <p class="cosme-article__related-description">{{ related_description | escape }}</p>
+          {% endif %}
+        </header>
+
+        <ul class="cosme-article__related-grid" role="list">
+          {% for related_handle in related_handle_list %}
+            {% if related_handle != blank %}
+              {% liquid
+                assign related_key = blog.handle | append: '/' | append: related_handle
+                assign related_article = articles[related_key]
+                if related_article == blank
+                  for candidate_article in blog.articles
+                    if candidate_article.handle == related_handle
+                      assign related_article = candidate_article
+                      break
+                    endif
+                  endfor
+                endif
+              %}
+              {% if related_article != blank %}
+                {% unless related_article.id == article.id %}
+                  <li class="cosme-article__related-item">
+                    <a
+                      class="cosme-article__related-link"
+                      href="{{ related_article.url }}"
+                      aria-label="{{ 'blog.read_article_label' | t: title: related_article.title | escape }}"
+                    >
+                      {% render 'cosme-article-card',
+                        article: related_article,
+                        aspect_ratio: '4/5',
+                        image_width: 900,
+                        image_height: 1125,
+                        sizes: '(min-width: 990px) 30vw, 92vw',
+                        heading_tag: 'h3',
+                        loading: 'lazy',
+                        featured: false,
+                        show_excerpt: false,
+                        show_date: true,
+                        show_reading_time: false,
+                        show_category: true,
+                        show_cta: true,
+                        show_index: false,
+                        category_label: journal_title,
+                        placeholder_name: 'image'
+                      %}
+                    </a>
+                  </li>
+                {% endunless %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    {% if blog.comments_enabled? %}
+      <section class="cosme-article__comments" aria-labelledby="ArticleComments-{{ section.id }}">
+        <h2 class="cosme-article__comments-heading" id="ArticleComments-{{ section.id }}">
+          {{ 'blog.article_comments' | t }}
+        </h2>
+
+        <div id="comments">
+          {% paginate article.comments by 10 %}
+            {% if article.comments_count > 0 %}
+              <ol class="cosme-article__comment-list" role="list">
+                {% for comment in article.comments %}
+                  <li class="cosme-article__comment">
+                    <p class="cosme-article__comment-meta">
+                      <span>{{ comment.author | escape }}</span>
+                      <span class="cosme-article__meta-sep" aria-hidden="true">·</span>
+                      {{ comment.created_at | time_tag: format: 'date' }}
+                    </p>
+                    <div class="cosme-article__comment-body">{{ comment.content }}</div>
+                  </li>
+                {% endfor %}
+              </ol>
+            {% endif %}
+
+            {% if paginate.pages > 1 %}
+              <nav class="cosme-article__comments-pagination" aria-label="{{ 'blog.pagination' | t }}">
+                {{ paginate | default_pagination: anchor: 'comments' }}
+              </nav>
+            {% endif %}
+          {% endpaginate %}
+        </div>
+
+        {% assign comment_name_label = 'blog.comment_form_name' | t %}
+        {% assign comment_email_label = 'blog.comment_form_email' | t %}
+        {% assign comment_body_label = 'blog.comment_form_body' | t %}
+        {% assign comment_submit_label = 'blog.comment_form_submit' | t %}
+        {% form 'new_comment', article %}
+          <h3 class="cosme-article__comment-form-title">{{ 'blog.comment_form_title' | t }}</h3>
+          {{ form.errors | default_errors }}
+          {% render 'cosme-form-field',
+            label: comment_name_label,
+            id: 'ArticleCommentAuthor',
+            name: 'comment[author]',
+            value: form.author,
+            required: true,
+            autocomplete: 'name'
+          %}
+          {% render 'cosme-form-field',
+            label: comment_email_label,
+            id: 'ArticleCommentEmail',
+            name: 'comment[email]',
+            type: 'email',
+            value: form.email,
+            required: true,
+            autocomplete: 'email'
+          %}
+          {% render 'cosme-form-field',
+            label: comment_body_label,
+            id: 'ArticleCommentBody',
+            name: 'comment[body]',
+            type: 'textarea',
+            value: form.body,
+            required: true,
+            rows: 5
+          %}
+          {% render 'cosme-button',
+            label: comment_submit_label,
+            type: 'submit',
+            style: 'outline'
+            class: 'cosme-article__comment-submit'
+          %}
+        {% endform %}
+      </section>
+    {% endif %}
   </div>
 
-  {% form 'new_comment', article %}
-    <h2>{{ 'blog.comment_form_title' | t }}</h2>
+  {% if show_newsletter %}
+    <section
+      class="cosme-article__newsletter color-{{ section.settings.newsletter_color_scheme }}"
+      {% if newsletter_heading != blank %}
+        aria-labelledby="{{ newsletter_heading_id }}"
+      {% else %}
+        aria-label="{{ 'blog.newsletter_label' | t }}"
+      {% endif %}
+    >
+      <div class="cosme-article__newsletter-inner">
+        {% if newsletter_eyebrow != blank %}
+          <p class="cosme-article__newsletter-eyebrow">{{ newsletter_eyebrow | escape }}</p>
+        {% endif %}
 
-    {{ form.errors | default_errors }}
+        {% if newsletter_heading != blank %}
+          <h2 class="cosme-article__newsletter-heading" id="{{ newsletter_heading_id }}">
+            {{ newsletter_heading | escape }}
+          </h2>
+        {% endif %}
 
-    <div>
-      <label for="author">{{ 'blog.comment_form_name' | t }}</label>
-      <input type="text" name="comment[author]" id="author" value="{{ form.author }}" required>
-    </div>
+        {% if newsletter_description != blank %}
+          <p class="cosme-article__newsletter-description">{{ newsletter_description | escape }}</p>
+        {% endif %}
 
-    <div>
-      <label for="email">{{ 'blog.comment_form_email' | t }}</label>
-      <input type="email" name="comment[email]" id="email" value="{{ form.email }}" required>
-    </div>
+        {% form 'customer', id: newsletter_form_id, class: 'cosme-article__newsletter-form' %}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          <input type="hidden" name="customer[accepts_marketing]" value="true">
 
-    <div>
-      <label for="body">{{ 'blog.comment_form_body' | t }}</label>
-      <textarea name="comment[body]" id="body" required>{{ form.body }}</textarea>
-    </div>
+          {% liquid
+            assign newsletter_error = blank
+            assign newsletter_posted = false
+            if form.posted_successfully?
+              assign newsletter_posted = true
+            endif
+            if form.errors
+              assign newsletter_error = 'blog.newsletter_error' | t
+            endif
+          %}
 
-    <input type="submit" value="{{ 'blog.comment_form_submit' | t }}">
-  {% endform %}
-{% endif %}
+          {% if newsletter_posted %}
+            <p
+              class="cosme-article__newsletter-status"
+              id="{{ newsletter_success_id }}"
+              role="status"
+              aria-live="polite"
+              tabindex="-1"
+            >
+              {{ 'blog.newsletter_success' | t }}
+            </p>
+          {% endif %}
+
+          {% render 'cosme-form-field',
+            label: newsletter_email_label,
+            id: newsletter_email_id,
+            name: 'contact[email]',
+            type: 'email',
+            value: form.email,
+            required: true,
+            autocomplete: 'email',
+            error: newsletter_error,
+            class: 'cosme-article__newsletter-field'
+          %}
+
+          {% render 'cosme-button',
+            label: newsletter_button_label,
+            type: 'submit',
+            style: 'primary',
+            class: 'cosme-article__newsletter-submit'
+          %}
+        {% endform %}
+      </div>
+    </section>
+  {% endif %}
+</article>
+
+{% stylesheet %}
+  .cosme-article {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-article__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+    min-width: 0;
+  }
+
+  .cosme-article--spacing-small .cosme-article__inner {
+    padding-block: calc(var(--spacing-section) * 0.4);
+  }
+
+  .cosme-article--spacing-medium .cosme-article__inner {
+    padding-block: clamp(1.5rem, 3.5vw, calc(var(--spacing-section) * 0.7));
+  }
+
+  .cosme-article--spacing-large .cosme-article__inner {
+    padding-block: clamp(2rem, 4.5vw, var(--spacing-section));
+  }
+
+  .cosme-article__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-height: 2.75rem;
+    margin: 0 0 var(--spacing-lg);
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+  }
+
+  .cosme-article__back:focus-visible {
+    color: var(--color-foreground);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  @media (hover: hover) {
+    .cosme-article__back:hover {
+      color: var(--color-foreground);
+    }
+  }
+
+  .cosme-article--animated .cosme-article__back-icon {
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-article--animated .cosme-article__back:hover .cosme-article__back-icon,
+  .cosme-article--animated .cosme-article__back:focus-visible .cosme-article__back-icon {
+    transform: translateX(-0.15em);
+  }
+
+  .cosme-article__header {
+    max-width: 44rem;
+    margin-inline: auto;
+    margin-block-end: var(--spacing-xl);
+    text-align: center;
+  }
+
+  .cosme-article__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 6.5vw, 3.25rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article__excerpt {
+    margin: var(--spacing-md) auto 0;
+    max-width: 38rem;
+    font-size: 1.0625rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-article__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35em 0.5em;
+    margin: var(--spacing-md) 0 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__meta time,
+  .cosme-article__comment-meta time {
+    font-style: normal;
+  }
+
+  .cosme-article__meta-sep {
+    color: var(--color-border);
+  }
+
+  .cosme-article__hero {
+    width: 100%;
+    margin-block-end: var(--spacing-2xl);
+  }
+.cosme-image {
+  border-radius: var(--radius-card);
+}
+  .cosme-article__hero-image {
+    width: 100%;
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-article__layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    min-width: 0;
+  }
+
+  .cosme-article__content {
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: var(--color-foreground);
+    overflow-wrap: anywhere;
+    overflow-x: auto;
+  }
+
+  .cosme-article__share {
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-article__share-label {
+    margin: 0;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__share-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-article__share-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .cosme-article__share-link:focus-visible {
+    color: var(--color-foreground);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) {
+    .cosme-article__share-link:hover {
+      color: var(--color-foreground);
+    }
+  }
+
+  .cosme-article__content > * {
+    max-width: 48rem;
+    margin-inline: auto;
+  }
+
+  .cosme-article__content > h2,
+  .cosme-article__content > h3,
+  .cosme-article__content > h4 {
+    max-width: 44rem;
+    color: var(--color-heading, var(--color-foreground));
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+  }
+
+  .cosme-article__content > *:first-child {
+    margin-block-start: 0;
+  }
+
+  .cosme-article__content > *:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-article__byline {
+    margin-block-start: var(--spacing-2xl);
+    padding-block-start: var(--spacing-lg);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__content p {
+    margin-block: 0 var(--spacing-md);
+  }
+
+  .cosme-article__content h2 {
+    margin-block: var(--spacing-2xl) var(--spacing-md);
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+  }
+
+  .cosme-article__content h3 {
+    margin-block: var(--spacing-xl) var(--spacing-sm);
+    font-size: clamp(1.25rem, 2.4vw, 1.5rem);
+  }
+
+  .cosme-article__content h4 {
+    margin-block: var(--spacing-lg) var(--spacing-sm);
+    font-size: 1.125rem;
+  }
+
+  .cosme-article__content a {
+    color: var(--color-foreground);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  .cosme-article__content a:focus-visible {
+    color: var(--color-accent);
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) {
+    .cosme-article__content a:hover {
+      color: var(--color-accent);
+    }
+  }
+
+  .cosme-article__content strong,
+  .cosme-article__content b {
+    font-weight: 600;
+  }
+
+  .cosme-article__content em,
+  .cosme-article__content i {
+    font-style: italic;
+  }
+
+  .cosme-article__content ul,
+  .cosme-article__content ol {
+    margin-block: 0 var(--spacing-md);
+    padding-inline-start: 1.25rem;
+  }
+
+  .cosme-article__content li {
+    margin-block-end: var(--spacing-xs);
+  }
+
+  .cosme-article__content li::marker {
+    color: var(--color-muted);
+  }
+
+  .cosme-article__content blockquote {
+    margin-block: var(--spacing-xl);
+    padding-block: var(--spacing-sm);
+    padding-inline-start: var(--spacing-lg);
+    border-inline-start: 1px solid var(--color-accent);
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.125rem, 2vw, 1.375rem);
+    line-height: 1.55;
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article__content blockquote p:last-child {
+    margin-block-end: 0;
+  }
+
+  .cosme-article__content hr {
+    width: 100%;
+    max-width: 8rem;
+    margin-block: var(--spacing-2xl);
+    margin-inline: auto;
+    border: 0;
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .cosme-article__content img,
+  .cosme-article__content video,
+  .cosme-article__content iframe {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .cosme-article__content iframe {
+    width: 100%;
+  }
+
+  .cosme-article__content > figure,
+  .cosme-article__content > p:has(> img) {
+    max-width: min(100%, 48rem);
+  }
+
+  .cosme-article__content figure {
+    margin-block: var(--spacing-xl);
+  }
+
+  .cosme-article__content figure img {
+    width: 100%;
+  }
+
+  .cosme-article__content figcaption,
+  .cosme-article__content .caption {
+    margin-block-start: var(--spacing-sm);
+    font-size: 0.8125rem;
+    letter-spacing: 0.02em;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__content h2,
+  .cosme-article__content h3,
+  .cosme-article__content h4 {
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-article__content pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .cosme-article__content table {
+    width: 100%;
+    max-width: 100%;
+    margin-block: var(--spacing-lg);
+    border-collapse: collapse;
+    font-size: 0.9375rem;
+  }
+
+  .cosme-article__content th,
+  .cosme-article__content td {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .comment-form {
+    gap: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: 28rem;
+    margin: var(--spacing-xl) auto 0;
+    text-align: start;
+  }
+
+  .cosme-article__comments {
+    max-width: 38rem;
+    margin: var(--spacing-2xl) auto 0;
+    padding-block-start: var(--spacing-2xl);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cosme-article__comments-heading,
+  .cosme-article__comment-form-title {
+    margin: 0 0 var(--spacing-lg);
+    font-family: var(--font-heading--family);
+    font-size: 1.25rem;
+    font-weight: var(--font-heading--weight);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article__comment-list {
+    margin: 0 0 var(--spacing-xl);
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-article__comment {
+    margin-block-end: var(--spacing-lg);
+    padding-block-end: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .cosme-article__comment-meta {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__comment-body {
+    margin: 0;
+    color: var(--color-foreground);
+  }
+
+  .cosme-article__comments-pagination {
+    margin-block-end: var(--spacing-xl);
+  }
+
+  .cosme-article__comments-pagination a {
+    color: var(--color-muted);
+  }
+
+  .cosme-article__pager,
+  .cosme-article__related {
+    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
+    padding-block-start: clamp(2.5rem, 6vw, 4.5rem);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cosme-article__pager {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    min-width: 0;
+  }
+
+  .cosme-article__pager-link {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-block: var(--spacing-sm);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-article__pager-link--prev {
+    align-items: flex-start;
+    text-align: start;
+  }
+
+  .cosme-article__pager-link--next {
+    align-items: flex-end;
+    text-align: end;
+    margin-inline-start: auto;
+  }
+
+  .cosme-article__pager-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-height: 2.75rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__pager-title {
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.125rem, 3vw, 1.5rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article__pager-link:focus-visible .cosme-article__pager-title {
+    color: var(--color-accent);
+  }
+
+  .cosme-article__pager-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-article--animated .cosme-article__pager-icon {
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-article--animated .cosme-article__pager-link--prev:focus-visible .cosme-article__pager-icon {
+    transform: translateX(-0.15em);
+  }
+
+  .cosme-article--animated .cosme-article__pager-link--next:focus-visible .cosme-article__pager-icon {
+    transform: translateX(0.15em);
+  }
+
+  @media (hover: hover) {
+    .cosme-article__pager-link:hover .cosme-article__pager-title {
+      color: var(--color-accent);
+    }
+
+    .cosme-article--animated .cosme-article__pager-link--prev:hover .cosme-article__pager-icon {
+      transform: translateX(-0.15em);
+    }
+
+    .cosme-article--animated .cosme-article__pager-link--next:hover .cosme-article__pager-icon {
+      transform: translateX(0.15em);
+    }
+  }
+
+  .cosme-article__related-header {
+    max-width: 38rem;
+    margin: 0 0 var(--spacing-xl);
+  }
+
+  .cosme-article__related-heading {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.5rem, 3vw, 1.875rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article__related-description {
+    margin: var(--spacing-sm) 0 0;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-article__related-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--grid-gap) * 1.45) var(--grid-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-article__related-item {
+    min-width: 0;
+  }
+
+  .cosme-article__related-link {
+    display: block;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-article__related-link:hover {
+    color: inherit;
+  }
+
+  .cosme-article__related-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-article__newsletter {
+    margin-block-start: clamp(2.5rem, 6vw, 4.5rem);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-article__newsletter-inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: clamp(2.5rem, 7vw, 5rem) var(--page-margin);
+    text-align: center;
+  }
+
+  .cosme-article__newsletter-eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-article__newsletter-heading {
+    margin: 0 auto;
+    max-width: 28rem;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: var(--font-heading--weight);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-article__newsletter-description {
+    margin: var(--spacing-md) auto 0;
+    max-width: 32rem;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-article__newsletter-form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: 28rem;
+    margin: var(--spacing-xl) auto 0;
+    text-align: start;
+  }
+
+  .cosme-article__newsletter-status {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-foreground);
+    font-size: 0.9375rem;
+  }
+
+  .cosme-article__newsletter-submit {
+    width: 100%;
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-article__newsletter-form {
+      flex-direction: row;
+      align-items: flex-end;
+    }
+
+    .cosme-article__newsletter-field {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .cosme-article__newsletter-submit {
+      width: auto;
+      flex: 0 0 auto;
+    }
+
+    .cosme-article__related-grid {
+      grid-template-columns: repeat(min(2, var(--related-cols, 3)), minmax(0, 1fr));
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-article__layout {
+      display: grid;
+      grid-template-columns: 3rem minmax(0, 1fr);
+      column-gap: var(--spacing-xl);
+      align-items: start;
+    }
+
+    .cosme-article__share {
+      position: sticky;
+      top: 6rem;
+      align-items: center;
+      order: 0;
+    }
+
+    .cosme-article__content {
+      order: 0;
+    }
+
+    .cosme-article__share-list {
+      flex-direction: column;
+    }
+
+    .cosme-article__share-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .cosme-article__pager {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--spacing-xl);
+    }
+
+    .cosme-article__pager-link {
+      max-width: min(100%, 22rem);
+    }
+
+    .cosme-article__related-grid {
+      grid-template-columns: repeat(var(--related-cols, 3), minmax(0, 1fr));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-article--animated .cosme-article__back-icon,
+    .cosme-article--animated .cosme-article__pager-icon {
+      transition: none;
+    }
+
+    .cosme-article--animated .cosme-article__back:hover .cosme-article__back-icon,
+    .cosme-article--animated .cosme-article__back:focus-visible .cosme-article__back-icon,
+    .cosme-article--animated .cosme-article__pager-link--prev:hover .cosme-article__pager-icon,
+    .cosme-article--animated .cosme-article__pager-link--prev:focus-visible .cosme-article__pager-icon,
+    .cosme-article--animated .cosme-article__pager-link--next:hover .cosme-article__pager-icon,
+    .cosme-article--animated .cosme-article__pager-link--next:focus-visible .cosme-article__pager-icon {
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    if (window._cosmeArticleShare) return;
+    window._cosmeArticleShare = true;
+
+    const initShare = (root) => {
+      if (!root) return;
+      const nativeButton = root.querySelector('[data-article-share]');
+      if (nativeButton && navigator.share) {
+        nativeButton.hidden = false;
+      }
+    };
+
+    document.querySelectorAll('[data-article-share-root]').forEach(initShare);
+
+    document.addEventListener('click', async (event) => {
+      const nativeButton = event.target.closest('[data-article-share]');
+      const copyButton = event.target.closest('[data-article-copy]');
+      if (!nativeButton && !copyButton) return;
+
+      const root = event.target.closest('[data-article-share-root]');
+      if (!root) return;
+
+      const url = root.dataset.shareUrl || window.location.href;
+      const title = root.dataset.shareTitle || document.title;
+      const status = root.querySelector('[data-share-status]');
+
+      try {
+        if (nativeButton) {
+          if (!navigator.share) return;
+          await navigator.share({ title, url });
+          return;
+        }
+
+        await navigator.clipboard.writeText(url);
+        if (status) status.textContent = root.dataset.stringCopied || '';
+      } catch (error) {
+        if (error && error.name === 'AbortError') return;
+        if (status) status.textContent = root.dataset.stringCopyFailed || '';
+      }
+    });
+
+    document.addEventListener('shopify:section:load', (event) => {
+      event.target.querySelectorAll('[data-article-share-root]').forEach(initShare);
+    });
+  })();
+{% endjavascript %}
 
 {% schema %}
 {
   "name": "t:general.article",
-  "settings": []
+  "enabled_on": {
+    "templates": ["article"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_back_link",
+      "label": "t:sections.article.settings.show_back_link",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_excerpt",
+      "label": "t:sections.article.settings.show_excerpt",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "t:sections.article.settings.show_date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "t:sections.article.settings.show_author",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_reading_time",
+      "label": "t:sections.article.settings.show_reading_time",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "hero_image_ratio",
+      "label": "t:sections.article.settings.hero_image_ratio",
+      "options": [
+        { "value": "landscape", "label": "t:sections.article.settings.ratio_landscape" },
+        { "value": "wide", "label": "t:sections.article.settings.ratio_wide" },
+        { "value": "square", "label": "t:sections.article.settings.ratio_square" }
+      ],
+      "default": "landscape"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_share",
+      "label": "t:sections.article.settings.show_share",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.article.settings.related_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_related",
+      "label": "t:sections.article.settings.show_related",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "related_count",
+      "label": "t:sections.article.settings.related_count",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3,
+      "visible_if": "{{ section.settings.show_related }}"
+    },
+    {
+      "type": "text",
+      "id": "related_heading",
+      "label": "t:sections.article.settings.related_heading",
+      "default": "Related Stories",
+      "visible_if": "{{ section.settings.show_related }}"
+    },
+    {
+      "type": "textarea",
+      "id": "related_description",
+      "label": "t:sections.article.settings.related_description",
+      "visible_if": "{{ section.settings.show_related }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.article.settings.newsletter_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_newsletter",
+      "label": "t:sections.article.settings.show_newsletter",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "newsletter_eyebrow",
+      "label": "t:sections.article.settings.newsletter_eyebrow",
+      "default": "THE COSME JOURNAL",
+      "visible_if": "{{ section.settings.show_newsletter }}"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "t:sections.article.settings.newsletter_heading",
+      "default": "Beauty, thoughtfully curated.",
+      "visible_if": "{{ section.settings.show_newsletter }}"
+    },
+    {
+      "type": "textarea",
+      "id": "newsletter_description",
+      "label": "t:sections.article.settings.newsletter_description",
+      "default": "Receive new stories, rituals and discoveries from Cosme.",
+      "visible_if": "{{ section.settings.show_newsletter }}"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_button_label",
+      "label": "t:sections.article.settings.newsletter_button_label",
+      "default": "Subscribe",
+      "visible_if": "{{ section.settings.show_newsletter }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "newsletter_color_scheme",
+      "label": "t:sections.article.settings.newsletter_color_scheme",
+      "default": "scheme-2",
+      "visible_if": "{{ section.settings.show_newsletter }}"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    }
+  ]
 }
 {% endschema %}

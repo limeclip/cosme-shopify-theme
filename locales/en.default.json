@@ -1,7 +1,11 @@
-{  "404": {
-    "title": "404",
-    "not_found": "Page not found.",
-    "back_to_shopping": "Back to shopping"
+{
+  "404": {
+    "title": "We couldn't find that page.",
+    "not_found": "The page you're looking for may have moved or no longer exists.",
+    "continue_shopping": "Continue shopping",
+    "back_to_home": "Back to home",
+    "back_to_shopping": "Continue shopping",
+    "search_label": "Search Cosme"
   },
   "blog": {
     "article_comments": "Comments",
@@ -10,20 +14,98 @@
     "comment_form_email": "Email",
     "comment_form_name": "Name",
     "comment_form_submit": "Post",
-    "comment_form_title": "Add a comment"
+    "comment_form_title": "Add a comment",
+    "empty": "No stories yet.",
+    "latest_stories": "Latest stories",
+    "read_article": "Read article",
+    "read_article_label": "Read article: {{ title }}",
+    "reading_time": {
+      "one": "{{ count }} min read",
+      "other": "{{ count }} min read"
+    },
+    "pagination": "Journal pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{ page }}",
+    "back_to_journal": "Back to journal",
+    "share": "Share",
+    "share_facebook": "Share on Facebook",
+    "share_x": "Share on X",
+    "share_pinterest": "Share on Pinterest",
+    "share_native": "Share article",
+    "copy_link": "Copy article link",
+    "share_copied": "Link copied",
+    "share_copy_failed": "Unable to copy link",
+    "written_by": "Written by {{ author }}",
+    "article_navigation": "Article navigation",
+    "previous_article": "Previous article",
+    "next_article": "Next article",
+    "previous_article_label": "Previous article: {{ title }}",
+    "next_article_label": "Next article: {{ title }}",
+    "related_stories": "Related Stories",
+    "newsletter_label": "Journal newsletter",
+    "newsletter_email_label": "Email address",
+    "newsletter_submit": "Subscribe",
+    "newsletter_error": "Please enter a valid email address.",
+    "newsletter_success": "Thanks — you are subscribed."
   },
   "cart": {
     "checkout": "Checkout",
-    "title": "Cart",
+    "title": "Your cart",
+    "drawer_title": "Your bag",
+    "savings": "{{ amount }} saved",
     "update": "Update",
     "remove": "Remove",
+    "remove_item": "Remove {{ product }}",
     "view_cart": "View cart",
     "subtotal": "Subtotal",
+    "total": "Total",
+    "order_summary": "Order summary",
+    "items_heading": "Cart items",
+    "line_total": "Line total",
+    "continue_shopping": "Continue shopping",
     "empty": "Your cart is empty",
+    "empty_heading": "Your bag is waiting.",
+    "empty_message": "Discover considered beauty essentials designed for your everyday ritual.",
+    "empty_shop_all": "Shop all",
+    "item_count": {
+      "one": "{{ count }} item",
+      "other": "{{ count }} items"
+    },
     "quantity": "Quantity, {{ product }}",
     "decrease_quantity": "Decrease quantity for {{ product }}",
     "increase_quantity": "Increase quantity for {{ product }}",
-    "close": "Close cart"
+    "updated": "Cart updated",
+    "quantity_updated": "Quantity updated",
+    "item_removed": "Item removed",
+    "error": "Unable to update your cart. Please try again.",
+    "discount": "Discount",
+    "discount_code": "Discount code",
+    "discount_apply": "Apply",
+    "discount_empty": "Enter a discount code",
+    "free_shipping_away": "You're {{ amount }} away from free shipping.",
+    "free_shipping_eligible": "You're eligible for free shipping.",
+    "free_shipping_unlocked": "You've unlocked free shipping ✦",
+    "free_shipping_label": "Free shipping",
+    "shipping_at_checkout": "Shipping is calculated at checkout.",
+    "taxes_shipping_at_checkout": "Taxes and shipping are calculated at checkout.",
+    "taxes_at_checkout": "Taxes are calculated at checkout.",
+    "payment_methods": "Payment methods",
+    "property_file": "Attached file",
+    "close": "Close cart",
+    "upsell_heading": "You may also like",
+    "upsell_add": "Add",
+    "upsell_choose": "Choose",
+    "upsell_added": "Item added to cart",
+    "upsell_editor_empty": "Select products in the cart drawer section to show recommendations here.",
+    "order_note": "Order note",
+    "order_note_placeholder": "Add a note to your order...",
+    "note_saved": "Order note saved",
+    "discount_prompt": "Have a discount code?",
+    "discount_applied": "Discount applied",
+    "discount_removed": "Discount removed",
+    "discount_not_applied": "This discount code could not be applied",
+    "secure_checkout": "Secure checkout"
   },
   "customers": {
     "login": {
@@ -34,12 +116,46 @@
     }
   },
   "collections": {
-    "title": "Collections"
+    "title": "Collections",
+    "availability": "Availability",
+    "in_stock": "In stock",
+    "out_of_stock": "Out of stock",
+    "price": "Price",
+    "brand": "Brand",
+    "product_type": "Product type",
+    "products_count": {
+      "one": "{{ count }} product",
+      "other": "{{ count }} products"
+    },
+    "toolbar": "Collection tools",
+    "all_collections": "All collections",
+    "collection_dropdown": "Collections",
+    "collection_links": "Collections",
+    "filters": "Filters",
+    "sort_by": "Sort by",
+    "clear_all": "Clear all",
+    "apply": "Apply",
+    "close_filters": "Close filters",
+    "active_filters": "Active filters",
+    "filter_chip": "{{ label }}: {{ value }}",
+    "remove_filter": "Remove filter {{ label }} {{ value }}",
+    "price_from": "From",
+    "price_to": "To",
+    "product_grid": "{{ title }} products",
+    "empty": "No products found",
+    "pagination": "Pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{ page }}",
+    "load_more": "Load more",
+    "loading": "Loading",
+    "products_loaded": "{{ count }} products loaded"
   },
   "general": {
     "accessibility": {
       "required": "(required)"
-    }
+    },
+    "back_to_top": "Back to top"
   },
   "header": {
     "account": "Account",
@@ -72,19 +188,51 @@
     "social_links": "Social media",
     "social_pinterest": "Pinterest",
     "social_tiktok": "TikTok",
-    "social_youtube": "YouTube"
+    "social_youtube": "YouTube",
+    "social_x": "X (Twitter)",
+    "country_selector": {
+      "label": "Country/region"
+    }
   },
   "gift_card": {
     "add_to_apple_wallet": "Add to Apple Wallet",
+    "balance": "Current balance",
     "card": "Gift card",
+    "code_label": "Gift card code",
+    "continue_shopping": "Continue shopping",
+    "copied": "Copied",
+    "copy_code": "Copy code",
+    "copy_failed": "Unable to copy code",
+    "description": "Give someone special the freedom to choose something they truly love.",
+    "disabled": "This gift card is no longer available",
     "expired": "This gift card has expired",
     "expires_on": "Expires on {{ expires_on }}",
+    "heading": "A gift of beauty",
+    "skip_to_content": "Skip to content",
     "use_at_checkout": "Use this gift card at checkout"
+  },
+  "popup": {
+    "close": "Close",
+    "dialog_label": "Newsletter offer",
+    "email_label": "Email address",
+    "email_placeholder": "Email address",
+    "error": "Please enter a valid email address.",
+    "submit": "Get 10% off",
+    "success": "Thanks — your welcome offer is on the way.",
+    "social_links": "Social media",
+    "teaser_label": "Get 10% off"
   },
   "password": {
     "title": "This shop is private",
-    "password": "Password",
-    "enter": "Enter"
+    "password": "Enter store password",
+    "enter": "Enter",
+    "error": "The password you entered is incorrect.",
+    "newsletter_label": "Launch newsletter",
+    "newsletter_email_label": "Email address",
+    "newsletter_submit": "Subscribe",
+    "newsletter_error": "Please enter a valid email address.",
+    "newsletter_success": "Thanks — you are subscribed.",
+    "skip_to_content": "Skip to content"
   },
   "products": {
     "badge": {
@@ -190,14 +338,35 @@
   },
   "search": {
     "title": "Search",
+    "label": "Search",
     "placeholder": "Search articles, pages, or products",
     "placeholder_short": "What are you looking for?",
+    "page_placeholder": "Search skincare, products, collections...",
     "submit": "Search",
+    "clear": "Clear search",
     "close": "Close search",
     "suggestions": "Search suggestions",
     "no_suggestions": "No results found",
     "no_results_html": "No results found for {{ terms }}",
-    "results_for_html": "{{ count }} results found for {{ terms }}"
+    "results_for_html": "{{ count }} results found for {{ terms }}",
+    "empty_heading": "What are you looking for?",
+    "results_eyebrow": "Search results for",
+    "results_count": {
+      "one": "{{ count }} result",
+      "other": "{{ count }} results"
+    },
+    "no_results_heading": "Nothing matched your search",
+    "no_results_text": "Try another search or explore our collections.",
+    "explore_collections": "Explore collections",
+    "status_results": "{{ count }} results for {{ terms }}",
+    "status_no_results": "No products matched {{ terms }}",
+    "empty_filters": "No products found",
+    "clear_filters": "Clear filters",
+    "popular_searches": "Popular searches",
+    "pagination": "Search pagination",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{ page }}"
   },
   "sections": {
     "main_hero": {
@@ -249,9 +418,43 @@
       "image_placeholder": "Editorial image placeholder. Replace with your campaign image in the theme editor.",
       "image_link_label": "Shop featured essentials"
     },
+    "about": {
+      "heading_fallback": "About",
+      "image_placeholder": "Add an editorial image in the theme editor."
+    },
+    "about_story": {
+      "landmark_label": "Brand story",
+      "image_placeholder": "Add a brand story image in the theme editor."
+    },
+    "about_manifesto": {
+      "landmark_label": "Philosophy",
+      "statement_fallback": "Beauty should feel intentional."
+    },
+    "about_philosophy": {
+      "heading_fallback": "A considered approach to beauty."
+    },
+    "about_image_story": {
+      "landmark_label": "The ritual",
+      "primary_placeholder": "Add a primary editorial image in the theme editor.",
+      "secondary_placeholder": "Add a secondary editorial image in the theme editor."
+    },
+    "about_brand_facts": {
+      "landmark_label": "Brand facts",
+      "disabled_notice": "Brand facts is turned off. Enable it to show this section on the storefront."
+    },
+    "about_cta": {
+      "landmark_label": "Discover Cosme",
+      "heading_fallback": "Make beauty part of your ritual.",
+      "disabled_notice": "Closing call to action is turned off. Enable it to show this section on the storefront."
+    },
     "benefits": {
       "landmark_label": "Store benefits",
       "link_fallback": "Learn more"
+    },
+    "cart_recommendations": {
+      "heading": "You may also like",
+      "landmark_label": "Recommended products",
+      "editor_empty": "Select products in this section to show recommendations on the cart page."
     },
     "product_details": {
       "landmark_label": "Product details"
@@ -294,6 +497,11 @@
       "demo_product_3": "Glow serum",
       "demo_product_4": "Hydrating eye cream"
     },
+    "list_collections": {
+      "explore": "Explore collection",
+      "empty": "Collections will appear here as they are published.",
+      "empty_selected": "Select collections in the theme editor to display them here."
+    },
     "testimonials": {
       "landmark_label": "Customer testimonials",
       "carousel_label": "Customer stories",
@@ -303,7 +511,51 @@
       "rating_summary": "{{ rating }} out of 5 stars, based on {{ count }} reviews",
       "author_fallback": "Customer",
       "view_product": "View {{ title }}"
+    },
+    "faq": {
+      "faq_alignment": "FAQ alignment",
+      "landmark_label": "Frequently asked questions",
+      "heading_fallback": "Frequently asked questions",
+      "search_label": "Search questions",
+      "search_placeholder": "Search questions...",
+      "search_clear": "Clear search",
+      "category_nav_label": "FAQ categories",
+      "category_all": "All",
+      "empty_heading": "No questions found",
+      "empty_text": "Try a different search term.",
+      "note_label": "Help note",
+      "cta_landmark": "Need more help",
+      "result_count": {
+        "one": "{{ count }} question",
+        "other": "{{ count }} questions"
+      }
+    },
+    "contact": {
+      "heading_fallback": "Contact",
+      "info_label": "Contact information",
+      "form_label": "Contact form",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "message": "Message",
+      "optional": "Optional",
+      "submit": "Send message",
+      "success": "Thank you for your message. We'll be in touch soon.",
+      "error_heading": "Please correct the errors below.",
+      "hours_label": "Business hours",
+      "phone_label": "Phone",
+      "faq_label": "Quick answers",
+      "faq_link": "View all FAQs",
+      "cta_label": "Get in touch"
     }
+  },
+  "pages": {
+    "content_alignment": "Content alignment",
+    "content_width": "Content width",
+    "alignment_left": "Left",
+    "alignment_center": "Center",
+    "width_narrow": "Narrow",
+    "width_wide": "Wide"
   },
   "labels": {
     "height_desktop": "Height (desktop)",

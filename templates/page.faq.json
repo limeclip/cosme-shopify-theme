@@ -1,0 +1,153 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-faq",
+      "blocks": {
+        "faq-orders-change": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Can I change or cancel my order?",
+            "answer": "<p>We prepare orders quickly to protect freshness. If your order has not yet shipped, contact us with your order number and we will do our best to update or cancel it.</p>",
+            "category": "Orders",
+            "open_by_default": false
+          }
+        },
+        "faq-orders-track": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How can I track my order?",
+            "answer": "<p>A tracking link is sent to your email as soon as your order leaves our studio. You can also find tracking details in your order confirmation.</p>",
+            "category": "Orders",
+            "open_by_default": false
+          }
+        },
+        "faq-shipping-time": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How long does shipping take?",
+            "answer": "<p>Standard shipping typically arrives in 3–6 business days after dispatch. Express options, where available, usually arrive in 1–2 business days.</p>",
+            "category": "Shipping",
+            "open_by_default": false
+          }
+        },
+        "faq-shipping-international": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Do you offer international shipping?",
+            "answer": "<p>Yes. International delivery times vary by destination, typically 6–12 business days once dispatched. Duties and taxes may apply depending on your region.</p>",
+            "category": "Shipping",
+            "open_by_default": false
+          }
+        },
+        "faq-products-sensitive": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Are your products suitable for sensitive skin?",
+            "answer": "<p>Many of our formulas are developed with sensitive skin in mind and are dermatologist tested. We recommend reviewing the ingredient list and patch testing if you have known sensitivities.</p>",
+            "category": "Products",
+            "open_by_default": false
+          }
+        },
+        "faq-products-storage": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How should I store my skincare products?",
+            "answer": "<p>Keep products in a cool, dry place away from direct sunlight. Close lids firmly after each use to help preserve texture and active ingredients.</p>",
+            "category": "Products",
+            "open_by_default": false
+          }
+        },
+        "faq-products-fragrance": {
+          "type": "faq_item",
+          "settings": {
+            "question": "Do your products contain fragrance?",
+            "answer": "<p>Some formulas are unscented, while others use a light, skin-friendly scent. Fragrance details are listed on each product page so you can choose what feels right for your routine.</p>",
+            "category": "Products",
+            "open_by_default": false
+          }
+        },
+        "faq-returns-policy": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What is your return policy?",
+            "answer": "<p>Unopened items may be returned within 30 days of delivery. For hygiene reasons, opened skincare cannot always be accepted. Contact us and we will guide you through the next step.</p>",
+            "category": "Returns",
+            "open_by_default": false
+          }
+        },
+        "faq-returns-start": {
+          "type": "faq_item",
+          "settings": {
+            "question": "How do I start a return?",
+            "answer": "<p>Email us with your order number and the items you wish to return. Once approved, we will send a prepaid label and instructions.</p>",
+            "category": "Returns",
+            "open_by_default": false
+          }
+        },
+        "faq-payments-methods": {
+          "type": "faq_item",
+          "settings": {
+            "question": "What payment methods do you accept?",
+            "answer": "<p>We accept major credit cards, Shop Pay, PayPal and other secure payment methods offered at checkout. All transactions are encrypted.</p>",
+            "category": "Payments",
+            "open_by_default": false
+          }
+        }
+      },
+      "block_order": [
+        "faq-orders-change",
+        "faq-orders-track",
+        "faq-shipping-time",
+        "faq-shipping-international",
+        "faq-products-sensitive",
+        "faq-products-storage",
+        "faq-products-fragrance",
+        "faq-returns-policy",
+        "faq-returns-start",
+        "faq-payments-methods"
+      ],
+      "settings": {
+        "show_eyebrow": true,
+        "eyebrow": "HELP CENTER",
+        "heading": "Frequently Asked Questions",
+        "description": "Find answers to questions about our products, orders, shipping, returns and more.",
+        "hero_alignment": "left",
+        "heading_size": "large",
+        "hero_max_width": "narrow",
+        "hero_spacing_top": "large",
+        "hero_spacing_bottom": "medium",
+        "intro_label": "QUESTIONS",
+        "enable_search": true,
+        "search_placeholder": "Search questions...",
+        "enable_category_nav": true,
+        "show_result_count": true,
+        "faq_width": "wide",
+        "question_size": "medium",
+        "answer_size": "medium",
+        "show_category": true,
+        "show_numbering": true,
+        "open_first": true,
+        "desktop_columns": "2",
+        "content_max_width": "medium",
+        "section_spacing_top": "small",
+        "section_spacing_bottom": "large",
+        "color_scheme": "scheme-1",
+        "border_width": 1,
+        "border_opacity": 40,
+        "accordion_spacing": 20,
+        "enable_note": true,
+        "note_title": "Can't find what you're looking for?",
+        "note_text": "Contact our team and we'll be happy to help.",
+        "enable_cta": true,
+        "cta_eyebrow": "NEED MORE HELP?",
+        "cta_heading": "Still have questions?",
+        "cta_description": "Our team is here to help.",
+        "cta_button_label": "Contact Us",
+        "cta_link": "/pages/contact",
+        "cta_color_scheme": "scheme-1",
+        "cta_spacing": "medium"
+      }
+    }
+  },
+  "order": ["main"]
+}

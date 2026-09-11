@@ -1,0 +1,469 @@
+{% liquid
+  assign heading_id = 'AboutBrandFactsHeading-' | append: section.id
+  assign list_id = 'AboutBrandFactsList-' | append: section.id
+
+  assign eyebrow = section.settings.eyebrow | strip
+  assign section_spacing = section.settings.section_spacing | default: 'large'
+
+  assign section_enabled = false
+  if section.settings.enable
+    assign section_enabled = true
+  endif
+
+  assign visible_count = 0
+  for block in section.blocks
+    assign block_index = block.settings.index | strip
+    assign block_title = block.settings.title | strip
+    assign block_description = block.settings.description | strip
+    assign show_item = false
+    if block_index != blank
+      assign show_item = true
+    endif
+    if block_title != blank
+      assign show_item = true
+    endif
+    if block_description != blank
+      assign show_item = true
+    endif
+    if show_item
+      assign visible_count = visible_count | plus: 1
+    endif
+  endfor
+
+  assign render_section = false
+  if section_enabled
+    if visible_count > 0
+      assign render_section = true
+    endif
+  endif
+
+  assign show_disabled_notice = false
+  if section_enabled == false
+    if request.design_mode
+      assign show_disabled_notice = true
+    endif
+  endif
+%}
+
+{% if render_section %}
+  <section
+    id="AboutBrandFacts-{{ section.id }}"
+    class="
+      cosme-about-brand-facts
+      full-width
+      color-{{ section.settings.color_scheme }}
+      cosme-about-brand-facts--spacing-{{ section_spacing }}
+      cosme-about-brand-facts--count-{{ visible_count }}
+      {% if settings.enable_animations %}cosme-about-brand-facts--animated{% endif %}
+    "
+    {% if eyebrow != blank %}
+      aria-labelledby="{{ heading_id }}"
+    {% else %}
+      aria-label="{{ 'sections.about_brand_facts.landmark_label' | t }}"
+    {% endif %}
+    {{ section.shopify_attributes }}
+  >
+    <div class="cosme-about-brand-facts__inner">
+      {% if eyebrow != blank %}
+        <header class="cosme-about-brand-facts__header">
+          <h2 class="cosme-about-brand-facts__eyebrow" id="{{ heading_id }}">
+            {{ eyebrow | escape }}
+          </h2>
+        </header>
+      {% endif %}
+
+      <ul class="cosme-about-brand-facts__list" id="{{ list_id }}">
+        {% for block in section.blocks %}
+          {% liquid
+            assign block_index = block.settings.index | strip
+            assign block_title = block.settings.title | strip
+            assign block_description = block.settings.description | strip
+            assign show_item = false
+            if block_index != blank
+              assign show_item = true
+            endif
+            if block_title != blank
+              assign show_item = true
+            endif
+            if block_description != blank
+              assign show_item = true
+            endif
+          %}
+
+          {% if show_item %}
+            <li
+              class="cosme-about-brand-facts__item"
+              {{ block.shopify_attributes }}
+            >
+              {% if block_index != blank %}
+                <p class="cosme-about-brand-facts__index">{{ block_index | escape }}</p>
+              {% endif %}
+
+              {% if block_title != blank %}
+                <h3 class="cosme-about-brand-facts__title">{{ block_title | escape }}</h3>
+              {% endif %}
+
+              {% if block_description != blank %}
+                <p class="cosme-about-brand-facts__text">
+                  {{ block_description | escape | newline_to_br }}
+                </p>
+              {% endif %}
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+{% elsif show_disabled_notice %}
+  <section
+    id="AboutBrandFacts-{{ section.id }}"
+    class="
+      cosme-about-brand-facts
+      cosme-about-brand-facts--disabled
+      full-width
+      color-{{ section.settings.color_scheme }}
+      cosme-about-brand-facts--spacing-small
+    "
+    aria-label="{{ 'sections.about_brand_facts.landmark_label' | t }}"
+    {{ section.shopify_attributes }}
+  >
+    <div class="cosme-about-brand-facts__inner">
+      <p class="cosme-about-brand-facts__notice">
+        {{ 'sections.about_brand_facts.disabled_notice' | t }}
+      </p>
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-about-brand-facts {
+    overflow-x: clip;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-about-brand-facts__inner {
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-about-brand-facts--spacing-small .cosme-about-brand-facts__inner {
+    padding-block: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  .cosme-about-brand-facts--spacing-medium .cosme-about-brand-facts__inner {
+    padding-block: clamp(2.75rem, 6.5vw, 5.25rem);
+  }
+
+  .cosme-about-brand-facts--spacing-large .cosme-about-brand-facts__inner {
+    padding-block: clamp(3.5rem, 8vw, 7.5rem);
+  }
+
+  .cosme-about-brand-facts__header {
+    margin-block-end: clamp(2rem, 5vw, 4.25rem);
+  }
+
+  .cosme-about-brand-facts__eyebrow {
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: inherit;
+    line-height: 1.4;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-about-brand-facts__list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+   
+  }
+
+  .cosme-about-brand-facts__item {
+    min-width: 0;
+    padding-block: clamp(1.75rem, 4.5vw, 2.75rem);
+    border-block-start: 1px solid var(--color-border);
+
+  }
+
+  .cosme-about-brand-facts__index {
+    margin: 0 0 var(--spacing-md);
+    font-family: var(--font-heading--family);
+    font-size: clamp(3rem, 12vw, 4.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--color-muted);
+    padding-top: var(--page-margin);
+  }
+
+  .cosme-about-brand-facts__title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.375rem, 3.4vw, 1.875rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-about-brand-facts__text {
+    max-width: 22rem;
+    margin: var(--spacing-sm) 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .cosme-about-brand-facts__notice {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  @media screen and (min-width: 750px) {
+    .cosme-about-brand-facts__list {
+      border-block-start: 1px solid var(--color-border);
+    }
+
+    .cosme-about-brand-facts--count-2 .cosme-about-brand-facts__list,
+    .cosme-about-brand-facts--count-3 .cosme-about-brand-facts__list,
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cosme-about-brand-facts__item {
+      padding: clamp(1.75rem, 3vw, 2.5rem) clamp(1.25rem, 3vw, 2.25rem);
+      border-block-start: 0;
+      border-inline-start: 1px solid var(--color-border);
+    }
+
+    .cosme-about-brand-facts__item:nth-child(odd) {
+      border-inline-start: 0;
+      padding-inline-start: 0;
+    }
+
+    .cosme-about-brand-facts__item:nth-child(n + 3) {
+      border-block-start: 1px solid var(--color-border);
+    }
+
+    .cosme-about-brand-facts__index {
+      font-size: clamp(3.25rem, 6vw, 4.5rem);
+    }
+
+    .cosme-about-brand-facts__text {
+      font-size: 1.125rem;
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-about-brand-facts--spacing-large .cosme-about-brand-facts__inner {
+      padding-block: clamp(4rem, 8vw, 8.5rem);
+    }
+
+    .cosme-about-brand-facts--count-3 .cosme-about-brand-facts__list,
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .cosme-about-brand-facts--count-3 .cosme-about-brand-facts__item,
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__item {
+      padding: 0 clamp(1.75rem, 3.2vw, 3rem);
+      border-inline-start: 1px solid var(--color-border);
+      border-block-start: 0;
+    }
+
+    .cosme-about-brand-facts--count-3 .cosme-about-brand-facts__item:nth-child(odd),
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__item:nth-child(odd) {
+      border-inline-start: 1px solid var(--color-border);
+      padding-inline-start: clamp(1.75rem, 3.2vw, 3rem);
+    }
+
+    .cosme-about-brand-facts--count-3 .cosme-about-brand-facts__item:nth-child(3n + 1),
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__item:nth-child(3n + 1) {
+      border-inline-start: 0;
+      padding-inline-start: 0;
+    }
+
+    .cosme-about-brand-facts--count-3 .cosme-about-brand-facts__item:nth-child(3n),
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__item:nth-child(3n) {
+      padding-inline-end: 0;
+    }
+
+    .cosme-about-brand-facts--count-4 .cosme-about-brand-facts__item:nth-child(n + 4) {
+      margin-block-start: clamp(2.5rem, 4vw, 4rem);
+      padding-block-start: clamp(2.5rem, 4vw, 4rem);
+      border-block-start: 1px solid var(--color-border);
+    }
+
+    .cosme-about-brand-facts--count-2 .cosme-about-brand-facts__item:nth-child(odd) {
+      padding-inline-start: 0;
+    }
+
+    .cosme-about-brand-facts--count-2 .cosme-about-brand-facts__item:nth-child(even) {
+      padding-inline-end: 0;
+    }
+
+    .cosme-about-brand-facts__index {
+      font-size: clamp(4rem, 5.5vw, 5.75rem);
+    }
+
+    .cosme-about-brand-facts__title {
+      font-size: clamp(1.5rem, 2vw, 1.9375rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .cosme-about-brand-facts--animated .cosme-about-brand-facts__header,
+    .cosme-about-brand-facts--animated .cosme-about-brand-facts__item {
+      animation: cosme-about-brand-facts-enter 0.75s var(--transition-easing, ease) both;
+    }
+
+    .cosme-about-brand-facts--animated .cosme-about-brand-facts__item:nth-child(2) {
+      animation-delay: 0.07s;
+    }
+
+    .cosme-about-brand-facts--animated .cosme-about-brand-facts__item:nth-child(3) {
+      animation-delay: 0.14s;
+    }
+
+    .cosme-about-brand-facts--animated .cosme-about-brand-facts__item:nth-child(4) {
+      animation-delay: 0.21s;
+    }
+  }
+
+  @keyframes cosme-about-brand-facts-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.55rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.about_brand_facts",
+  "enabled_on": {
+    "templates": ["page"]
+  },
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable",
+      "label": "t:sections.about_brand_facts.settings.enable",
+      "info": "t:sections.about_brand_facts.settings.enable_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:general.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.about_brand_facts.settings.eyebrow",
+      "default": "BY THE NUMBERS"
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "large"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "fact",
+      "name": "t:sections.about_brand_facts.blocks.item",
+      "settings": [
+        {
+          "type": "text",
+          "id": "index",
+          "label": "t:sections.about_brand_facts.blocks.index",
+          "default": "01"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.about_brand_facts.blocks.title",
+          "default": "Thoughtfully Made"
+        },
+        {
+          "type": "textarea",
+          "id": "description",
+          "label": "t:sections.about_brand_facts.blocks.description",
+          "default": "Every product begins with a clear purpose."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.about_brand_facts",
+      "blocks": [
+        {
+          "type": "fact",
+          "settings": {
+            "index": "01",
+            "title": "Thoughtfully Made",
+            "description": "Every product begins with a clear purpose."
+          }
+        },
+        {
+          "type": "fact",
+          "settings": {
+            "index": "02",
+            "title": "Everyday Rituals",
+            "description": "Beauty designed to become part of real routines."
+          }
+        },
+        {
+          "type": "fact",
+          "settings": {
+            "index": "03",
+            "title": "Less, Better",
+            "description": "A considered approach to modern skincare."
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

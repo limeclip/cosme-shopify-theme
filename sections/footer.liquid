@@ -7,6 +7,13 @@
   assign care_menu = section.settings.care_menu
   assign care_heading = section.settings.care_menu_heading
   assign enable_newsletter = section.settings.enable_newsletter
+  assign enable_country_selector = section.settings.enable_country_selector
+  assign show_country_selector = false
+  if enable_country_selector
+    if localization.available_countries.size > 0
+      assign show_country_selector = true
+    endif
+  endif
   assign show_social = section.settings.show_social
   assign social_style = section.settings.social_style | default: 'icons'
   assign show_payment_icons = section.settings.show_payment_icons
@@ -25,6 +32,9 @@
     elsif settings.social_youtube != blank
       assign has_social_links = true
     elsif settings.social_pinterest != blank
+      assign has_social_links = true
+    endif
+    if settings.social_x != blank
       assign has_social_links = true
     endif
   endif
@@ -184,7 +194,7 @@
                       aria-label="{{ 'footer.social_instagram' | t }}"
                     >
                       {%- if social_style == 'icons' -%}
-                        {% render 'cosme-icon', icon: 'instagram' %}
+                        {% render 'cosme-icon', icon: 'instagram', size: 'lg' %}
                         <span class="cosme-visually-hidden">{{ 'footer.social_instagram' | t }}</span>
                       {%- else -%}
                         {{ 'footer.social_instagram' | t }}
@@ -202,7 +212,7 @@
                       aria-label="{{ 'footer.social_facebook' | t }}"
                     >
                       {%- if social_style == 'icons' -%}
-                        {% render 'cosme-icon', icon: 'facebook' %}
+                        {% render 'cosme-icon', icon: 'facebook', size: 'lg' %}
                         <span class="cosme-visually-hidden">{{ 'footer.social_facebook' | t }}</span>
                       {%- else -%}
                         {{ 'footer.social_facebook' | t }}
@@ -220,7 +230,7 @@
                       aria-label="{{ 'footer.social_tiktok' | t }}"
                     >
                       {%- if social_style == 'icons' -%}
-                        {% render 'cosme-icon', icon: 'tiktok' %}
+                        {% render 'cosme-icon', icon: 'tiktok', size: 'lg' %}
                         <span class="cosme-visually-hidden">{{ 'footer.social_tiktok' | t }}</span>
                       {%- else -%}
                         {{ 'footer.social_tiktok' | t }}
@@ -238,7 +248,7 @@
                       aria-label="{{ 'footer.social_youtube' | t }}"
                     >
                       {%- if social_style == 'icons' -%}
-                        {% render 'cosme-icon', icon: 'youtube' %}
+                        {% render 'cosme-icon', icon: 'youtube', size: 'lg' %}
                         <span class="cosme-visually-hidden">{{ 'footer.social_youtube' | t }}</span>
                       {%- else -%}
                         {{ 'footer.social_youtube' | t }}
@@ -256,7 +266,7 @@
                       aria-label="{{ 'footer.social_pinterest' | t }}"
                     >
                       {%- if social_style == 'icons' -%}
-                        {% render 'cosme-icon', icon: 'pinterest' %}
+                        {% render 'cosme-icon', icon: 'pinterest', size: 'lg' %}
                         <span class="cosme-visually-hidden">{{ 'footer.social_pinterest' | t }}</span>
                       {%- else -%}
                         {{ 'footer.social_pinterest' | t }}
@@ -264,8 +274,32 @@
                     </a>
                   </li>
                 {%- endif -%}
+                {%- if settings.social_x != blank -%}
+                  <li>
+                    <a
+                      class="cosme-footer__social-link"
+                      href="{{ settings.social_x }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="{{ 'footer.social_x' | t }}"
+                    >
+                      {%- if social_style == 'icons' -%}
+                        {% render 'cosme-icon', icon: 'x', size: 'lg' %}
+                        <span class="cosme-visually-hidden">{{ 'footer.social_x' | t }}</span>
+                      {%- else -%}
+                        {{ 'footer.social_x' | t }}
+                      {%- endif -%}
+                    </a>
+                  </li>
+                {%- endif -%}
               </ul>
             </nav>
+          {%- endif -%}
+
+          {%- if show_country_selector -%}
+            <div class="cosme-footer__country">
+              {% render 'cosme-country-selector', section_id: section.id %}
+            </div>
           {%- endif -%}
         </div>
 
@@ -739,7 +773,7 @@
   }
 
   .cosme-footer__newsletter-field .cosme-form-field__control:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline: none;
     outline-offset: 4px;
     border-bottom-color: var(--color-accent);
     box-shadow: none;
@@ -771,6 +805,12 @@
   .cosme-footer__social {
     order: 5;
     min-width: 0;
+  }
+
+  .cosme-footer__country {
+    order: 6;
+    min-width: 0;
+    width: 100%;
   }
 
   .cosme-footer__social-list {
@@ -902,8 +942,13 @@
     .cosme-footer__newsletter,
     .cosme-footer__menu--shop,
     .cosme-footer__menu--care,
-    .cosme-footer__social {
+    .cosme-footer__social,
+    .cosme-footer__country {
       order: 0;
+    }
+
+    .cosme-footer__country {
+      max-width: 18rem;
     }
 
     .cosme-footer__accordion,
@@ -1177,6 +1222,17 @@
       ],
       "default": "icons",
       "visible_if": "{{ section.settings.show_social }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.settings.country_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_country_selector",
+      "label": "t:sections.footer.settings.enable_country_selector",
+      "info": "t:sections.footer.settings.enable_country_selector_info",
+      "default": true
     },
     {
       "type": "header",

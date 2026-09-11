@@ -11,7 +11,61 @@
   "sections": {
     "main": {
       "type": "search",
-      "settings": {}
+      "settings": {
+        "eyebrow": "Search",
+        "heading": "What are you looking for?",
+        "placeholder": "Search skincare, products, collections...",
+        "no_results_heading": "Nothing matched your search",
+        "no_results_text": "Try another search or explore our collections.",
+        "no_results_cta_label": "Explore collections",
+        "desktop_columns": "4",
+        "color_scheme": "scheme-1",
+        "show_popular_searches": true
+      },
+      "blocks": {
+        "popular-skincare": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Skincare",
+            "label": "Skincare"
+          }
+        },
+        "popular-serums": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Serums",
+            "label": "Serums"
+          }
+        },
+        "popular-moisturizers": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Moisturizers",
+            "label": "Moisturizers"
+          }
+        },
+        "popular-cleansers": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Cleansers",
+            "label": "Cleansers"
+          }
+        },
+        "popular-masks": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Masks",
+            "label": "Masks"
+          }
+        }
+      },
+      "block_order": [
+        "popular-skincare",
+        "popular-serums",
+        "popular-moisturizers",
+        "popular-cleansers",
+        "popular-masks"
+      ]
     }
   },
   "order": [

@@ -66,12 +66,12 @@ p:empty {
 }
 
 :is(p, h1, h2, h3, h4, h5, h6):first-child,
-:empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+:empty:first-child+ :where(p, h1, h2, h3, h4, h5, h6) {
   margin-block-start: 0;
 }
 
 :is(p, h1, h2, h3, h4, h5, h6):last-child,
-:where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+:where(p, h1, h2, h3, h4, h5, h6)+ :has(+ :empty:last-child) {
   margin-block-end: 0;
 }
 
@@ -170,6 +170,7 @@ dialog {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -191,11 +192,11 @@ dialog {
   width: 100%;
 }
 
-.shopify-section > * {
+.shopify-section>* {
   grid-column: 2;
 }
 
-.shopify-section > .full-width {
+.shopify-section>.full-width {
   grid-column: 1 / -1;
 }
 
@@ -203,4 +204,38 @@ dialog {
   position: sticky;
   top: 0;
   z-index: 30;
+}
+
+.shopify-section-group-overlay-group {
+  display: contents;
+}
+
+.shopify-section-group-overlay-group > .shopify-section:empty {
+  display: none;
+}
+
+.shopify-policy__container {
+  padding: 2rem var(--page-margin);
+  padding-inline: var(--page-margin);
+  margin-block: 8rem;
+  max-width: 50rem!important;
+}
+
+.shopify-policy__title {
+  padding: var(--page-margin);
+
+}
+.shopify-policy__body .rte p {
+  padding: var(--page-margin);
+  padding-inline: var(--page-margin);
+}
+
+.shopify-policy__body h2{
+  padding: var(--page-margin);
+  padding-inline: var(--page-margin);
+  font-weight: 600;
+}
+
+.cosme-rte {
+  /* defined in global styles */
 }

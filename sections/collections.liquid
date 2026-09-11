@@ -1,83 +1,669 @@
-{% comment %}
-  This section is used in the list-collections template to render a list of
-  collections.
+{% liquid
+  assign collection_source = section.settings.collection_source | default: 'all'
+  assign desktop_columns = section.settings.columns_desktop | default: '3' | plus: 0
+  assign section_spacing = section.settings.section_spacing | default: 'medium'
+  assign text_alignment = section.settings.text_alignment | default: 'left'
+  assign heading_id = 'ListCollectionsHeading-' | append: section.id
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/collection
-{% endcomment %}
+  assign heading = section.settings.heading | strip
+  if heading == blank
+    assign heading = 'collections.title' | t
+  endif
 
-<h1>{{ 'collections.title' | t }}</h1>
+  assign eyebrow = section.settings.eyebrow | strip
+  assign intro_description = section.settings.description | strip
 
-<div
-  class="collections {{ section.settings.grid_item_width }}"
-  style="--grid-gap: {{ section.settings.grid_gap }}px"
+  assign show_eyebrow = false
+  if section.settings.show_eyebrow
+    if eyebrow != blank
+      assign show_eyebrow = true
+    endif
+  endif
+
+  assign show_intro_description = false
+  if section.settings.show_description
+    if intro_description != blank
+      assign show_intro_description = true
+    endif
+  endif
+
+  assign tablet_columns = 2
+  if desktop_columns >= 4
+    assign tablet_columns = 3
+  endif
+
+  assign large_columns = desktop_columns
+  if desktop_columns == 5
+    assign large_columns = 4
+  endif
+
+  case desktop_columns
+    when 5
+      assign card_sizes = '(min-width: 1440px) 18vw, (min-width: 990px) 22vw, (min-width: 768px) 30vw, 92vw'
+      assign image_width = 640
+    when 4
+      assign card_sizes = '(min-width: 990px) 24vw, (min-width: 768px) 42vw, 92vw'
+      assign image_width = 720
+    else
+      assign card_sizes = '(min-width: 990px) 32vw, (min-width: 768px) 45vw, 92vw'
+      assign image_width = 960
+  endcase
+
+  case section.settings.image_ratio
+    when '1/1'
+      assign aspect_ratio = '1/1'
+      assign image_height = image_width
+    when '4/3'
+      assign aspect_ratio = '4/3'
+      assign image_height = image_width | times: 3 | divided_by: 4
+    else
+      assign aspect_ratio = '4/5'
+      assign image_height = image_width | times: 5 | divided_by: 4
+  endcase
+
+  case section.settings.grid_gap
+    when 'small'
+      assign gap_token = 'var(--spacing-sm)'
+    when 'large'
+      assign gap_token = 'var(--spacing-xl)'
+    else
+      assign gap_token = 'var(--grid-gap)'
+  endcase
+
+  assign selected_count = 0
+  assign seen_ids = ''
+  if collection_source == 'selected'
+    for block in section.blocks
+      if block.type == 'collection'
+        assign selected_collection = block.settings.collection
+        if selected_collection != blank
+          if selected_collection.url != blank
+            assign id_token = '-' | append: selected_collection.id | append: '-'
+            assign is_duplicate = false
+            if seen_ids contains id_token
+              assign is_duplicate = true
+            endif
+            if is_duplicate == false
+              assign seen_ids = seen_ids | append: id_token
+              assign selected_count = selected_count | plus: 1
+            endif
+          endif
+        endif
+      endif
+    endfor
+  endif
+
+  assign enable_hover_effect = true
+  if section.settings.enable_hover_effect == false
+    assign enable_hover_effect = false
+  endif
+%}
+
+<section
+  id="ListCollections-{{ section.id }}"
+  class="cosme-list-collections full-width color-{{ section.settings.color_scheme }} cosme-list-collections--spacing-{{ section_spacing }} cosme-list-collections--align-{{ text_alignment }} cosme-list-collections--cols-{{ desktop_columns }}{% if enable_hover_effect %} cosme-list-collections--hover{% endif %}"
+  style="
+    --list-cols: {{ desktop_columns }};
+    --list-cols-lg: {{ large_columns }};
+    --list-cols-md: {{ tablet_columns }};
+    --list-gap: {{ gap_token }};
+  "
+  aria-labelledby="{{ heading_id }}"
+  {{ section.shopify_attributes }}
 >
-  {% for collection in collections %}
-    <a class="collection-card" href="{{ collection.url }}">
-      {% if collection.featured_image %}
-        {% render 'image',
-          class: 'collection-card__image',
-          image: collection.featured_image,
-          width: 600,
-          height: 600,
-          crop: 'center'
-        %}
+  <div class="cosme-list-collections__inner">
+    <header class="cosme-list-collections__intro">
+      {% if show_eyebrow %}
+        <p class="cosme-list-collections__eyebrow">{{ eyebrow | escape }}</p>
       {% endif %}
 
-      <div class="collection-card__content">
-        <p>{{ collection.title }}</p>
+      <h1 class="cosme-list-collections__heading" id="{{ heading_id }}">{{ heading | escape }}</h1>
 
-        {% if collection.description %}
-          <p>{{ collection.description | strip_html | truncatewords: 15 }}</p>
+      {% if show_intro_description %}
+        <p class="cosme-list-collections__description">{{ intro_description | escape }}</p>
+      {% endif %}
+    </header>
+
+    {% if collection_source == 'selected' %}
+      {% if selected_count > 0 %}
+        <ul class="cosme-list-collections__grid" role="list">
+          {% liquid
+            assign rendered_index = 0
+            assign seen_ids = ''
+          %}
+          {% for block in section.blocks %}
+            {% liquid
+              assign selected_collection = blank
+              if block.type == 'collection'
+                assign selected_collection = block.settings.collection
+              endif
+
+              if selected_collection == blank
+                continue
+              endif
+              if selected_collection.url == blank
+                continue
+              endif
+
+              assign id_token = '-' | append: selected_collection.id | append: '-'
+              if seen_ids contains id_token
+                continue
+              endif
+
+              assign seen_ids = seen_ids | append: id_token
+              assign rendered_index = rendered_index | plus: 1
+              assign placeholder_index = rendered_index | minus: 1 | modulo: 6 | plus: 1
+              assign placeholder_name = 'collection-' | append: placeholder_index
+              assign card_loading = 'lazy'
+              assign card_fetchpriority = blank
+              if rendered_index <= 3
+                assign card_loading = 'eager'
+                assign card_fetchpriority = 'high'
+              endif
+            %}
+            <li class="cosme-list-collections__item" {{ block.shopify_attributes }}>
+              <a class="cosme-list-collections__link" href="{{ selected_collection.url }}">
+                {% render 'cosme-collection-card',
+                  collection: selected_collection,
+                  aspect_ratio: aspect_ratio,
+                  image_width: image_width,
+                  image_height: image_height,
+                  sizes: card_sizes,
+                  loading: card_loading,
+                  fetchpriority: card_fetchpriority,
+                  show_description: section.settings.show_collection_description,
+                  show_product_count: section.settings.show_product_count,
+                  show_cta: section.settings.show_cta,
+                  placeholder_name: placeholder_name,
+                  card_index: rendered_index
+                %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="cosme-list-collections__empty">
+          {{ 'sections.list_collections.empty_selected' | t }}
+        </p>
+      {% endif %}
+    {% else %}
+      {% paginate collections by 24 %}
+        {% if collections.size > 0 %}
+          <ul class="cosme-list-collections__grid" role="list">
+            {% liquid
+              assign pages_before = paginate.current_page | minus: 1
+              assign page_offset = pages_before | times: paginate.page_size
+              assign rendered_index = page_offset
+            %}
+            {% for collection in collections %}
+              {% liquid
+                if collection.url == blank
+                  continue
+                endif
+
+                assign rendered_index = rendered_index | plus: 1
+                assign placeholder_index = rendered_index | minus: 1 | modulo: 6 | plus: 1
+                assign placeholder_name = 'collection-' | append: placeholder_index
+                assign card_loading = 'lazy'
+                assign card_fetchpriority = blank
+                if paginate.current_page == 1
+                  if rendered_index <= 3
+                    assign card_loading = 'eager'
+                    assign card_fetchpriority = 'high'
+                  endif
+                endif
+              %}
+              <li class="cosme-list-collections__item">
+                <a class="cosme-list-collections__link" href="{{ collection.url }}">
+                  {% render 'cosme-collection-card',
+                    collection: collection,
+                    aspect_ratio: aspect_ratio,
+                    image_width: image_width,
+                    image_height: image_height,
+                    sizes: card_sizes,
+                    loading: card_loading,
+                    fetchpriority: card_fetchpriority,
+                    show_description: section.settings.show_collection_description,
+                    show_product_count: section.settings.show_product_count,
+                    show_cta: section.settings.show_cta,
+                    placeholder_name: placeholder_name,
+                    card_index: rendered_index
+                  %}
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+
+          {% if paginate.pages > 1 %}
+            {% assign current_page_label = paginate.current_page | append: '' %}
+            <nav
+              class="cosme-list-collections__pagination"
+              aria-label="{{ 'collections.pagination' | t }}"
+            >
+              {% if paginate.previous %}
+                <a
+                  class="cosme-list-collections__page-link"
+                  href="{{ paginate.previous.url }}"
+                  rel="prev"
+                  aria-label="{{ 'collections.previous' | t }}"
+                >
+                  {{ 'collections.previous' | t }}
+                </a>
+              {% endif %}
+
+              <ol class="cosme-list-collections__pages" role="list">
+                {% for part in paginate.parts %}
+                  <li>
+                    {% if part.is_link %}
+                      <a
+                        class="cosme-list-collections__page-link"
+                        href="{{ part.url }}"
+                        aria-label="{{ 'collections.page' | t: page: part.title }}"
+                      >
+                        {{ part.title }}
+                      </a>
+                    {% elsif part.title == current_page_label %}
+                      <span
+                        class="cosme-list-collections__page-link cosme-list-collections__page-link--current"
+                        aria-current="page"
+                        aria-label="{{ 'collections.page' | t: page: part.title }}"
+                      >
+                        {{ part.title }}
+                      </span>
+                    {% else %}
+                      <span class="cosme-list-collections__page-ellipsis" aria-hidden="true">
+                        {{ part.title }}
+                      </span>
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ol>
+
+              {% if paginate.next %}
+                <a
+                  class="cosme-list-collections__page-link"
+                  href="{{ paginate.next.url }}"
+                  rel="next"
+                  aria-label="{{ 'collections.next' | t }}"
+                >
+                  {{ 'collections.next' | t }}
+                </a>
+              {% endif %}
+            </nav>
+          {% endif %}
+        {% else %}
+          <p class="cosme-list-collections__empty">
+            {{ 'sections.list_collections.empty' | t }}
+          </p>
         {% endif %}
-      </div>
-    </a>
-  {% endfor %}
-</div>
+      {% endpaginate %}
+    {% endif %}
+  </div>
+</section>
 
 {% stylesheet %}
-  .collections {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--collection-card-size), 100%), 1fr));
-    gap: var(--grid-gap);
+  .cosme-list-collections {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
   }
-  .collections--compact {
-    --collection-card-size: 160px;
-  }
-  .collections--full {
-    --collection-card-size: 280px;
-  }
-  .collection-card {
-    display: flex;
-    flex-direction: column;
+
+  .cosme-list-collections__inner {
     width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-list-collections--spacing-small .cosme-list-collections__inner {
+    padding-block: calc(var(--spacing-section) * 0.45);
+  }
+
+  .cosme-list-collections--spacing-medium .cosme-list-collections__inner {
+    padding-block: clamp(1.75rem, 4vw, calc(var(--spacing-section) * 0.7));
+  }
+
+  .cosme-list-collections--spacing-large .cosme-list-collections__inner {
+    padding-block: clamp(2.25rem, 5vw, var(--spacing-section));
+  }
+
+  .cosme-list-collections__intro {
+    max-width: 38rem;
+    margin-block-end: var(--spacing-xl);
+  }
+
+  .cosme-list-collections--align-center .cosme-list-collections__intro {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-list-collections__eyebrow {
+    margin: 0 0 var(--spacing-sm);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-list-collections__heading {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(2rem, 4.5vw, 3rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: var(--line-height-heading);
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading, var(--color-foreground));
+  }
+
+  .cosme-list-collections__description {
+    margin: var(--spacing-sm) 0 0;
+    max-width: 32rem;
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+    color: var(--color-muted);
+  }
+
+  .cosme-list-collections--align-center .cosme-list-collections__description {
+    margin-inline: auto;
+  }
+
+  .cosme-list-collections__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--list-gap);
+    row-gap: calc(var(--list-gap) * 1.35);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-list-collections__item {
+    min-width: 0;
+  }
+
+  .cosme-list-collections__link {
+    display: block;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--radius-card);
+  }
+
+  .cosme-list-collections__link:hover {
+    color: inherit;
+  }
+
+  .cosme-list-collections__link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 4px;
+  }
+
+  .cosme-list-collections__empty {
+    margin: 0;
+    max-width: 32rem;
+    color: var(--color-muted);
+    font-size: 1rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-list-collections--align-center .cosme-list-collections__empty {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .cosme-list-collections__pagination,
+  .cosme-list-collections__pages {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm) var(--spacing-md);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cosme-list-collections__pagination {
+    margin-block-start: var(--spacing-2xl);
+  }
+
+  .cosme-list-collections__page-link,
+  .cosme-list-collections__page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    letter-spacing: var(--letter-spacing-body);
+    text-decoration: none;
+  }
+
+  .cosme-list-collections__page-link:hover,
+  .cosme-list-collections__page-link:focus-visible {
+    color: var(--color-foreground);
+  }
+
+  .cosme-list-collections__page-link--current {
+    color: var(--color-foreground);
+  }
+
+  @media screen and (min-width: 768px) {
+    .cosme-list-collections__grid {
+      grid-template-columns: repeat(var(--list-cols-md), minmax(0, 1fr));
+    }
+
+    .cosme-list-collections__intro {
+      margin-block-end: var(--spacing-2xl);
+    }
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-list-collections__grid {
+      grid-template-columns: repeat(var(--list-cols-lg), minmax(0, 1fr));
+    }
+
+    .cosme-list-collections--cols-3 .cosme-collection-card__title {
+      font-size: clamp(1.25rem, 1.5vw, 1.75rem);
+    }
+  }
+
+  @media screen and (min-width: 1440px) {
+    .cosme-list-collections__grid {
+      grid-template-columns: repeat(var(--list-cols), minmax(0, 1fr));
+    }
+
+    .cosme-list-collections--cols-5 .cosme-collection-card__title {
+      font-size: 1.0625rem;
+    }
+
+    .cosme-list-collections--cols-5 .cosme-collection-card__description {
+      display: none;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
   "name": "t:general.collections_grid",
+  "enabled_on": {
+    "templates": ["list-collections"]
+  },
+  "max_blocks": 24,
   "settings": [
     {
-      "type": "select",
-      "id": "grid_item_width",
-      "label": "t:labels.grid_item_width",
-      "options": [
-        { "value": "collections--compact", "label": "t:options.size.small" },
-        { "value": "collections--full", "label": "t:options.size.large" }
-      ],
-      "default": "collections--full"
+      "type": "header",
+      "content": "t:general.content"
     },
     {
-      "type": "range",
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.list_collections.settings.eyebrow",
+      "default": "Explore"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_eyebrow",
+      "label": "t:sections.list_collections.settings.show_eyebrow",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:labels.heading",
+      "default": "Collections"
+    },
+    {
+      "type": "textarea",
+      "id": "description",
+      "label": "t:sections.list_collections.settings.description",
+      "default": "Discover carefully curated collections designed around your beauty rituals."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "t:sections.list_collections.settings.show_description",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:sections.list_collections.settings.text_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "header",
+      "content": "t:general.collections"
+    },
+    {
+      "type": "select",
+      "id": "collection_source",
+      "label": "t:sections.list_collections.settings.collection_source",
+      "options": [
+        { "value": "all", "label": "t:sections.list_collections.settings.source_all" },
+        { "value": "selected", "label": "t:sections.list_collections.settings.source_selected" }
+      ],
+      "default": "all",
+      "info": "t:sections.list_collections.settings.collection_source_info"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.list_collections.settings.selected_info",
+      "visible_if": "{{ section.settings.collection_source == 'selected' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.list_collections.settings.grid_header"
+    },
+    {
+      "type": "select",
+      "id": "columns_desktop",
+      "label": "t:sections.list_collections.settings.columns_desktop",
+      "options": [
+        { "value": "3", "label": "3" },
+        { "value": "4", "label": "4" },
+        { "value": "5", "label": "5" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "t:sections.list_collections.settings.image_ratio",
+      "options": [
+        { "value": "4/5", "label": "t:sections.list_collections.settings.ratio_4_5" },
+        { "value": "1/1", "label": "t:sections.list_collections.settings.ratio_1_1" },
+        { "value": "4/3", "label": "t:sections.list_collections.settings.ratio_4_3" }
+      ],
+      "default": "4/5"
+    },
+    {
+      "type": "select",
       "id": "grid_gap",
       "label": "t:labels.grid_gap",
-      "min": 0,
-      "max": 50,
-      "step": 5,
-      "unit": "px",
-      "default": 10
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.list_collections.settings.card_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_collection_description",
+      "label": "t:sections.list_collections.settings.show_collection_description",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_product_count",
+      "label": "t:sections.list_collections.settings.show_product_count",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cta",
+      "label": "t:sections.list_collections.settings.show_cta",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_hover_effect",
+      "label": "t:sections.list_collections.settings.enable_hover_effect",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:general.colors"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:labels.section_spacing"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
     }
   ],
-  "presets": [{ "name": "t:general.collections_grid" }]
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "t:general.collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "t:general.collection",
+          "info": "t:sections.list_collections.settings.block_collection_info"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.collections_grid"
+    }
+  ]
 }
 {% endschema %}

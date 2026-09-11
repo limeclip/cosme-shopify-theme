@@ -1,0 +1,1413 @@
+{%- liquid
+  assign popup_enabled = false
+  if section.settings.enable
+    assign popup_enabled = true
+  endif
+
+  assign render_popup = false
+  if popup_enabled
+    assign render_popup = true
+  endif
+
+  if request.design_mode
+    assign render_popup = true
+  endif
+
+  assign is_home = false
+  if request.page_type == 'index'
+    assign is_home = true
+  endif
+
+  assign is_logged_in = false
+  if customer
+    assign is_logged_in = true
+  endif
+
+  assign trigger_automatically = false
+  if section.settings.trigger_automatically
+    assign trigger_automatically = true
+  endif
+
+  assign trigger_type = section.settings.trigger_type | default: 'delay'
+  assign delay_ms = section.settings.delay | default: 5 | times: 1000
+  assign scroll_percentage = section.settings.scroll_percentage | default: 50
+  assign repeat_interval = section.settings.repeat_interval | default: '1d'
+
+  assign image_layout = 'top'
+  assign popup_has_image = false
+  for block in section.blocks
+    if block.type == 'image'
+      if popup_has_image == false
+        if block.settings.image != blank
+          assign popup_has_image = true
+          assign image_layout = block.settings.image_position | default: 'top'
+        endif
+      endif
+    endif
+  endfor
+
+  assign heading_id = 'CosmePopupHeading-' | append: section.id
+  assign labelledby_id = heading_id
+  assign heading_found = false
+  for block in section.blocks
+    if heading_found == false
+      if block.type == 'heading'
+        if block.settings.heading != blank
+          assign labelledby_id = heading_id | append: '-' | append: block.id
+          assign heading_found = true
+        endif
+      endif
+    endif
+  endfor
+
+  assign text_alignment = section.settings.text_alignment | default: 'center'
+  assign container_width = section.settings.container_width | default: 680
+  assign color_scheme = section.settings.color_scheme | default: 'scheme-1'
+  assign open_in_editor = false
+  if request.design_mode
+    assign open_in_editor = true
+  endif
+
+  assign show_teaser = false
+  if section.settings.show_teaser
+    if popup_enabled
+      assign show_teaser = true
+    endif
+  endif
+  if request.design_mode
+    if section.settings.show_teaser
+      assign show_teaser = true
+    endif
+  endif
+
+  assign teaser_label = section.settings.teaser_label | strip
+  if teaser_label == blank
+    assign teaser_label = 'popup.teaser_label' | t
+  endif
+  assign teaser_position = section.settings.teaser_position | default: 'right'
+-%}
+
+{%- if render_popup -%}
+  <div
+    class="cosme-popup-host full-width color-{{ color_scheme }}{% if settings.enable_animations %} cosme-popup-host--animated{% endif %}"
+    data-cosme-popup-host
+    {{ section.shopify_attributes }}
+  >
+    {%- if show_teaser -%}
+      <button
+        type="button"
+        class="cosme-popup__teaser cosme-popup__teaser--{{ teaser_position }}"
+        data-cosme-popup-teaser
+        aria-controls="CosmePopup-{{ section.id }}"
+        aria-expanded="false"
+        aria-haspopup="dialog"
+      >
+        <span class="cosme-popup__teaser-label">{{ teaser_label | escape }}</span>
+      </button>
+    {%- endif -%}
+  <dialog
+    class="
+      cosme-popup
+      color-{{ color_scheme }}
+      cosme-popup--align-{{ text_alignment }}
+      cosme-popup--image-{{ image_layout }}
+      {% if popup_has_image %}cosme-popup--has-image{% endif %}
+      {% if settings.enable_animations %}cosme-popup--animated{% endif %}
+    "
+    id="CosmePopup-{{ section.id }}"
+    data-cosme-popup
+    data-open-in-editor="{{ open_in_editor }}"
+    data-enable-animations="{{ settings.enable_animations }}"
+    style="--popup-width: {{ container_width }}px;"
+    role="dialog"
+    aria-modal="true"
+    {% if heading_found %}
+      aria-labelledby="{{ labelledby_id }}"
+    {% else %}
+      aria-label="{{ 'popup.dialog_label' | t }}"
+    {% endif %}
+    scroll-lock
+  >
+    <script type="application/json" data-cosme-popup-config>
+      {
+        "enabled": {{ popup_enabled | json }},
+        "designMode": {{ request.design_mode | json }},
+        "homeOnly": {{ section.settings.show_home_only | json }},
+        "isHome": {{ is_home | json }},
+        "visitorsOnly": {{ section.settings.show_visitors_only | json }},
+        "isLoggedIn": {{ is_logged_in | json }},
+        "triggerAutomatically": {{ trigger_automatically | json }},
+        "triggerType": {{ trigger_type | json }},
+        "delay": {{ delay_ms | json }},
+        "scrollPercent": {{ scroll_percentage | json }},
+        "repeatInterval": {{ repeat_interval | json }},
+        "storageKey": {{ section.id | prepend: 'cosme-popup-' | json }}
+      }
+    </script>
+    <div class="cosme-popup__panel" data-cosme-popup-panel>
+      <button
+        type="button"
+        class="cosme-popup__close"
+        data-cosme-popup-close
+        aria-label="{{ 'popup.close' | t }}"
+      >
+        {% render 'cosme-icon', icon: 'close', size: 'md' %}
+      </button>
+
+      <div class="cosme-popup__layout">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'image' -%}
+              {%- if block.settings.image != blank -%}
+                {%- liquid
+                  assign image_alt = block.settings.image_alt | strip
+                  if image_alt == blank
+                    assign image_alt = block.settings.image.alt
+                  endif
+                -%}
+                <div
+                  class="cosme-popup__media"
+                  {{ block.shopify_attributes }}
+                >
+                  {% render 'cosme-image',
+                    image: block.settings.image,
+                    class: 'cosme-popup__image',
+                    width: 1400,
+                    sizes: '(min-width: 768px) 680px, 100vw',
+                    alt: image_alt,
+                    loading: 'lazy'
+                  %}
+                </div>
+              {%- else -%}
+                <div class="cosme-popup__media cosme-popup__media--empty" {{ block.shopify_attributes }}></div>
+              {%- endif -%}
+
+            {%- when 'heading' -%}
+              {%- liquid
+                assign heading_tag = block.settings.heading_tag | default: 'h2'
+                assign heading_size = block.settings.heading_size | default: 'heading-xl'
+                assign block_heading_id = heading_id | append: '-' | append: block.id
+              -%}
+              {%- if block.settings.heading != blank -%}
+                <{{ heading_tag }}
+                  class="cosme-popup__heading cosme-popup__heading--{{ heading_size }}"
+                  id="{{ block_heading_id }}"
+                  {{ block.shopify_attributes }}
+                >
+                  {{ block.settings.heading | escape }}
+                </{{ heading_tag }}>
+              {%- else -%}
+                <div class="cosme-popup__heading cosme-popup__heading--empty" {{ block.shopify_attributes }}></div>
+              {%- endif -%}
+
+            {%- when 'text' -%}
+              {%- assign text_size = block.settings.text_size | default: 'base' -%}
+              {%- if block.settings.text != blank -%}
+                <div
+                  class="cosme-popup__text cosme-popup__text--{{ text_size }} rte"
+                  {{ block.shopify_attributes }}
+                >
+                  {{ block.settings.text }}
+                </div>
+              {%- else -%}
+                <div class="cosme-popup__text cosme-popup__text--empty" {{ block.shopify_attributes }}></div>
+              {%- endif -%}
+
+            {%- when 'newsletter' -%}
+              {%- liquid
+                assign button_label = block.settings.button_label | strip
+                if button_label == blank
+                  assign button_label = 'popup.submit' | t
+                endif
+                assign button_style = 'primary'
+                if block.settings.button_design == 'design_2'
+                  assign button_style = 'outline'
+                endif
+                assign newsletter_form_id = 'PopupNewsletter-' | append: section.id | append: '-' | append: block.id
+                assign newsletter_email_id = 'PopupNewsletterEmail-' | append: section.id | append: '-' | append: block.id
+                assign newsletter_success_id = 'PopupNewsletterSuccess-' | append: section.id | append: '-' | append: block.id
+                assign newsletter_email_label = 'popup.email_label' | t
+                assign newsletter_email_placeholder = 'popup.email_placeholder' | t
+              -%}
+              <div class="cosme-popup__form-wrap" {{ block.shopify_attributes }}>
+                {% form 'customer', id: newsletter_form_id, class: 'cosme-popup__form' %}
+                  <input type="hidden" name="contact[tags]" value="newsletter">
+                  <input type="hidden" name="contact[accepts_marketing]" value="true">
+
+                  {%- liquid
+                    assign newsletter_error = blank
+                    assign newsletter_posted = false
+                    if form.posted_successfully?
+                      assign newsletter_posted = true
+                    endif
+                    if form.errors
+                      assign newsletter_error = 'popup.error' | t
+                    endif
+                  -%}
+
+                  <div
+                    class="cosme-popup__form-fields"
+                    data-cosme-popup-form-fields
+                    {% if newsletter_posted %}
+                      hidden
+                    {% endif %}
+                  >
+                    {% render 'cosme-form-field',
+                      label: newsletter_email_label,
+                      id: newsletter_email_id,
+                      name: 'contact[email]',
+                      type: 'email',
+                      value: form.email,
+                      required: true,
+                      placeholder: newsletter_email_placeholder,
+                      autocomplete: 'email',
+                      error: newsletter_error,
+                      class: 'cosme-popup__field'
+                    %}
+
+                    {% render 'cosme-button',
+                      label: button_label,
+                      type: 'submit',
+                      style: button_style,
+                      class: 'cosme-popup__submit'
+                    %}
+                  </div>
+
+                  <p
+                    class="cosme-popup__status"
+                    id="{{ newsletter_success_id }}"
+                    data-cosme-popup-success
+                    role="status"
+                    aria-live="polite"
+                    {% unless newsletter_posted %}
+                      hidden
+                    {% endunless %}
+                  >
+                    {{ 'popup.success' | t }}
+                  </p>
+                {% endform %}
+              </div>
+
+            {%- when 'social' -%}
+              {%- liquid
+                assign has_social_links = false
+                if settings.social_instagram != blank
+                  assign has_social_links = true
+                endif
+                if settings.social_facebook != blank
+                  assign has_social_links = true
+                endif
+                if settings.social_tiktok != blank
+                  assign has_social_links = true
+                endif
+                if settings.social_youtube != blank
+                  assign has_social_links = true
+                endif
+                if settings.social_pinterest != blank
+                  assign has_social_links = true
+                endif
+                if settings.social_x != blank
+                  assign has_social_links = true
+                endif
+              -%}
+              {%- if has_social_links -%}
+                <nav
+                  class="cosme-popup__social"
+                  aria-label="{{ 'popup.social_links' | t }}"
+                  {{ block.shopify_attributes }}
+                >
+                  <ul class="cosme-popup__social-list" role="list">
+                    {%- if settings.social_instagram != blank -%}
+                      <li>
+                        <a
+                          class="cosme-popup__social-link"
+                          href="{{ settings.social_instagram }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="{{ 'footer.social_instagram' | t }}"
+                        >
+                          {% render 'cosme-icon', icon: 'instagram' , size: 'lg' %}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                    {%- if settings.social_facebook != blank -%}
+                      <li>
+                        <a
+                          class="cosme-popup__social-link"
+                          href="{{ settings.social_facebook }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="{{ 'footer.social_facebook' | t }}"
+                        >
+                          {% render 'cosme-icon', icon: 'facebook' , size: 'lg' %}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                    {%- if settings.social_tiktok != blank -%}
+                      <li>
+                        <a
+                          class="cosme-popup__social-link"
+                          href="{{ settings.social_tiktok }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="{{ 'footer.social_tiktok' | t }}"
+                        >
+                          {% render 'cosme-icon', icon: 'tiktok', size: 'lg' %}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                    {%- if settings.social_x != blank -%}
+                      <li>
+                        <a
+                          class="cosme-popup__social-link"
+                          href="{{ settings.social_x }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="{{ 'footer.social_x' | t }}"
+                        >
+                          {% render 'cosme-icon', icon: 'x', size: 'lg' %}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                    {%- if settings.social_youtube != blank -%}
+                      <li>
+                        <a
+                          class="cosme-popup__social-link"
+                          href="{{ settings.social_youtube }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="{{ 'footer.social_youtube' | t }}"
+                        >
+                          {% render 'cosme-icon', icon: 'youtube', size: 'lg' %}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                    {%- if settings.social_pinterest != blank -%}
+                      <li>
+                        <a
+                          class="cosme-popup__social-link"
+                          href="{{ settings.social_pinterest }}"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label="{{ 'footer.social_pinterest' | t }}"
+                        >
+                          {% render 'cosme-icon', icon: 'pinterest', size: 'lg' %}
+                        </a>
+                      </li>
+                    {%- endif -%}
+                  </ul>
+                </nav>
+              {%- else -%}
+                <div class="cosme-popup__social cosme-popup__social--empty" {{ block.shopify_attributes }}></div>
+              {%- endif -%}
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </dialog>
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .shopify-section:has(.cosme-popup-host),
+  .shopify-section:has(.cosme-popup) {
+    display: contents;
+  }
+
+  .cosme-popup-host {
+    display: contents;
+  }
+
+  .cosme-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin: 0;
+    padding: max(var(--spacing-md), env(safe-area-inset-top, 0px))
+      max(var(--spacing-md), env(safe-area-inset-right, 0px))
+      max(var(--spacing-md), env(safe-area-inset-bottom, 0px))
+      max(var(--spacing-md), env(safe-area-inset-left, 0px));
+    overflow: auto;
+    border: 0;
+    background: transparent;
+    color: var(--color-foreground);
+    place-items: center;
+  }
+
+  .cosme-popup[open] {
+    display: grid;
+  }
+
+  .cosme-popup > [data-cosme-popup-config] {
+    display: none;
+  }
+
+  .cosme-popup::backdrop {
+    background-color: color-mix(
+      in srgb,
+      var(--color-overlay, #000) calc(var(--overlay-opacity, 0.4) * 100%),
+      transparent
+    );
+  }
+
+  .cosme-popup__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(100%, var(--popup-width, 680px), 55rem);
+    max-width: calc(100vw - 2rem);
+    max-height: min(90dvh, 48rem);
+    overflow: auto;
+    overflow-x: hidden;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 1.5rem 3rem color-mix(in srgb, var(--color-foreground) 8%, transparent);
+  }
+
+  .cosme-popup__close {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    color: var(--color-foreground);
+    background: color-mix(in srgb, var(--color-background) 88%, transparent);
+    border: 0;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .cosme-popup__close:focus-visible {
+    outline: none;
+ 
+  }
+  .cosme-popup__close:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-popup__layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl) var(--spacing-lg) var(--spacing-lg);
+  }
+
+  .cosme-popup--has-image.cosme-popup--image-top .cosme-popup__layout {
+    padding-top: 0;
+  }
+
+  .cosme-popup__media {
+    margin-inline: calc(var(--spacing-lg) * -1);
+    margin-top: calc(var(--spacing-xl) * -1);
+    overflow: hidden;
+  }
+
+  .cosme-popup--has-image.cosme-popup--image-top .cosme-popup__media {
+    margin-top: 0;
+  }
+
+  .cosme-popup--has-image.cosme-popup--image-left .cosme-image {
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius: 0;
+    border-bottom-left-radius: var(--radius-card);
+    border-bottom-right-radius: 0;
+  }
+
+  .cosme-popup--has-image.cosme-popup--image-top .cosme-image {
+    border-top-left-radius: var(--radius-card);
+    border-top-right-radius:var(--radius-card);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  .cosme-popup__media--empty,
+  .cosme-popup__heading--empty,
+  .cosme-popup__text--empty {
+    display: none;
+  }
+
+  .cosme-popup__image,
+  .cosme-popup__image img,
+  .cosme-popup__media img {
+    width: 100%;
+    height: auto;
+    max-height: 12.5rem;
+    object-fit: cover;
+  }
+
+  .cosme-popup__heading {
+    margin: 0;
+    color: var(--color-heading, var(--color-foreground));
+    text-wrap: pretty;
+  }
+
+  .cosme-popup__heading--heading-xs {
+    font-size: 0.875rem;
+  }
+
+  .cosme-popup__heading--heading-sm {
+    font-size: 1rem;
+  }
+
+  .cosme-popup__heading--heading-md {
+    font-size: 1.25rem;
+  }
+
+  .cosme-popup__heading--heading-lg {
+    font-size: clamp(1.375rem, 2vw, 1.5rem);
+  }
+
+  .cosme-popup__heading--heading-xl {
+    font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+  }
+
+  .cosme-popup__heading--heading-2xl {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+  }
+
+  .cosme-popup__heading--display-md {
+    font-size: clamp(1.875rem, 3.2vw, 2.5rem);
+  }
+
+  .cosme-popup__heading--display-lg {
+    font-size: clamp(2rem, 3.6vw, 3rem);
+  }
+
+  .cosme-popup__heading--display-xl {
+    font-size: clamp(2.25rem, 4vw, 3.5rem);
+  }
+
+  .cosme-popup__heading--display-2xl {
+    font-size: clamp(2.5rem, 4.6vw, 4rem);
+  }
+
+  .cosme-popup__text {
+    color:  var(--color-foreground), var(--color-muted);
+    line-height: var(--line-height-body);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .cosme-popup__text--small {
+    font-size: 0.875em;
+  }
+
+  .cosme-popup__text--base {
+    font-size: 1em;
+  }
+
+  .cosme-popup__text--large {
+    font-size: 1.125em;
+  }
+
+  .cosme-popup__text--inherit {
+    font-size: inherit;
+  }
+
+  .cosme-popup--align-left .cosme-popup__heading,
+  .cosme-popup--align-left .cosme-popup__text,
+  .cosme-popup--align-left .cosme-popup__form,
+  .cosme-popup--align-left .cosme-popup__form-wrap,
+  .cosme-popup--align-left .cosme-popup__social {
+    text-align: left;
+  }
+
+  .cosme-popup--align-center .cosme-popup__heading,
+  .cosme-popup--align-center .cosme-popup__text,
+  .cosme-popup--align-center .cosme-popup__form,
+  .cosme-popup--align-center .cosme-popup__form-wrap,
+  .cosme-popup--align-center .cosme-popup__social {
+    text-align: center;
+  }
+
+  .cosme-popup__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-popup__form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-popup__submit {
+    width: 100%;
+  }
+
+  .cosme-popup__status {
+    margin: 0;
+    color: var(--color-success, var(--color-foreground));
+  }
+
+  .cosme-popup__social-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    justify-content: inherit;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+ 
+  }
+
+  .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__social-list {
+    margin-top: var(--spacing-md);
+  }
+
+  .cosme-popup--align-center .cosme-popup__social-list {
+    justify-content: center;
+  }
+
+  .cosme-popup--align-left .cosme-popup__social-list {
+    justify-content: flex-start;
+  }
+
+  .cosme-popup__social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    color: var(--color-foreground);
+    text-decoration: none;
+    border-radius: var(--radius-button);
+  }
+
+  .cosme-popup__social-link:hover {
+    color: var(--color-accent);
+  }
+
+  .cosme-popup__social--empty {
+    display: none;
+  }
+
+  .cosme-popup--animated[open] .cosme-popup__panel {
+    animation: cosme-popup-enter var(--animation-duration, 400ms) var(--transition-easing, ease);
+  }
+
+  @keyframes cosme-popup-enter {
+    from {
+      opacity: 0;
+      transform: translateY(0.75rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .cosme-popup {
+      padding: var(--spacing-xl);
+    }
+
+    .cosme-popup__layout {
+      padding: var(--spacing-2xl) var(--spacing-xl) var(--spacing-xl);
+      gap: var(--spacing-lg);
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-top .cosme-popup__layout {
+      padding-top: 0;
+    }
+
+    .cosme-popup__media {
+      margin-inline: calc(var(--spacing-xl) * -1);
+      margin-top: calc(var(--spacing-2xl) * -1);
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-top .cosme-popup__media {
+      margin-top: 0;
+    }
+
+    .cosme-popup__image,
+    .cosme-popup__image img,
+    .cosme-popup__media img {
+      max-height: 14rem;
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__layout {
+      display: grid;
+      grid-template-columns: minmax(14rem, 0.9fr) minmax(0, 1.1fr);
+      gap: 0;
+      padding: 0;
+      align-items: stretch;
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__media {
+      grid-column: 1;
+      grid-row: 1 / span 50;
+      margin: 0;
+      min-height: 100%;
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__image,
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__image img,
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__media img {
+      height: 100%;
+      max-height: none;
+      min-height: 22rem;
+      object-fit: cover;
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__heading,
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__text,
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__form-wrap,
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__social {
+      grid-column: 2;
+      margin-inline: var(--spacing-xl);
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__layout > *:first-child:not(.cosme-popup__media),
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__media + * {
+      margin-top: var(--spacing-2xl);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .cosme-popup--has-image.cosme-popup--image-left .cosme-popup__layout > *:last-child {
+      margin-bottom: var(--spacing-xl);
+    }
+  }
+
+  @media (max-width: 767px) {
+    .cosme-popup--has-image .cosme-popup__media {
+      order: -1;
+    }
+
+    .cosme-popup {
+      padding: max(var(--spacing-sm), env(safe-area-inset-top, 0px))
+        max(var(--spacing-sm), env(safe-area-inset-right, 0px))
+        max(var(--spacing-sm), env(safe-area-inset-bottom, 0px))
+        max(var(--spacing-sm), env(safe-area-inset-left, 0px));
+    }
+
+    .cosme-popup__panel {
+      max-height: min(88dvh, 100%);
+      max-width: calc(100vw - 1.5rem);
+    }
+  }
+
+  .cosme-popup__teaser {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    z-index: 35;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+    padding: var(--spacing-md) var(--spacing-sm);
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    background-color: var(--color-button-primary-background, var(--color-accent));
+    color: var(--color-button-primary-label, var(--color-accent-contrast));
+    border: 0;
+    border-radius: var(--radius-button) 0 0 var(--radius-button);
+    font-family: var(--font-heading--family, inherit);
+    font-size: 0.75rem;
+    font-weight: inherit;
+    letter-spacing: 0.12em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .cosme-popup__teaser--left {
+    right: auto;
+    left: 0;
+    border-radius: 0 var(--radius-button) var(--radius-button) 0;
+  }
+  .cosme-popup__teaser--left .cosme-popup__teaser-label {
+  transform: rotate(180deg);
+}
+  
+
+  .cosme-popup__teaser:hover {
+    background-color: var(--color-button-primary-background-hover, var(--color-foreground));
+    color: var(--color-button-primary-label-hover, var(--color-background));
+  }
+
+  .cosme-popup-host--animated .cosme-popup__teaser {
+    transition:
+      background-color var(--transition-duration) var(--transition-easing),
+      color var(--transition-duration) var(--transition-easing);
+  }
+
+  @media (max-width: 767px) {
+    .cosme-popup__teaser,
+    .cosme-popup__teaser--left {
+      top: auto;
+      right: max(0.75rem, env(safe-area-inset-right, 0px));
+      left: auto;
+      bottom: max(6.5rem, calc(env(safe-area-inset-bottom, 0px) + 5.75rem));
+      transform: none;
+      writing-mode: horizontal-tb;
+      max-width: min(11.5rem, calc(100vw - 5.5rem));
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--radius-button);
+    }
+
+    .cosme-popup__teaser--left .cosme-popup__teaser-label {
+    transform: none;
+  }
+
+    .cosme-popup__teaser--left {
+      right: auto;
+      left: max(0.75rem, env(safe-area-inset-left, 0px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-popup--animated[open] .cosme-popup__panel {
+      animation: none;
+    }
+  }
+  .cosme-popup__field .cosme-form-field__label {
+  display: none;
+}
+{% endstylesheet %}
+
+{% javascript %}
+  (() => {
+    const REPEAT_MS = {
+      none: 0,
+      '30m': 30 * 60 * 1000,
+      '1h': 60 * 60 * 1000,
+      '6h': 6 * 60 * 60 * 1000,
+      '12h': 12 * 60 * 60 * 1000,
+      '1d': 24 * 60 * 60 * 1000,
+      '3d': 3 * 24 * 60 * 60 * 1000,
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '14d': 14 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000
+    };
+
+    const readConfig = (root) => {
+      const node = root.querySelector('[data-cosme-popup-config]');
+      if (!node) return null;
+      try {
+        return JSON.parse(node.textContent);
+      } catch (error) {
+        return null;
+      }
+    };
+
+    const readState = (key) => {
+      try {
+        return JSON.parse(window.localStorage.getItem(key) || '{}');
+      } catch (error) {
+        return {};
+      }
+    };
+
+    const writeState = (key, designMode, patch) => {
+      if (designMode) return;
+      try {
+        const next = Object.assign({}, readState(key), patch);
+        window.localStorage.setItem(key, JSON.stringify(next));
+      } catch (error) {}
+    };
+
+    const scrollProgress = () => {
+      const rootEl = document.documentElement;
+      const scrollable = rootEl.scrollHeight - rootEl.clientHeight;
+      if (scrollable <= 0) return 1;
+      return window.scrollY / scrollable;
+    };
+
+    const initPopup = (root) => {
+      if (!root || root.dataset.popupReady === 'true') return;
+      root.dataset.popupReady = 'true';
+
+      const config = readConfig(root) || {};
+      const panel = root.querySelector('[data-cosme-popup-panel]');
+      const closeButtons = root.querySelectorAll('[data-cosme-popup-close]');
+      const host = root.closest('[data-cosme-popup-host]');
+      const teaser = host ? host.querySelector('[data-cosme-popup-teaser]') : null;
+      const cleanups = [];
+      let lastFocusedElement = null;
+
+      const syncTeaser = () => {
+        if (!teaser) return;
+        teaser.setAttribute('aria-expanded', root.open ? 'true' : 'false');
+      };
+
+      const openPopup = (options) => {
+        const manual = options && options.manual === true;
+        if (root.open) return;
+        lastFocusedElement = document.activeElement;
+        if (typeof root.showModal === 'function') {
+          root.showModal();
+        } else {
+          root.setAttribute('open', '');
+        }
+        const focusTarget = root.querySelector('[data-cosme-popup-close]') || panel;
+        if (focusTarget) focusTarget.focus();
+        syncTeaser();
+        if (!manual && !config.designMode) {
+          writeState(config.storageKey, config.designMode, { openedAt: Date.now() });
+        }
+      };
+
+      const closePopup = () => {
+        if (!root.open) return;
+        if (typeof root.close === 'function') {
+          root.close();
+        } else {
+          root.removeAttribute('open');
+        }
+      };
+
+      const canAutoOpen = () => {
+        if (config.designMode) return false;
+        if (config.enabled === false) return false;
+        if (config.triggerAutomatically === false) return false;
+        if (config.homeOnly && config.isHome !== true) return false;
+        if (config.visitorsOnly && config.isLoggedIn) return false;
+        const state = readState(config.storageKey);
+        if (state.done) return false;
+        const repeatMs = REPEAT_MS[config.repeatInterval];
+        const interval = typeof repeatMs === 'number' ? repeatMs : REPEAT_MS['1d'];
+        if (interval === 0 && state.openedAt) return false;
+        if (interval > 0 && state.openedAt && Date.now() - state.openedAt < interval) return false;
+        return true;
+      };
+
+      const openAutomatically = () => {
+        if (!canAutoOpen()) return;
+        openPopup();
+      };
+
+      const startTriggers = () => {
+        if (!canAutoOpen()) return;
+        const type = config.triggerType || 'delay';
+
+        if (type === 'immediate') {
+          window.requestAnimationFrame(() => openAutomatically());
+          return;
+        }
+
+        if (type === 'scroll') {
+          const percent = Math.min(90, Math.max(10, Number(config.scrollPercent) || 50)) / 100;
+          const onScroll = () => {
+            if (scrollProgress() < percent) return;
+            window.removeEventListener('scroll', onScroll);
+            openAutomatically();
+          };
+          window.addEventListener('scroll', onScroll, { passive: true });
+          cleanups.push(() => window.removeEventListener('scroll', onScroll));
+          onScroll();
+          return;
+        }
+
+        const delay = Math.max(0, Number(config.delay) || 5000);
+        const timer = window.setTimeout(() => openAutomatically(), delay);
+        cleanups.push(() => window.clearTimeout(timer));
+      };
+
+      const onClose = () => {
+        syncTeaser();
+        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+          lastFocusedElement.focus();
+        }
+      };
+
+      const onBackdropClick = (event) => {
+        if (event.target === root) closePopup();
+      };
+
+      root.addEventListener('close', onClose);
+      cleanups.push(() => root.removeEventListener('close', onClose));
+      root.addEventListener('click', onBackdropClick);
+      cleanups.push(() => root.removeEventListener('click', onBackdropClick));
+
+      closeButtons.forEach((button) => {
+        const onClick = () => closePopup();
+        button.addEventListener('click', onClick);
+        cleanups.push(() => button.removeEventListener('click', onClick));
+      });
+
+      if (teaser) {
+        const onTeaser = () => openPopup({ manual: true });
+        teaser.addEventListener('click', onTeaser);
+        cleanups.push(() => teaser.removeEventListener('click', onTeaser));
+      }
+
+      root.querySelectorAll('form.cosme-popup__form').forEach((form) => {
+        const fields = form.querySelector('[data-cosme-popup-form-fields]');
+        const success = form.querySelector('[data-cosme-popup-success]');
+
+        if (success && !success.hidden) {
+          writeState(config.storageKey, config.designMode, { done: true });
+          if (config.designMode) openPopup({ manual: true });
+        }
+
+        const onSubmit = async (event) => {
+          if (!form.checkValidity()) return;
+          event.preventDefault();
+
+          const submitButton = form.querySelector('[type="submit"]');
+          if (submitButton) submitButton.disabled = true;
+
+          try {
+            const response = await fetch(form.action || window.location.pathname, {
+              method: 'POST',
+              body: new FormData(form),
+              headers: { Accept: 'text/html' }
+            });
+
+            if (!response.ok) throw new Error('newsletter');
+
+            if (fields) fields.hidden = true;
+            if (success) success.hidden = false;
+            writeState(config.storageKey, config.designMode, { done: true });
+          } catch (error) {
+            form.submit();
+          } finally {
+            if (submitButton) submitButton.disabled = false;
+          }
+        };
+
+        form.addEventListener('submit', onSubmit);
+        cleanups.push(() => form.removeEventListener('submit', onSubmit));
+      });
+
+      if (root.dataset.openInEditor === 'true') {
+        openPopup({ manual: true });
+      } else {
+        startTriggers();
+      }
+
+      root.cosmePopupOpen = (options) => openPopup(Object.assign({ manual: true }, options));
+      root.cosmePopupClose = closePopup;
+      root.cosmePopupDestroy = () => {
+        cleanups.forEach((fn) => fn());
+        delete root.dataset.popupReady;
+      };
+    };
+
+    const initAll = (scope) => {
+      (scope || document).querySelectorAll('[data-cosme-popup]').forEach(initPopup);
+    };
+
+    initAll();
+
+    document.addEventListener('shopify:section:load', (event) => {
+      initAll(event.target);
+    });
+
+    document.addEventListener('shopify:section:unload', (event) => {
+      event.target.querySelectorAll('[data-cosme-popup]').forEach((popup) => {
+        if (typeof popup.cosmePopupDestroy === 'function') popup.cosmePopupDestroy();
+      });
+    });
+
+    document.addEventListener('shopify:section:select', (event) => {
+      const popup = event.target.querySelector('[data-cosme-popup]');
+      if (popup && typeof popup.cosmePopupOpen === 'function') popup.cosmePopupOpen({ manual: true });
+    });
+  })();
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:general.popup",
+  "enabled_on": {
+    "groups": ["custom.overlay"]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.popup.settings.popup_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable",
+      "label": "t:sections.popup.settings.enable",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_home_only",
+      "label": "t:sections.popup.settings.show_home_only",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_visitors_only",
+      "label": "t:sections.popup.settings.show_visitors_only",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "t:sections.popup.settings.text_alignment",
+      "options": [
+        { "value": "left", "label": "t:options.alignment.left" },
+        { "value": "center", "label": "t:options.alignment.center" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "container_width",
+      "label": "t:sections.popup.settings.container_width",
+      "min": 560,
+      "max": 880,
+      "step": 10,
+      "unit": "px",
+      "default": 680
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.popup.settings.trigger_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "trigger_automatically",
+      "label": "t:sections.popup.settings.trigger_automatically",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "trigger_type",
+      "label": "t:sections.popup.settings.trigger_type",
+      "options": [
+        { "value": "immediate", "label": "t:options.popup_trigger.immediate" },
+        { "value": "delay", "label": "t:options.popup_trigger.delay" },
+        { "value": "scroll", "label": "t:options.popup_trigger.scroll" }
+      ],
+      "default": "delay",
+      "visible_if": "{{ section.settings.trigger_automatically }}"
+    },
+    {
+      "type": "range",
+      "id": "delay",
+      "label": "t:sections.popup.settings.delay",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "unit": "s",
+      "default": 5,
+      "visible_if": "{{ section.settings.trigger_automatically and section.settings.trigger_type == 'delay' }}"
+    },
+    {
+      "type": "range",
+      "id": "scroll_percentage",
+      "label": "t:sections.popup.settings.scroll_percentage",
+      "min": 10,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 50,
+      "visible_if": "{{ section.settings.trigger_automatically and section.settings.trigger_type == 'scroll' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.popup.settings.repeat_header"
+    },
+    {
+      "type": "select",
+      "id": "repeat_interval",
+      "label": "t:sections.popup.settings.repeat_interval",
+      "options": [
+        { "value": "none", "label": "t:options.popup_repeat.none" },
+        { "value": "30m", "label": "t:options.popup_repeat.30m" },
+        { "value": "1h", "label": "t:options.popup_repeat.1h" },
+        { "value": "6h", "label": "t:options.popup_repeat.6h" },
+        { "value": "12h", "label": "t:options.popup_repeat.12h" },
+        { "value": "1d", "label": "t:options.popup_repeat.1d" },
+        { "value": "3d", "label": "t:options.popup_repeat.3d" },
+        { "value": "7d", "label": "t:options.popup_repeat.7d" },
+        { "value": "14d", "label": "t:options.popup_repeat.14d" },
+        { "value": "30d", "label": "t:options.popup_repeat.30d" }
+      ],
+      "default": "1d",
+      "visible_if": "{{ section.settings.trigger_automatically }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.popup.settings.teaser_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_teaser",
+      "label": "t:sections.popup.settings.show_teaser",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "teaser_label",
+      "label": "t:sections.popup.settings.teaser_label",
+      "default": "GET 10% OFF",
+      "visible_if": "{{ section.settings.show_teaser }}"
+    },
+    {
+      "type": "select",
+      "id": "teaser_position",
+      "label": "t:sections.popup.settings.teaser_position",
+      "options": [
+        { "value": "right", "label": "t:options.alignment.right" },
+        { "value": "left", "label": "t:options.alignment.left" }
+      ],
+      "default": "right",
+      "visible_if": "{{ section.settings.show_teaser }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "t:sections.popup.blocks.image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:labels.image"
+        },
+        {
+          "type": "select",
+          "id": "image_position",
+          "label": "t:labels.image_position",
+          "options": [
+            { "value": "top", "label": "t:sections.popup.settings.image_position_top" },
+            { "value": "left", "label": "t:sections.popup.settings.image_position_left" }
+          ],
+          "default": "top"
+        },
+        {
+          "type": "text",
+          "id": "image_alt",
+          "label": "t:sections.popup.settings.image_alt",
+          "info": "t:sections.popup.settings.image_alt_info"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "name": "t:sections.popup.blocks.heading",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:labels.heading",
+          "default": "A considered welcome"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "t:labels.text_size",
+          "options": [
+            { "value": "heading-xs", "label": "t:options.heading_size.heading_xs" },
+            { "value": "heading-sm", "label": "t:options.heading_size.heading_sm" },
+            { "value": "heading-md", "label": "t:options.heading_size.heading_md" },
+            { "value": "heading-lg", "label": "t:options.heading_size.heading_lg" },
+            { "value": "heading-xl", "label": "t:options.heading_size.heading_xl" },
+            { "value": "heading-2xl", "label": "t:options.heading_size.heading_2xl" },
+            { "value": "display-md", "label": "t:options.heading_size.display_md" },
+            { "value": "display-lg", "label": "t:options.heading_size.display_lg" },
+            { "value": "display-xl", "label": "t:options.heading_size.display_xl" },
+            { "value": "display-2xl", "label": "t:options.heading_size.display_2xl" }
+          ],
+          "default": "heading-xl"
+        },
+        {
+          "type": "select",
+          "id": "heading_tag",
+          "label": "t:sections.popup.settings.heading_tag",
+          "options": [
+            { "value": "h1", "label": "t:options.heading_tag.h1" },
+            { "value": "h2", "label": "t:options.heading_tag.h2" },
+            { "value": "h3", "label": "t:options.heading_tag.h3" },
+            { "value": "h4", "label": "t:options.heading_tag.h4" },
+            { "value": "h5", "label": "t:options.heading_tag.h5" },
+            { "value": "h6", "label": "t:options.heading_tag.h6" }
+          ],
+          "default": "h2"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "t:sections.popup.blocks.text",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "t:labels.text",
+          "default": "<p>Join our list and receive 10% off your first order.</p>"
+        },
+        {
+          "type": "select",
+          "id": "text_size",
+          "label": "t:labels.text_size",
+          "options": [
+            { "value": "small", "label": "t:options.size.small" },
+            { "value": "base", "label": "t:options.size.base" },
+            { "value": "large", "label": "t:options.size.large" },
+            { "value": "inherit", "label": "t:options.size.inherit" }
+          ],
+          "default": "base"
+        }
+      ]
+    },
+    {
+      "type": "newsletter",
+      "name": "t:sections.popup.blocks.newsletter",
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "t:sections.popup.settings.button_label",
+          "default": "GET 10% OFF"
+        },
+        {
+          "type": "select",
+          "id": "button_design",
+          "label": "t:sections.popup.settings.button_design",
+          "options": [
+            { "value": "design_1", "label": "t:options.popup_design.design_1" },
+            { "value": "design_2", "label": "t:options.popup_design.design_2" }
+          ],
+          "default": "design_1"
+        }
+      ]
+    },
+    {
+      "type": "social",
+      "name": "t:sections.popup.blocks.social",
+      "settings": []
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.popup",
+      "blocks": [
+        { "type": "image" },
+        { "type": "heading" },
+        { "type": "text" },
+        { "type": "newsletter" },
+        { "type": "social" }
+      ]
+    }
+  ]
+}
+{% endschema %}

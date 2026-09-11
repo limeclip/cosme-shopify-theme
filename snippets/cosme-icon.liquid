@@ -5,10 +5,10 @@
   pattern. Unknown icon names render nothing.
 
   Supported icons:
-  `account`, `arrow-right`, `cart`, `chevron-down`, `chevron-left`, `chevron-right`,
-  `chevron-up`, `close`, `discount`, `external-link`, `facebook`, `gift`, `instagram`,
+  `account`, `arrow-right`, `arrow-up`, `cart`, `chevron-down`, `chevron-left`, `chevron-right`,
+  `chevron-up`, `close`, `copy`, `discount`, `external-link`, `facebook`, `gift`, `instagram`,
   `menu`, `minus`, `pause`, `pinterest`, `play`, `plus`, `return`, `search`, `secure`,
-  `shipping`, `star`, `support`, `tiktok`, `volume`, `volume-off`, `youtube`
+  `shipping`, `star`, `support`, `tiktok`, `volume`, `volume-off`, `x`, `youtube`
 
   @param {string} icon - Icon name without the `icon-` prefix or `.svg` suffix
   @param {string} [class] - Additional CSS classes
@@ -27,7 +27,7 @@
   assign icon_known = false
 
   case icon
-    when 'account', 'arrow-right', 'cart', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'close', 'discount', 'external-link', 'facebook', 'gift', 'instagram', 'menu', 'minus', 'pause', 'pinterest', 'play', 'plus', 'return', 'search', 'secure', 'shipping', 'star', 'support', 'tiktok', 'volume', 'volume-off', 'youtube'
+    when 'account', 'arrow-right', 'arrow-up', 'cart', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'close', 'copy', 'discount', 'external-link', 'facebook', 'gift', 'instagram', 'menu', 'minus', 'pause', 'pinterest', 'play', 'plus', 'return', 'search', 'secure', 'shipping', 'star', 'support', 'tiktok', 'volume', 'volume-off', 'x', 'youtube'
       assign icon_known = true
       assign icon_asset = 'icon-' | append: icon | append: '.svg'
   endcase
