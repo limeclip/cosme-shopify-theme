@@ -1,0 +1,173 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "content_width": "page",
+        "gallery_width": 58,
+        "info_width": 440,
+        "info_alignment": "left",
+        "gallery_spacing": 64,
+        "image_spacing": 16,
+        "gallery_layout": "editorial",
+        "thumbnail_position": "right",
+        "image_aspect": "square",
+        "image_fit": "contain",
+        "image_focal": "center",
+        "show_thumbnails": true,
+        "show_arrows": true,
+        "show_media_count": true,
+        "enable_zoom": true,
+        "enable_lightbox": true,
+        "enable_video_controls": true,
+        "show_badges": true,
+        "custom_badge": "",
+        "show_rating": true,
+        "reviews_link": "#ProductReviews",
+        "show_availability": true,
+        "low_stock_threshold": 5,
+        "show_description": true,
+        "open_first_accordion": true,
+        "accordion_icon_style": "chevron",
+        "show_vendor": true,
+        "show_sku": true,
+        "show_type": false,
+        "show_share": true,
+        "button_style": "primary",
+        "show_buy_it_now": true,
+        "buy_now_style": "outline",
+        "show_trust": true,
+        "trust_shipping": "Free shipping",
+        "trust_payment": "Secure checkout",
+        "trust_returns": "Easy returns",
+        "enable_sticky_atc": true,
+        "sticky_atc_desktop": true,
+        "sticky_atc_mobile": true,
+        "sticky_atc_show_image": true,
+        "sticky_atc_show_title": true,
+        "sticky_atc_show_price": true,
+        "sticky_atc_show_variant": true,
+        "sticky_atc_color_scheme": "scheme-1"
+      },
+      "blocks": {
+        "description": {
+          "type": "description",
+          "settings": {
+            "enabled": true,
+            "heading": "Description"
+          }
+        },
+        "ingredients": {
+          "type": "information",
+          "settings": {
+            "enabled": true,
+            "heading": "Ingredients",
+            "metafield_namespace": "custom",
+            "metafield_key": "ingredients"
+          }
+        },
+        "how_to_use": {
+          "type": "information",
+          "settings": {
+            "enabled": true,
+            "heading": "How to use",
+            "metafield_namespace": "custom",
+            "metafield_key": "how_to_use"
+          }
+        },
+        "shipping": {
+          "type": "information",
+          "settings": {
+            "enabled": true,
+            "heading": "Shipping & delivery",
+            "metafield_namespace": "custom",
+            "metafield_key": "shipping_information"
+          }
+        },
+        "additional": {
+          "type": "information",
+          "settings": {
+            "enabled": true,
+            "heading": "Details",
+            "metafield_namespace": "custom",
+            "metafield_key": "additional_information"
+          }
+        }
+      },
+      "block_order": [
+        "description",
+        "ingredients",
+        "how_to_use",
+        "shipping",
+        "additional"
+      ]
+    },
+    "complementary": {
+      "type": "product-recommendations",
+      "settings": {
+        "heading": "Complete the ritual",
+        "subheading": "",
+        "product_source": "complementary",
+        "products_to_show": 4,
+        "desktop_columns": "4",
+        "show_vendor": true,
+        "show_badges": true,
+        "show_navigation": true,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "description-reviews": {
+      "type": "product-description-reviews",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "enable_reviews": true,
+        "show_rating_summary": true,
+        "show_rating_distribution": true,
+        "show_review_count": true,
+        "show_verified_badge": true,
+        "show_review_dates": true,
+        "show_review_images": true,
+        "show_sorting": true,
+        "show_pagination": true,
+        "pagination_mode": "load_more",
+        "reviews_per_page": 6,
+        "show_write_review": true,
+        "reviews_namespace": "reviews",
+        "reviews_list_key": ""
+      }
+    },
+    "related": {
+      "type": "product-recommendations",
+      "settings": {
+        "heading": "You may also like",
+        "subheading": "",
+        "product_source": "related",
+        "products_to_show": 8,
+        "desktop_columns": "4",
+        "show_vendor": true,
+        "show_badges": true,
+        "show_navigation": true,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "recently-viewed": {
+      "type": "recently-viewed",
+      "settings": {
+        "enable": true,
+        "heading": "Recently viewed",
+        "products_to_show": 8,
+        "desktop_columns": "4",
+        "show_navigation": true,
+        "color_scheme": "scheme-1"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "description-reviews",
+    "complementary",
+    "related",
+    "recently-viewed"
+  ]
+}

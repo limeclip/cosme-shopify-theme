@@ -452,14 +452,12 @@ style="--desktop-columns: {{ desktop_columns }};"
     display: block;
     width: 100%;
     height: 100%;
-    filter: brightness(0);
+    filter: brightness(0) invert(1);
+    mix-blend-mode: difference;
     opacity: 0.35;
   }
 
-  .cosme-collections-editorial.color-scheme-2 .cosme-collections-editorial__placeholder-svg {
-    filter: brightness(0) invert(1);
-    opacity: 0.25;
-  }
+ 
 
   .cosme-collections-editorial__content {
     position: absolute;

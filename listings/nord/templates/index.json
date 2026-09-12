@@ -1,0 +1,475 @@
+{
+  "sections": {
+    "main_hero": {
+      "type": "main-hero",
+      "blocks": {
+        "nav_link_1": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Skin"
+          }
+        },
+        "nav_link_2": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Hair"
+          }
+        },
+        "nav_link_3": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Shave"
+          }
+        },
+        "nav_link_4": {
+          "type": "nav_link",
+          "settings": {
+            "label": "Body"
+          }
+        },
+        "slide_1": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "NORD / BODY",
+            "heading": "Daily Body Wash",
+            "description": "A clean, refreshing body wash for a simple and refined daily routine.",
+            "button_label": "Shop Body",
+            "image_alt": "NORD Daily Body Wash",
+            "image_position": "center",
+            "image_width": 1200,
+            "image_fit": "cover"
+          }
+        },
+        "slide_2": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "NORD / SHAVE",
+            "heading": "Precision Shave Cream",
+            "description": "A rich, protective cream built for a close, comfortable shave.",
+            "button_label": "Shop Shave",
+            "image_alt": "NORD Precision Shave Cream",
+            "image_position": "center",
+            "image_width": 1200,
+            "image_fit": "cover"
+          }
+        },
+        "slide_3": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "NORD / HAIR",
+            "heading": "Scalp Refresh Tonic",
+            "description": "A lightweight daily tonic that refreshes the scalp and leaves hair feeling clean and balanced.",
+            "button_label": "Shop Hair",
+            "image_alt": "NORD Scalp Refresh Tonic",
+            "image_position": "center",
+            "image_width": 1200,
+            "image_fit": "cover"
+          }
+        },
+        "slide_4": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "NORD / FRAGRANCE",
+            "heading": "Eau de Parfum — No. 01",
+            "description": "A restrained composition of wood, citrus and quiet warmth.",
+            "button_label": "Shop Fragrance",
+            "image_alt": "NORD Eau de Parfum No. 01",
+            "image_position": "center",
+            "image_width": 1200,
+            "image_fit": "cover"
+          }
+        }
+      },
+      "block_order": [
+        "nav_link_1",
+        "nav_link_2",
+        "nav_link_3",
+        "nav_link_4",
+        "slide_1",
+        "slide_2",
+        "slide_3",
+        "slide_4"
+      ],
+      "settings": {
+        "layout": "editorial",
+        "hero_height": "full_viewport",
+        "content_alignment": "default",
+        "nav_heading": "Store",
+        "color_scheme": "scheme-1",
+        "autoplay": true,
+        "autoplay_interval": "6",
+        "show_navigation_arrows": true,
+        "show_slide_numbers": true,
+        "show_pagination": true,
+      }
+    },
+    "collections_editorial": {
+      "type": "main-collections-editorial",
+      "blocks": {
+        "collection_1": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Skin",
+            "link_label": "Shop Skin"
+          }
+        },
+        "collection_2": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Hair",
+            "link_label": "Shop Hair"
+          }
+        },
+        "collection_3": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Shave",
+            "link_label": "Shop Shave"
+          }
+        },
+        "collection_4": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Body",
+            "link_label": "Shop Body"
+          }
+        },
+        "collection_5": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Beard",
+            "link_label": "Shop Beard"
+          }
+        },
+        "collection_6": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Fragrance",
+            "link_label": "Shop Fragrance"
+          }
+        }
+      },
+      "block_order": [
+        "collection_1",
+        "collection_2",
+        "collection_3",
+        "collection_4",
+        "collection_5",
+        "collection_6"
+      ],
+      "settings": {
+        "heading": "The Collection",
+        "layout": "editorial",
+        "image_aspect_ratio": "landscape",
+        "image_fit": "cover",
+        "color_scheme": "scheme-1",
+        "show_card_numbers": true,
+        "show_navigation": true,
+        "enable_carousel": true,
+        "autoplay": false,
+        "autoplay_interval": "5",
+        "show_arrows": true,
+        "show_pagination": true
+      }
+    },
+    "popular_products": {
+      "type": "main-popular-products",
+      "settings": {
+        "eyebrow": "THE EDIT",
+        "heading": "Essentials",
+        "products_to_show": 8,
+        "desktop_columns": "4",
+        "mobile_columns": "2",
+        "show_navigation": false,
+        "show_vendor": true,
+        "show_price": true,
+        "show_badge": true,
+        "show_secondary_image": true,
+        "show_quick_view": true,
+        "show_add_to_cart": true,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "editorial_story": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "THE NORD RITUAL",
+        "heading": "Less, but better.",
+        "description": "A considered approach to everyday grooming, built around essential products and precise formulations.",
+        "primary_button_label": "Discover the Ritual",
+        "secondary_button_label": "",
+        "layout": "image_left",
+        "content_alignment": "center",
+        "section_height": "large",
+        "content_width": 480,
+        "image_position": "center",
+        "image_width": 58,
+        "image_fit": "cover",
+        "image_focal_position": "center",
+        "color_scheme": "scheme-1",
+        "show_border": false,
+        "border_width": 1,
+        "section_spacing": "large"
+      }
+    },
+    "vertical_video": {
+      "type": "vertical-video",
+      "blocks": {
+        "category_1": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Skin"
+          }
+        },
+        "category_2": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Hair"
+          }
+        },
+        "category_3": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Shave"
+          }
+        },
+        "category_4": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Body"
+          }
+        },
+        "category_5": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Beard"
+          }
+        },
+        "category_6": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Fragrance"
+          }
+        },
+        "video_1": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Skin, simplified.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_2": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Hair, kept in order.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_3": {
+          "type": "video",
+          "settings": {
+            "custom_label": "A closer, cleaner shave.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_4": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Body care, without excess.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        }
+      },
+      "block_order": [
+        "category_1",
+        "category_2",
+        "category_3",
+        "category_4",
+        "category_5",
+        "category_6",
+        "video_1",
+        "video_2",
+        "video_3",
+        "video_4"
+      ],
+      "settings": {
+        "eyebrow": "DISCOVER",
+        "heading": "Grooming in Motion",
+        "layout": "video_collections",
+        "heading_alignment": "left",
+        "desktop_cards": "4",
+        "mobile_cards": "1.5",
+        "video_aspect_ratio": "9/16",
+        "show_category_navigation": true,
+        "show_arrows": true,
+        "carousel_autoplay": true,
+        "carousel_autoplay_delay": 5000,
+        "show_product": true,
+        "show_product_image": true,
+        "autoplay": true,
+        "autoplay_behavior": "viewport",
+        "color_scheme": "scheme-1"
+      }
+    },
+    "benefits": {
+      "type": "benefits",
+      "blocks": {
+        "benefit_1": {
+          "type": "benefit",
+          "settings": {
+            "icon": "star",
+            "heading": "Carefully Selected",
+            "description": "A short edit of products chosen for daily use."
+          }
+        },
+        "benefit_2": {
+          "type": "benefit",
+          "settings": {
+            "icon": "gift",
+            "heading": "Everyday Essentials",
+            "description": "Formulas built into a simple, lasting ritual."
+          }
+        },
+        "benefit_3": {
+          "type": "benefit",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Fast Delivery",
+            "description": "Dispatched with care, without delay."
+          }
+        },
+        "benefit_4": {
+          "type": "benefit",
+          "settings": {
+            "icon": "secure",
+            "heading": "Secure Checkout",
+            "description": "Protected payments on every order."
+          }
+        }
+      },
+      "block_order": [
+        "benefit_1",
+        "benefit_2",
+        "benefit_3",
+        "benefit_4"
+      ],
+      "settings": {
+        "columns": "4",
+        "alignment": "center",
+        "show_dividers": true,
+        "section_spacing": "large",
+        "icon_size": 18,
+        "icon_position": "top",
+        "color_scheme": "scheme-1"
+      }
+    },
+    "testimonials": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_1": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Quiet formulas, precise results. It replaced a shelf of products I no longer needed.",
+            "author_name": "James H.",
+            "author_location": "Copenhagen",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_2": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The texture is considered, and the routine is short. That is the point.",
+            "author_name": "Daniel K.",
+            "author_location": "London",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_3": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Nothing ornamental. Just well-made essentials that earn their place.",
+            "author_name": "Marcus L.",
+            "author_location": "Berlin",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_1",
+        "testimonial_2",
+        "testimonial_3"
+      ],
+      "settings": {
+        "eyebrow": "NOTES",
+        "heading": "Worn in, not shown off.",
+        "description": "A few words from people who keep the ritual simple.",
+        "heading_alignment": "left",
+        "show_rating_summary": false,
+        "rating": 4.9,
+        "review_count": 86,
+        "rating_label": "Based on customer notes",
+        "desktop_cards": "3",
+        "tablet_cards": "2",
+        "show_arrows": false,
+        "autoplay": false,
+        "autoplay_interval": 5000,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "editorial_cta": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "NORD",
+        "heading": "Build your ritual.",
+        "description": "Discover a refined edit of modern grooming essentials.",
+        "primary_button_label": "Shop All",
+        "secondary_button_label": "",
+        "layout": "text_only",
+        "content_alignment": "center",
+        "section_height": "auto",
+        "content_width": 520,
+        "image_position": "center",
+        "image_width": 58,
+        "image_fit": "cover",
+        "image_focal_position": "center",
+        "color_scheme": "scheme-1",
+        "show_border": false,
+        "border_width": 1,
+        "section_spacing": "large"
+      }
+    }
+  },
+  "order": [
+    "main_hero",
+    "popular_products",
+    "collections_editorial",
+    "editorial_story",
+    "vertical_video",
+    "benefits",
+    "testimonials",
+    "editorial_cta"
+  ]
+}

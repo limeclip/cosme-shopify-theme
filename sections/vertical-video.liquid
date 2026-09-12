@@ -570,17 +570,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    filter: brightness(0);
+    filter: brightness(0) invert(1);
+    mix-blend-mode: difference;
     opacity: 0.35;
-  }
-
-  /* === Плейсхолдеры для видео (демо-заглушки) === */
-  .cosme-vertical-video__placeholder-svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-    filter: brightness(0);
-    opacity: 0.45;
   }
 
   /* === Плейсхолдеры для продуктов в демо-режиме === */
@@ -588,15 +580,15 @@
     display: block;
     width: 100%;
     height: 100%;
-    filter: brightness(0);
+    filter: brightness(0) invert(1);
+    mix-blend-mode: difference;
     opacity: 0.45;
   }
 
   /* === Тёмная схема (color-scheme-2, т.е. Dark) === */
-  .color-scheme-2 .cosme-vertical-video__category-placeholder,
-  .color-scheme-2 .cosme-vertical-video__placeholder-svg,
-  .color-scheme-2 .cosme-vertical-video__product-placeholder {
+  .cosme-vertical-video__placeholder-svg {
     filter: brightness(0) invert(1);
+    mix-blend-mode: difference;
     opacity: 0.45;
   }
   .cosme-vertical-video__category-media::after {
@@ -616,7 +608,7 @@
     padding: 0.15rem 0.4rem;
     border-radius: var(--radius-button);
     background-color: transparent;
-    color: var(--color-accent-contrast);
+    color: #E5E9ED;
     font-size: 1rem;
     line-height: 1.3;
     letter-spacing: normal;
@@ -624,9 +616,9 @@
   }
 
   .cosme-vertical-video__track {
-  position: relative;
-  align-items: flex-end;
-}
+    position: relative;
+    align-items: flex-end;
+  }
 
   .cosme-vertical-video__carousel {
     position: relative;
@@ -773,7 +765,7 @@
     padding: 0;
     border: 0;
     border-radius: 50%;
-    color: var(--color-accent-contrast);
+    color: #E5E9ED;
     background-color: color-mix(in srgb, var(--color-overlay) 35%, transparent);
     cursor: pointer;
     pointer-events: auto;
@@ -830,7 +822,7 @@
     transform: translateY(-50%);
     border-radius: var(--radius-button);
     background-color: color-mix(in srgb, var(--color-overlay) 35%, transparent);
-    color: var(--color-accent-contrast);
+    color: #E5E9ED;
     font-size: clamp(0.8125rem, 1.4vw, 1rem);
     line-height: 1.35;
     letter-spacing: 0.01em;
@@ -876,6 +868,7 @@
     overflow: hidden;
     border-radius: calc(var(--radius-card) * 0.4);
     background-color: var(--color-background-2);
+    margin-right: var(--spacing-md);
   }
 
   .cosme-vertical-video__product-image .cosme-image,
@@ -1010,8 +1003,8 @@
     object-fit: contain;
   }
   .cosme-vertical-video.is-jumping .cosme-vertical-video__slide {
-  transition: none;
-}
+    transition: none;
+  }
 {% endstylesheet %}
 
 {% javascript %}

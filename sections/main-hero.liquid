@@ -11,7 +11,7 @@
         assign hero_min_height = 'clamp(28rem, 72vh, 44rem)'
       endif
     when 'full_viewport'
-      assign hero_min_height = '100svh'
+  assign hero_min_height = 'calc(100svh - var(--header-total-height, 0px))'
     else
       assign hero_min_height = 'auto'
   endcase
@@ -498,27 +498,18 @@
  * Do NOT use object-fit/object-position here.
  * This is an inline SVG, not an <img>.
  */
-  .main-hero__placeholder-svg {
-    display: block;
-
-    width: 100%;
-    height: auto;
-
-    max-width: 100%;
-    max-height: min(52vh, 36rem);
-
-    margin: 0;
-    padding: 0;
-    opacity: 0.35;
-  }
-
-  .main-hero__placeholder-svg {
-    filter: brightness(0);
-  }
-
-  .main-hero.color-scheme-2 .main-hero__placeholder-svg {
-    filter: brightness(0) invert(1);
-  }
+ .main-hero__placeholder-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: min(52vh, 36rem);
+  margin: 0;
+  padding: 0;
+  opacity: 0.35;
+  filter: brightness(0) invert(1);
+  mix-blend-mode: difference;
+}
   .main-hero--editorial-compact .main-hero__media .cosme-image__img {
     max-height: min(46vh, 30rem);
   }

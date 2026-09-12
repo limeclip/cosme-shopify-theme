@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "main": {
+      "type": "collections",
+      "settings": {
+        "eyebrow": "NORD / COLLECTIONS",
+        "show_eyebrow": true,
+        "heading": "Explore the Collection",
+        "description": "A considered edit of modern grooming essentials — skin, hair, shave, body and fragrance, built for a precise daily ritual.",
+        "show_description": true,
+        "text_alignment": "left",
+        "collection_source": "all",
+        "columns_desktop": "3",
+        "image_ratio": "4/5",
+        "grid_gap": "large",
+        "show_collection_description": true,
+        "show_product_count": true,
+        "show_cta": true,
+        "enable_hover_effect": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

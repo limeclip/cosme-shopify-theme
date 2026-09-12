@@ -352,10 +352,10 @@
     width: 2.55rem;
     height: 2.55rem;
     padding: 0;
-    background-color: var(--color-foreground); 
-    color: var(--color-background); 
-    border: none; 
-    border-radius: 50%; 
+    background-color: var(--color-foreground);
+    color: var(--color-background);
+    border: none;
+    border-radius: 50%;
     cursor: pointer;
   }
 
@@ -367,8 +367,8 @@
 
   .cosme-header__menu-toggle:hover,
   .cosme-header__menu-toggle:focus-visible {
-    background-color: var(--color-foreground); 
-    color: var(--color-background); 
+    background-color: var(--color-foreground);
+    color: var(--color-background);
   }
 
   .cosme-header__menu-icon {
@@ -1668,22 +1668,46 @@
     let ticking = false;
 
     const updateHeaderStickyOffset = () => {
-      const stickyGroup = document.querySelector(
-        '.shopify-section-group-header-group:has([data-header-group][data-sticky="true"])'
-      );
-      let offset = 0;
+  const stickyGroup = document.querySelector(
+    '.shopify-section-group-header-group:has([data-header-group][data-sticky="true"])'
+  );
+  let offset = 0;
 
-      if (stickyGroup) {
-        const group = stickyGroup.querySelector('[data-header-group]');
-        const hidden = group?.classList.contains('cosme-header-group--scroll-hidden');
-        if (!hidden) {
-          offset = Math.round(stickyGroup.getBoundingClientRect().height);
-        }
-      }
+  if (stickyGroup) {
+    const group = stickyGroup.querySelector('[data-header-group]');
+    const hidden = group?.classList.contains('cosme-header-group--scroll-hidden');
+    if (!hidden) {
+      offset = Math.round(stickyGroup.getBoundingClientRect().height);
+    }
+  }
 
-      document.documentElement.style.setProperty('--header-sticky-offset', `${offset}px`);
-    };
+  document.documentElement.style.setProperty('--header-sticky-offset', `${offset}px`);
 
+  /* Total height of everything above the main content:
+     announcement bar + header (+ any other header-group sections).
+     Measured as the document offset of <main> (or #MainContent). */
+  let total = 0;
+  const mainEl = document.querySelector('main, #MainContent, [role="main"]');
+
+  if (mainEl) {
+    const rect = mainEl.getBoundingClientRect();
+    total = Math.round(rect.top + window.scrollY);
+  }
+
+  /* Fallback if main is unavailable or positioned at 0 unexpectedly */
+  if (total <= 0) {
+    const headerEl = document.querySelector('.cosme-header');
+    const headerGroupRoot = document.querySelector('.shopify-section-group-header-group');
+    if (headerGroupRoot) {
+      total += Math.round(headerGroupRoot.getBoundingClientRect().height);
+    }
+    if (headerEl && headerGroupRoot && !headerGroupRoot.contains(headerEl)) {
+      total += Math.round(headerEl.getBoundingClientRect().height);
+    }
+  }
+
+  document.documentElement.style.setProperty('--header-total-height', `${total}px`);
+};
     const updateHeaderOnScroll = () => {
       const scrollY = window.scrollY;
       const isScrolled = scrollY > COSME_SCROLL_THRESHOLD;
@@ -1720,7 +1744,7 @@
         ticking = true;
       }
     };
-
+    updateHeaderStickyOffset();
     updateHeaderOnScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', updateHeaderStickyOffset, { passive: true });
@@ -2196,7 +2220,7 @@
       if (cents == null || Number.isNaN(Number(cents))) return '';
 
       const value = Number(cents);
-      const formatString = format || cartDialog.dataset.moneyFormat || ('$' + '{' + '{amount}}');
+      const formatString = format || cartDialog.dataset.moneyFormat || '$' + '{' + '{amount}}';
       const placeholderMatch = formatString.match(new RegExp('\\{\\{\\s*(\\w+)\\s*\\}\\}'));
 
       if (!placeholderMatch) return String(value);
@@ -2288,11 +2312,10 @@
       const textEl = shippingEl.querySelector('[data-shipping-text]');
       const iconEl = shippingEl.querySelector('[data-shipping-icon]');
       const awayTemplate = message != null ? message : cartDialog.dataset.freeShippingMessage || '';
-      const unlockedTemplate = unlockedMessage != null ? unlockedMessage : cartDialog.dataset.freeShippingUnlocked || '';
+      const unlockedTemplate =
+        unlockedMessage != null ? unlockedMessage : cartDialog.dataset.freeShippingUnlocked || '';
       const formattedRemaining = formatMoney(remaining, cartDialog.dataset.moneyFormat);
-      let nextMessage = unlocked
-        ? unlockedTemplate
-        : String(awayTemplate).replace(/\[amount\]/g, formattedRemaining);
+      let nextMessage = unlocked ? unlockedTemplate : String(awayTemplate).replace(/\[amount\]/g, formattedRemaining);
 
       if (!unlocked && nextMessage === awayTemplate) {
         nextMessage = String(awayTemplate).replace(/\{\{\s*amount\s*\}\}/g, formattedRemaining);
@@ -2348,9 +2371,7 @@
       if (!node) return;
 
       const headingText =
-        headingOverride != null && headingOverride !== ''
-          ? headingOverride
-          : cartDialog.dataset.upsellHeading;
+        headingOverride != null && headingOverride !== '' ? headingOverride : cartDialog.dataset.upsellHeading;
       const headingEl = node.querySelector('[data-cart-drawer-upsell-heading]');
 
       if (headingEl && headingText) {
@@ -2494,9 +2515,7 @@
         return;
       }
 
-      const source = cartDialog.querySelector(
-        '[data-cart-drawer-empty-recs-source] [data-cart-drawer-upsell]'
-      );
+      const source = cartDialog.querySelector('[data-cart-drawer-empty-recs-source] [data-cart-drawer-upsell]');
 
       if (!source) {
         if (existing) existing.remove();
@@ -2614,7 +2633,14 @@
       if (!Array.isArray(codes) || !code) return null;
 
       const needle = String(code).trim().toLowerCase();
-      return codes.find((entry) => String(entry.code || '').trim().toLowerCase() === needle) || null;
+      return (
+        codes.find(
+          (entry) =>
+            String(entry.code || '')
+              .trim()
+              .toLowerCase() === needle
+        ) || null
+      );
     };
 
     const setDiscountError = (message, focusInput) => {
@@ -2651,7 +2677,8 @@
       const noteFieldLabel = noteDetails && noteDetails.querySelector('label[for="CosmeCartDrawerNote"]');
       const discountLabel = cartBody.querySelector('[data-cart-drawer-discount-label]');
       const discountInput = cartBody.querySelector('[data-cart-drawer-discount-input]');
-      const discountFieldLabel = discountDetails && discountDetails.querySelector('label[for="CosmeCartDrawerDiscount"]');
+      const discountFieldLabel =
+        discountDetails && discountDetails.querySelector('label[for="CosmeCartDrawerDiscount"]');
       const discountButton = cartBody.querySelector('[data-cart-drawer-discount-apply]');
       const trustMessage = cartBody.querySelector('[data-cart-drawer-trust-message]');
 
@@ -2843,16 +2870,18 @@
         return;
       }
 
-      const existing = currentDiscountCodes().filter(
-        (entry) => entry.toLowerCase() !== code.toLowerCase()
-      );
+      const existing = currentDiscountCodes().filter((entry) => entry.toLowerCase() !== code.toLowerCase());
       updateCartDiscount(existing.concat([code]).join(','), code, false);
     };
 
     const removeDiscountCode = (code) => {
       extrasState.discountOpen = true;
       const remaining = currentDiscountCodes().filter(
-        (entry) => entry.toLowerCase() !== String(code || '').trim().toLowerCase()
+        (entry) =>
+          entry.toLowerCase() !==
+          String(code || '')
+            .trim()
+            .toLowerCase()
       );
       updateCartDiscount(remaining.join(','), code, true);
     };

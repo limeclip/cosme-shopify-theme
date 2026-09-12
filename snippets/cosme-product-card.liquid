@@ -508,7 +508,8 @@
     display: block;
     width: 100%;
     height: 100%;
-    filter: brightness(0);
+    filter: brightness(0) invert(1);
+    mix-blend-mode: difference;
     opacity: 0.35;
   }
 
@@ -559,10 +560,6 @@
     background-color: var(--color-background-2, var(--color-background));
   }
 
-  .cosme-product-card--editorial .cosme-product-card__placeholder-svg {
-    filter: brightness(0);
-    opacity: 0.35;
-  }
 
   .cosme-product-card--editorial .cosme-product-card__content {
     gap: var(--spacing-xs);
@@ -606,10 +603,7 @@
     text-decoration: none;
   }
 
-  .color-scheme-2 .cosme-product-card--editorial .cosme-product-card__placeholder-svg {
-    filter: brightness(0) invert(1);
-    opacity: 0.15;
-  }
+
 {% endstylesheet %}
 {% javascript %}
   (function() {

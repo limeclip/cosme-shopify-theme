@@ -1,0 +1,15 @@
+# Native Shopify listing overlays (multi-preset Theme Store architecture).
+#
+# Theme Style in the editor only copies presentational settings from
+# config/settings_data.json presets (fonts, colors, radii, etc.).
+# It does not replace templates/index.json.
+#
+# listings/<preset>/templates/*.json overlay the root templates when:
+#   - a merchant installs that preset from the Theme Store
+#   - Shopify CLI is run with --listing
+#
+# Cosme is the root/base theme (no listing overlay).
+# NORD homepage JSON stays in listings/nord/templates/.
+
+[environments.nord]
+listing = "nord"
