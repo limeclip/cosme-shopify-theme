@@ -413,6 +413,15 @@
       "demo_product_5": "Cream Bronzer",
       "demo_product_6": "Skin Rewind"
     },
+    "editorial_media_hero": {
+      "landmark_label": "Editorial media",
+      "slide_controls": "Slides",
+      "slide_label": "Slide {{ number }} of {{ total }}",
+      "slide_status": "{{ current }} / {{ total }}",
+      "previous_slide": "Previous slide",
+      "next_slide": "Next slide",
+      "image_placeholder": "Campaign image placeholder. Replace with your editorial image in the theme editor."
+    },
     "editorial_cta": {
       "landmark_label": "Featured essentials",
       "image_placeholder": "Editorial image placeholder. Replace with your campaign image in the theme editor.",
