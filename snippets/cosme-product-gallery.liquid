@@ -379,6 +379,31 @@
   .cosme-product-gallery--landscape .cosme-product-gallery__stage {
     aspect-ratio: var(--gallery-aspect);
   }
+    /* Natural: активная media в потоке, чтобы задавать высоту stage своей натуральной пропорцией */
+    .cosme-product-gallery--natural .cosme-product-gallery__stage {
+    aspect-ratio: auto;
+  }
+
+  .cosme-product-gallery--natural .cosme-product-gallery__media.is-active {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+  }
+
+  .cosme-product-gallery--natural .cosme-product-gallery__media.is-active .cosme-product-gallery__zoom {
+    display: block;
+    height: auto;
+  }
+
+  .cosme-product-gallery--natural .cosme-product-gallery__media.is-active img,
+  .cosme-product-gallery--natural .cosme-product-gallery__media.is-active .cosme-image,
+  .cosme-product-gallery--natural .cosme-product-gallery__media.is-active .cosme-image__img,
+  .cosme-product-gallery--natural .cosme-product-gallery__media.is-active .cosme-product-gallery__image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
   .cosme-product-gallery__media {
     position: absolute;
     inset: 0;
@@ -490,28 +515,38 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0;
     border: 0;
     border-radius: 50%;
-    background: transparent;
-    color: var(--color-slider-arrows, var(--color-foreground));
+    background-color: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    color: #fff;
     transform: translateY(-50%);
-    opacity: 0.7;
+    opacity: 0.85;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
   }
 
   .cosme-product-gallery__arrow:hover,
   .cosme-product-gallery__arrow:focus-visible {
     opacity: 1;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .cosme-product-gallery__arrow svg,
+  .cosme-product-gallery__arrow svg * {
+    color: inherit;
+ 
   }
 
   .cosme-product-gallery__arrow--prev {
-    left: 0.25rem;
+    left: 0.45rem;
   }
 
   .cosme-product-gallery__arrow--next {
-    right: 0.25rem;
+    right: 0.45rem;
   }
 
   .cosme-product-gallery__count {

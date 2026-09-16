@@ -14,6 +14,10 @@
       assign show_country_selector = true
     endif
   endif
+  assign footer_logo = section.settings.footer_logo
+  if footer_logo == blank
+    assign footer_logo = settings.logo
+  endif
   assign show_social = section.settings.show_social
   assign social_style = section.settings.social_style | default: 'icons'
   assign show_payment_icons = section.settings.show_payment_icons
@@ -151,14 +155,14 @@
             <a
               class="cosme-footer__logo"
               href="{{ routes.root_url }}"
-              {%- if settings.logo != blank -%}
+              {%- if footer_logo != blank -%}
                 style="--cosme-footer-logo-width: {{ settings.logo_width }}px;"
               {%- endif -%}
             >
-              {%- if settings.logo != blank -%}
+              {%- if footer_logo != blank -%}
                 {%- capture footer_logo_sizes -%}{{ settings.logo_width }}px{%- endcapture -%}
                 {{
-                  settings.logo
+                  footer_logo
                   | image_url: width: 600
                   | image_tag:
                     class: 'cosme-footer__logo-image',
@@ -1122,6 +1126,12 @@
     {
       "type": "header",
       "content": "t:sections.footer.settings.brand_header"
+    },
+    {
+      "type": "image_picker",
+      "id": "footer_logo",
+      "label": "t:sections.footer.settings.footer_logo",
+      "info": "t:sections.footer.settings.footer_logo_info"
     },
     {
       "type": "textarea",

@@ -1,0 +1,444 @@
+{
+  "sections": {
+    "editorial_media_hero": {
+      "type": "editorial-media-hero",
+      "blocks": {
+        "slide_1": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "NEW SEASON",
+            "heading": "The New Silhouette",
+            "text": "Modern forms, considered materials and effortless proportions.",
+            "content_color": "auto",
+            "slide_alignment_x": "inherit",
+            "slide_alignment_y": "inherit",
+            "primary_button_label": "Explore Collection",
+            "media_type": "image",
+            "image_focal_position": "center"
+          }
+        },
+        "slide_2": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "THE EDIT",
+            "heading": "Essential Forms",
+            "text": "A refined wardrobe built around timeless pieces.",
+            "content_color": "auto",
+            "slide_alignment_x": "inherit",
+            "slide_alignment_y": "inherit",
+            "primary_button_label": "Discover The Edit",
+            "media_type": "image",
+            "image_focal_position": "center"
+          }
+        },
+        "slide_3": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "FARO",
+            "heading": "Between Seasons",
+            "text": "A study in texture, movement and everyday elegance.",
+            "content_color": "auto",
+            "slide_alignment_x": "inherit",
+            "slide_alignment_y": "inherit",
+            "primary_button_label": "Explore",
+            "media_type": "image",
+            "image_focal_position": "center"
+          }
+        }
+      },
+      "block_order": [
+        "slide_1",
+        "slide_2",
+        "slide_3"
+      ],
+      "settings": {
+        "layout": "grid",
+        "section_width": "full",
+        "grid_desktop_items": "3",
+        "grid_mobile_items": "1.2",
+        "grid_gap": "small",
+        "grid_content_position": "overlay",
+        "grid_image_ratio": "portrait",
+        "horizontal_alignment": "center",
+        "overlay_opacity": 0,
+        "heading_tag": "h1",
+        "autoplay": false,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "collections_editorial": {
+      "type": "main-collections-editorial",
+      "blocks": {
+        "collection_1": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "New",
+            "link_label": "Shop New"
+          }
+        },
+        "collection_2": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Ready-to-wear",
+            "link_label": "Shop Ready-to-wear"
+          }
+        },
+        "collection_3": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Outerwear",
+            "link_label": "Shop Outerwear"
+          }
+        },
+        "collection_4": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "SHOP",
+            "title": "Accessories",
+            "link_label": "Shop Accessories"
+          }
+        }
+      },
+      "block_order": [
+        "collection_1",
+        "collection_2",
+        "collection_3",
+        "collection_4"
+      ],
+      "settings": {
+        "heading": "The wardrobe",
+        "layout": "editorial_compact",
+        "image_aspect_ratio": "square",
+        "image_fit": "cover",
+        "color_scheme": "scheme-1",
+        "show_card_numbers": false,
+        "show_navigation": true,
+        "enable_carousel": true,
+        "autoplay": false,
+        "autoplay_interval": "5",
+        "show_arrows": true,
+        "show_pagination": true
+      }
+    },
+    "popular_products": {
+      "type": "main-popular-products",
+      "settings": {
+        "eyebrow": "THE EDIT",
+        "heading": "Essentials",
+        "products_to_show": 8,
+        "desktop_columns": "4",
+        "mobile_columns": "2",
+        "show_navigation": false,
+        "show_vendor": false,
+        "show_price": true,
+        "show_badge": true,
+        "show_secondary_image": true,
+        "show_quick_view": true,
+        "show_add_to_cart": true,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "editorial_story": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "THE ATELIER",
+        "heading": "Cut, then considered.",
+        "description": "A modern wardrobe built around proportion, fabric, and space — without ornament.",
+        "primary_button_label": "Discover the house",
+        "secondary_button_label": "",
+        "layout": "image_left",
+        "content_alignment": "center",
+        "section_height": "large",
+        "content_width": 480,
+        "image_position": "center",
+        "image_width": 58,
+        "image_fit": "cover",
+        "image_focal_position": "center",
+        "color_scheme": "scheme-1",
+        "show_border": false,
+        "border_width": 1,
+        "section_spacing": "large"
+      }
+    },
+    "vertical_video": {
+      "type": "vertical-video",
+      "blocks": {
+        "category_1": {
+          "type": "collection_link",
+          "settings": {
+            "label": "New"
+          }
+        },
+        "category_2": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Ready-to-wear"
+          }
+        },
+        "category_3": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Outerwear"
+          }
+        },
+        "category_4": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Knitwear"
+          }
+        },
+        "category_5": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Accessories"
+          }
+        },
+        "category_6": {
+          "type": "collection_link",
+          "settings": {
+            "label": "The archive"
+          }
+        },
+        "video_1": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Tailoring, in motion.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_2": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Layers, kept spare.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_3": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Cloth that holds a line.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_4": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Quiet pieces, worn often.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        }
+      },
+      "block_order": [
+        "category_1",
+        "category_2",
+        "category_3",
+        "category_4",
+        "category_5",
+        "category_6",
+        "video_1",
+        "video_2",
+        "video_3",
+        "video_4"
+      ],
+      "settings": {
+        "eyebrow": "LOOKBOOK",
+        "heading": "Fashion in motion",
+        "layout": "video_collections",
+        "heading_alignment": "left",
+        "desktop_cards": "5",
+        "mobile_cards": "1.5",
+        "video_aspect_ratio": "9/16",
+        "show_category_navigation": true,
+        "show_arrows": true,
+        "carousel_autoplay": false,
+        "carousel_autoplay_delay": 5000,
+        "show_product": true,
+        "show_product_image": true,
+        "autoplay": true,
+        "autoplay_behavior": "viewport",
+        "color_scheme": "scheme-1"
+      }
+    },
+    "testimonials": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_1": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The cut is precise, and the fabric does the rest. Nothing extra, nothing missing.",
+            "author_name": "Elena V.",
+            "author_location": "Milan",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_2": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "It looks editorial on the rack and lived-in by evening. That is the point.",
+            "author_name": "Amelia K.",
+            "author_location": "Paris",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_3": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Quiet clothes that hold their shape. I reach for them without thinking.",
+            "author_name": "Sofia R.",
+            "author_location": "London",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_1",
+        "testimonial_2",
+        "testimonial_3"
+      ],
+      "settings": {
+        "eyebrow": "NOTES",
+        "heading": "Worn in, not shown off.",
+        "description": "A few words from people who keep the wardrobe simple.",
+        "heading_alignment": "center",
+        "show_rating_summary": false,
+        "rating": 4.9,
+        "review_count": 64,
+        "rating_label": "Based on customer notes",
+        "desktop_cards": "3",
+        "tablet_cards": "2",
+        "show_arrows": false,
+        "autoplay": false,
+        "autoplay_interval": 5000,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "editorial_cta": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "FARO",
+        "heading": "Build the wardrobe.",
+        "description": "Discover a refined edit of modern fashion essentials.",
+        "primary_button_label": "Shop all",
+        "secondary_button_label": "",
+        "layout": "text_only",
+        "content_alignment": "center",
+        "section_height": "auto",
+        "content_width": 520,
+        "image_position": "center",
+        "image_width": 58,
+        "image_fit": "cover",
+        "image_focal_position": "center",
+        "color_scheme": "scheme-1",
+        "show_border": false,
+        "border_width": 1,
+        "section_spacing": "large"
+      }
+    },
+    "editorial_cta_2": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "FARO",
+        "heading": "Designed for the everyday.",
+        "description": "A considered collection of modern essentials.",
+        "primary_button_label": "Explore the Collection",
+        "secondary_button_label": "",
+        "layout": "content_left",
+        "content_alignment": "center",
+        "section_height": "large",
+        "content_width": 420,
+        "image_position": "center",
+        "image_width": 62,
+        "image_fit": "cover",
+        "image_focal_position": "center",
+        "background_style": "default",
+        "color_scheme": "scheme-2",
+        "show_border": false,
+        "section_spacing": "large"
+      }
+    },
+    "benefits": {
+      "type": "benefits",
+      "blocks": {
+        "benefit_1": {
+          "type": "benefit",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Complimentary shipping",
+            "description": "On qualifying orders, worldwide."
+          }
+        },
+        "benefit_2": {
+          "type": "benefit",
+          "settings": {
+            "icon": "return",
+            "heading": "Considered returns",
+            "description": "A straightforward window to send pieces back."
+          }
+        },
+        "benefit_3": {
+          "type": "benefit",
+          "settings": {
+            "icon": "secure",
+            "heading": "Secure checkout",
+            "description": "Protected payments on every order."
+          }
+        },
+        "benefit_4": {
+          "type": "benefit",
+          "settings": {
+            "icon": "support",
+            "heading": "Client care",
+            "description": "Here when a fit or fabric question arises."
+          }
+        }
+      },
+      "block_order": [
+        "benefit_1",
+        "benefit_2",
+        "benefit_3",
+        "benefit_4"
+      ],
+      "settings": {
+        "columns": "4",
+        "alignment": "center",
+        "show_dividers": true,
+        "section_spacing": "large",
+        "icon_size": 18,
+        "icon_position": "top",
+        "color_scheme": "scheme-2"
+      }
+    }
+ 
+  },
+  "order": [
+    "editorial_media_hero",
+    "collections_editorial",
+    "popular_products",
+    "editorial_story",
+    "vertical_video",
+    "editorial_cta_2",
+    "testimonials",
+    "editorial_cta",
+    "benefits"
+  ]
+}

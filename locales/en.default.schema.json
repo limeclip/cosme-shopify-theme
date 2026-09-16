@@ -495,6 +495,8 @@
       "settings": {
         "enable_footer": "Enable footer",
         "density": "Spacing",
+        "footer_logo": "Footer logo",
+        "footer_logo_info": "Optional. Upload a light version if your footer uses a dark color scheme. If empty, the theme logo from Theme Settings is used.",
         "brand_header": "Brand",
         "brand_description": "Description",
         "menus_header": "Menus",

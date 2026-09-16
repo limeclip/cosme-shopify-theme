@@ -1,0 +1,65 @@
+{
+  "sections": {
+    "main": {
+      "type": "search",
+      "settings": {
+        "eyebrow": "Search",
+        "heading": "What are you looking for?",
+        "placeholder": "Search new arrivals, dresses, knitwear...",
+        "no_results_heading": "Nothing matched your search",
+        "no_results_text": "Try another search or explore our collections.",
+        "no_results_cta_label": "Explore collections",
+        "desktop_columns": "4",
+        "color_scheme": "scheme-1",
+        "show_popular_searches": true
+      },
+      "blocks": {
+        "popular-new-arrivals": {
+          "type": "popular_search",
+          "settings": {
+            "term": "New Arrivals",
+            "label": "New Arrivals"
+          }
+        },
+        "popular-dresses": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Dresses",
+            "label": "Dresses"
+          }
+        },
+        "popular-tailoring": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Tailoring",
+            "label": "Tailoring"
+          }
+        },
+        "popular-knitwear": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Knitwear",
+            "label": "Knitwear"
+          }
+        },
+        "popular-accessories": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Accessories",
+            "label": "Accessories"
+          }
+        }
+      },
+      "block_order": [
+        "popular-new-arrivals",
+        "popular-dresses",
+        "popular-tailoring",
+        "popular-knitwear",
+        "popular-accessories"
+      ]
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

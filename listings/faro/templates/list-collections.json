@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "main": {
+      "type": "collections",
+      "settings": {
+        "eyebrow": "THE WARDROBE",
+        "show_eyebrow": true,
+        "heading": "Collections",
+        "description": "A considered edit of modern fashion — ready-to-wear, outerwear, and accessories, built for a precise wardrobe.",
+        "show_description": true,
+        "text_alignment": "left",
+        "collection_source": "all",
+        "columns_desktop": "4",
+        "image_ratio": "4/5",
+        "grid_gap": "large",
+        "show_collection_description": true,
+        "show_product_count": true,
+        "show_cta": true,
+        "enable_hover_effect": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

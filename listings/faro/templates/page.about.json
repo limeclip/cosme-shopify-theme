@@ -1,0 +1,105 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-about-hero",
+      "settings": {
+        "eyebrow": "ABOUT FARO",
+        "heading": "A study in modern form.",
+        "description": "",
+        "text_alignment": "left",
+        "content_width": "wide",
+        "image_alt": "",
+        "image_ratio": "wide",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "manifesto": {
+      "type": "about-manifesto",
+      "settings": {
+        "eyebrow": "THE FARO APPROACH",
+        "statement": "We believe in considered design, quiet confidence and pieces made to exist beyond a season.",
+        "supporting_text": "",
+        "alignment": "center",
+        "statement_max_width": "medium",
+        "show_index": false,
+        "index_text": "",
+        "show_divider": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "story": {
+      "type": "about-story",
+      "settings": {
+        "eyebrow": "",
+        "heading": "Essential forms.",
+        "body": "A refined wardrobe built around timeless pieces.",
+        "secondary_text": "",
+        "text_alignment": "left",
+        "content_width": "medium",
+        "image_alt": "",
+        "image_position": "left",
+        "image_ratio": "portrait",
+        "show_cta": false,
+        "cta_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "principles": {
+      "type": "about-manifesto",
+      "settings": {
+        "eyebrow": "",
+        "statement": "FORM / MATERIAL / MOVEMENT",
+        "supporting_text": "",
+        "alignment": "center",
+        "statement_max_width": "wide",
+        "show_index": false,
+        "index_text": "",
+        "show_divider": false,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "image_story": {
+      "type": "about-image-story",
+      "settings": {
+        "eyebrow": "",
+        "heading": "Designed for the everyday.",
+        "body": "",
+        "primary_image_alt": "",
+        "show_secondary_image": false,
+        "secondary_image_alt": "",
+        "image_ratio": "wide",
+        "image_position": "left",
+        "cta_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "closing_cta": {
+      "type": "about-cta",
+      "settings": {
+        "enable": true,
+        "eyebrow": "FARO",
+        "heading": "Designed for the everyday.",
+        "description": "",
+        "alignment": "center",
+        "primary_label": "Explore the Collection",
+        "show_secondary_cta": false,
+        "secondary_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "manifesto",
+    "story",
+    "principles",
+    "image_story",
+    "closing_cta"
+  ]
+}

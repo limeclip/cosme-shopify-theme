@@ -10,6 +10,10 @@
 #
 # Cosme is the root/base theme (no listing overlay).
 # NORD homepage JSON stays in listings/nord/templates/.
+# Faro homepage JSON stays in listings/faro/templates/.
 
 [environments.nord]
 listing = "nord"
+
+[environments.faro]
+listing = "faro"

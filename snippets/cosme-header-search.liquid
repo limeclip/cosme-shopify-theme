@@ -39,15 +39,28 @@
       {%- assign search_field_id = 'CosmeHeaderSearchInput-' | append: section.id -%}
       {%- assign search_label = 'search.title' | t -%}
       {%- assign search_placeholder = 'search.placeholder_short' | t -%}
-      {% render 'cosme-form-field',
-        label: search_label,
-        id: search_field_id,
-        name: 'q',
-        type: 'search',
-        placeholder: search_placeholder,
-        autocomplete: 'off',
-        class: 'cosme-header__search-field'
-      %}
+
+      <div class="cosme-header__search-input-wrap">
+        {% render 'cosme-form-field',
+          label: search_label,
+          id: search_field_id,
+          name: 'q',
+          type: 'search',
+          placeholder: search_placeholder,
+          autocomplete: 'off',
+          class: 'cosme-header__search-field'
+        %}
+
+        <button
+          type="button"
+          class="cosme-header__search-clear"
+          data-header-search-clear
+          aria-label="{{ 'search.clear' | t }}"
+          hidden
+        >
+          {% render 'cosme-icon', icon: 'close', size: 'md' %}
+        </button>
+      </div>
 
       <button type="submit" class="cosme-visually-hidden">{{ 'search.submit' | t }}</button>
     </form>
@@ -61,7 +74,12 @@
         aria-label="{{ 'search.suggestions' | t }}"
         hidden
       ></div>
-      <p class="cosme-header__search-status cosme-visually-hidden" data-header-search-status role="status" aria-live="polite"></p>
+      <p
+        class="cosme-header__search-status cosme-visually-hidden"
+        data-header-search-status
+        role="status"
+        aria-live="polite"
+      ></p>
     {%- endif -%}
   </div>
 </dialog>
