@@ -1,0 +1,469 @@
+{
+  "sections": {
+    "editorial_media_hero": {
+      "type": "editorial-media-hero",
+      "blocks": {
+        "slide_1": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "NEW COLLECTION",
+            "heading": "The Geometry of Light",
+            "text": "Sculptural forms shaped by light, proportion and movement.",
+            "content_color": "auto",
+            "slide_alignment_x": "inherit",
+            "slide_alignment_y": "inherit",
+            "primary_button_label": "Explore Collection",
+            "media_type": "image",
+            "image_focal_position": "center",
+            "image_alt": "Editorial jewelry still life"
+          }
+        },
+        "slide_2": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "THE ESSENTIALS",
+            "heading": "Quietly Distinct",
+            "text": "Modern pieces designed to become part of your everyday.",
+            "content_color": "auto",
+            "slide_alignment_x": "inherit",
+            "slide_alignment_y": "inherit",
+            "primary_button_label": "Discover Essentials",
+            "media_type": "image",
+            "image_focal_position": "center",
+            "image_alt": "Contemporary jewelry on a quiet surface"
+          }
+        },
+        "slide_3": {
+          "type": "slide",
+          "settings": {
+            "eyebrow": "FACET",
+            "heading": "Form in Focus",
+            "text": "A study of metal, stone and contemporary silhouette.",
+            "content_color": "auto",
+            "slide_alignment_x": "inherit",
+            "slide_alignment_y": "inherit",
+            "primary_button_label": "Explore Facet",
+            "media_type": "image",
+            "image_focal_position": "center",
+            "image_alt": "Sculptural jewelry in natural light"
+          }
+        }
+      },
+      "block_order": [
+        "slide_1",
+        "slide_2",
+        "slide_3"
+      ],
+      "settings": {
+        "layout": "grid",
+        "section_width": "full",
+        "grid_desktop_items": "2",
+        "grid_mobile_items": "1.2",
+        "grid_gap": "small",
+        "grid_content_position": "overlay",
+        "grid_image_ratio": "landscape",
+        "horizontal_alignment": "left",
+        "vertical_alignment": "bottom",
+        "text_width": "medium",
+        "overlay_opacity": 0,
+        "heading_tag": "h1",
+        "autoplay": false,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "collections_editorial": {
+      "type": "main-collections-editorial",
+      "blocks": {
+        "collection_1": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "",
+            "title": "Rings",
+            "link_label": "Shop Rings",
+            "image_position": "center"
+          }
+        },
+        "collection_2": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "",
+            "title": "Necklaces",
+            "link_label": "Shop Necklaces",
+            "image_position": "center"
+          }
+        },
+        "collection_3": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "",
+            "title": "Earrings",
+            "link_label": "Shop Earrings",
+            "image_position": "center"
+          }
+        },
+        "collection_4": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "",
+            "title": "Bracelets",
+            "link_label": "Shop Bracelets",
+            "image_position": "center"
+          }
+        },
+        "collection_5": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "",
+            "title": "Fine Jewelry",
+            "link_label": "Explore Fine Jewelry",
+            "image_position": "center"
+          }
+        },
+        "collection_6": {
+          "type": "collection",
+          "settings": {
+            "eyebrow": "",
+            "title": "Gifts",
+            "link_label": "Shop Gifts",
+            "image_position": "center"
+          }
+        }
+      },
+      "block_order": [
+        "collection_1",
+        "collection_2",
+        "collection_3",
+        "collection_4",
+        "collection_5",
+        "collection_6"
+      ],
+      "settings": {
+        "heading": "",
+        "layout": "editorial",
+        "image_aspect_ratio": "landscape",
+        "image_fit": "cover",
+        "desktop_columns": "3",
+        "show_card_numbers": false,
+        "show_navigation": false,
+        "enable_carousel": false,
+        "autoplay": false,
+        "autoplay_interval": "5",
+        "show_arrows": false,
+        "show_pagination": false,
+        "color_scheme": "scheme-1",
+        "text_color_source": "scheme"
+      }
+    },
+    "popular_products": {
+      "type": "main-popular-products",
+      "settings": {
+        "eyebrow": "A considered selection of contemporary pieces.",
+        "heading": "The Facet Edit",
+        "products_to_show": 8,
+        "desktop_columns": "4",
+        "mobile_columns": "2",
+        "show_navigation": false,
+        "show_vendor": false,
+        "show_price": true,
+        "show_badge": true,
+        "show_secondary_image": true,
+        "show_quick_view": true,
+        "show_add_to_cart": true,
+        "color_scheme": "scheme-1"
+      }
+    },
+    "vertical_video": {
+      "type": "vertical-video",
+      "blocks": {
+        "category_1": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Rings",
+            "image_fit": "cover"
+          }
+        },
+        "category_2": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Necklaces",
+            "image_fit": "cover"
+          }
+        },
+        "category_3": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Earrings",
+            "image_fit": "cover"
+          }
+        },
+        "category_4": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Bracelets",
+            "image_fit": "cover"
+          }
+        },
+        "category_5": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Fine Jewelry",
+            "image_fit": "cover"
+          }
+        },
+        "category_6": {
+          "type": "collection_link",
+          "settings": {
+            "label": "Statement",
+            "image_fit": "cover"
+          }
+        },
+        "video_1": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Sculpted to catch the light.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_2": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Quiet lines, made to stay.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_3": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Small details, unmistakable form.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_4": {
+          "type": "video",
+          "settings": {
+            "custom_label": "A rhythm of metal and movement.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_5": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Precious pieces, quietly considered.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        },
+        "video_6": {
+          "type": "video",
+          "settings": {
+            "custom_label": "Made to give. Chosen to keep.",
+            "show_product": true,
+            "muted": true,
+            "product_position": "bottom-left"
+          }
+        }
+      },
+      "block_order": [
+        "category_1",
+        "category_2",
+        "category_3",
+        "category_4",
+        "category_5",
+        "category_6",
+        "video_1",
+        "video_2",
+        "video_3",
+        "video_4",
+        "video_5",
+        "video_6"
+      ],
+      "settings": {
+        "eyebrow": "FACET",
+        "heading": "Light, Form, Movement",
+        "layout": "video_collections",
+        "heading_alignment": "left",
+        "desktop_cards": "5",
+        "mobile_cards": "1.5",
+        "video_aspect_ratio": "9/16",
+        "show_category_navigation": true,
+        "show_arrows": true,
+        "carousel_autoplay": true,
+        "carousel_autoplay_delay": 5000,
+        "show_product": true,
+        "show_product_image": true,
+        "autoplay": true,
+        "autoplay_behavior": "viewport",
+        "color_scheme": "scheme-1"
+      }
+    },
+    "testimonials": {
+      "type": "testimonials",
+      "blocks": {
+        "testimonial_1": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The craft is quiet and exact. I notice the weight, then forget I am wearing it.",
+            "author_name": "Elena V.",
+            "author_location": "Milan",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_2": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "A distinctive form without noise. It sits with everything I already wear.",
+            "author_name": "Amelia K.",
+            "author_location": "Paris",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_3": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "The finish is considered. Quality you feel before you see it.",
+            "author_name": "Sofia R.",
+            "author_location": "London",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        },
+        "testimonial_4": {
+          "type": "testimonial",
+          "settings": {
+            "quote": "Designed for every day, not display. I reach for it without thinking.",
+            "author_name": "Nora P.",
+            "author_location": "Copenhagen",
+            "rating": 5,
+            "verified": false,
+            "verified_label": "Verified",
+            "show_product": false
+          }
+        }
+      },
+      "block_order": [
+        "testimonial_1",
+        "testimonial_2",
+        "testimonial_3",
+        "testimonial_4"
+      ],
+      "settings": {
+        "eyebrow": "NOTES",
+        "heading": "Worn, not shown.",
+        "description": "A few words from people who keep jewelry simple.",
+        "heading_alignment": "center",
+        "show_rating_summary": false,
+        "rating": 4.9,
+        "review_count": 48,
+        "rating_label": "Based on customer notes",
+        "desktop_cards": "4",
+        "tablet_cards": "2",
+        "show_arrows": false,
+        "autoplay": false,
+        "autoplay_interval": 5000,
+        "color_scheme": "scheme-3"
+      }
+    },
+    "editorial_cta": {
+      "type": "editorial-cta",
+      "settings": {
+        "eyebrow": "FACET",
+        "heading": "Designed to catch the light.",
+        "description": "Contemporary jewelry with a quiet presence.",
+        "primary_button_label": "Explore the Collection",
+        "secondary_button_label": "",
+        "layout": "text_only",
+        "content_alignment": "center",
+        "section_height": "large",
+        "content_width": 520,
+        "text_alignment": "center",
+        "image_position": "center",
+        "image_width": 58,
+        "image_fit": "cover",
+        "image_focal_position": "center",
+        "background_style": "default",
+        "color_scheme": "scheme-2",
+        "show_border": false,
+        "border_width": 1,
+        "section_spacing": "large"
+      }
+    },
+    "benefits": {
+      "type": "benefits",
+      "blocks": {
+        "benefit_1": {
+          "type": "benefit",
+          "settings": {
+            "icon": "shipping",
+            "heading": "Complimentary Shipping",
+            "description": "Worldwide delivery on orders over $75."
+          }
+        },
+        "benefit_2": {
+          "type": "benefit",
+          "settings": {
+            "icon": "gift",
+            "heading": "Gift Ready",
+            "description": "Every piece arrives ready to give."
+          }
+        },
+        "benefit_3": {
+          "type": "benefit",
+          "settings": {
+            "icon": "secure",
+            "heading": "Secure Checkout",
+            "description": "A simple and secure shopping experience."
+          }
+        },
+        "benefit_4": {
+          "type": "benefit",
+          "settings": {
+            "icon": "return",
+            "heading": "Easy Returns",
+            "description": "Straightforward returns within the store policy."
+          }
+        }
+      },
+      "block_order": [
+        "benefit_1",
+        "benefit_2",
+        "benefit_3",
+        "benefit_4"
+      ],
+      "settings": {
+        "columns": "4",
+        "alignment": "center",
+        "show_dividers": true,
+        "section_spacing": "large",
+        "icon_size": 18,
+        "icon_position": "top",
+        "color_scheme": "scheme-1"
+      }
+    }
+  },
+  "order": [
+    "editorial_media_hero",
+    "collections_editorial",
+    "popular_products",
+    "vertical_video",
+    "testimonials",
+    "editorial_cta",
+    "benefits"
+  ]
+}

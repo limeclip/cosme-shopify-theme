@@ -1,0 +1,65 @@
+{
+  "sections": {
+    "main": {
+      "type": "search",
+      "settings": {
+        "eyebrow": "Search",
+        "heading": "What are you looking for?",
+        "placeholder": "Search rings, necklaces, earrings...",
+        "no_results_heading": "Nothing matched your search",
+        "no_results_text": "Try another search or explore our collections.",
+        "no_results_cta_label": "Explore collections",
+        "desktop_columns": "4",
+        "color_scheme": "scheme-1",
+        "show_popular_searches": true
+      },
+      "blocks": {
+        "popular-rings": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Rings",
+            "label": "Rings"
+          }
+        },
+        "popular-necklaces": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Necklaces",
+            "label": "Necklaces"
+          }
+        },
+        "popular-earrings": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Earrings",
+            "label": "Earrings"
+          }
+        },
+        "popular-bracelets": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Bracelets",
+            "label": "Bracelets"
+          }
+        },
+        "popular-new-arrivals": {
+          "type": "popular_search",
+          "settings": {
+            "term": "New Arrivals",
+            "label": "New Arrivals"
+          }
+        }
+      },
+      "block_order": [
+        "popular-rings",
+        "popular-necklaces",
+        "popular-earrings",
+        "popular-bracelets",
+        "popular-new-arrivals"
+      ]
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

@@ -1,0 +1,40 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "footer",
+  "name": "t:general.footer",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "settings": {
+        "enable_footer": true,
+        "color_scheme": "scheme-1",
+        "density": "spacious",
+        "brand_description": "Contemporary jewelry shaped with architectural clarity — form, material, and light, without ornament.",
+        "shop_menu_heading": "Shop",
+        "care_menu_heading": "Client care",
+        "enable_newsletter": true,
+        "newsletter_heading": "Notes from the atelier",
+        "newsletter_description": "New pieces and editorial letters — never noise.",
+        "newsletter_placeholder": "Email address",
+        "newsletter_button_label": "Subscribe",
+        "show_social": true,
+        "social_style": "icons",
+        "enable_country_selector": true,
+        "show_copyright": true,
+        "show_policy_links": true,
+        "show_payment_icons": true
+      }
+    }
+  },
+  "order": [
+    "footer"
+  ]
+}

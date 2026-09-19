@@ -543,6 +543,188 @@
           }
         }
       }
+    },
+    "Facet": {
+      "logo_width": 90,
+      "type_primary_font": "jost_n4",
+      "type_heading_font": "jost_n4",
+      "base_font_size": 16,
+      "max_page_width": "110rem",
+      "min_page_margin": 16,
+      "grid_gap": 24,
+      "section_spacing": 96,
+      "color_scheme": "scheme-1",
+      "button_corner_radius": 0,
+      "input_corner_radius": 0,
+      "card_corner_radius": 0,
+      "border_width": 1,
+      "focus_ring_width": 2,
+      "cart_type": "drawer",
+      "enable_predictive_search": true,
+      "gift_card_show_eyebrow": true,
+      "gift_card_heading": "A gift of form",
+      "gift_card_description": "Give the freedom to choose from a considered edit of contemporary jewelry.",
+      "gift_card_text_alignment": "left",
+      "gift_card_color_scheme": "scheme-1",
+      "gift_card_show_editorial": true,
+      "gift_card_editorial_eyebrow": "A THOUGHTFUL GIFT",
+      "gift_card_editorial_heading": "Something they will wear",
+      "gift_card_editorial_text": "From sculptural rings to quiet chains, let them choose what feels right.",
+      "gift_card_editorial_color_scheme": "scheme-2",
+      "enable_animations": true,
+      "enable_back_to_top": true,
+      "quick_view_enabled": true,
+      "quick_view_autoplay": false,
+      "quick_view_autoplay_delay": 5000,
+      "quick_view_show_arrows": true,
+      "quick_view_show_dots": false,
+      "quick_view_show_description": true,
+      "quick_view_show_buy_now": true,
+     "color_schemes": {
+  "scheme-1": {
+    "settings": {
+      "foreground": "#1B1A18",
+      "muted_foreground": "#746F67",
+      "heading": "#11100F",
+
+      "background": "#F5F3EE",
+      "background_2": "#EBE8E1",
+      "background_gradient": "",
+
+      "button_primary_label": "#F5F3EE",
+      "button_primary_label_hover": "#FFFFFF",
+      "button_primary_background": "#3A332C",
+      "button_primary_background_hover": "#29241F",
+
+      "button_secondary_label": "#11100F",
+      "button_secondary_label_hover": "#11100F",
+      "button_secondary_background": "#EBE8E1",
+      "button_secondary_background_hover": "#E0DCD3",
+
+      "button_tertiary_label": "#11100F",
+      "button_tertiary_label_hover": "#6F665A",
+
+      "input_background": "#F5F3EE",
+      "input_label": "#1B1A18",
+      "input_border": "#D6D2C9",
+      "input_background_hover": "#F5F3EE",
+      "input_label_hover": "#11100F",
+      "input_border_hover": "#6F665A",
+
+      "badge_text": "#F5F3EE",
+      "badge_background": "#11100F",
+
+      "overlay": "#000000",
+
+      "border": "#D6D2C9",
+
+      "accent": "#6F665A",
+      "accent_contrast": "#F5F3EE",
+
+      "slider_arrows": "#11100F",
+
+      "sale": "#6B3A3A",
+      "success": "#4A5C52",
+      "error": "#7A3A38"
+    }
+  },
+
+  "scheme-2": {
+    "settings": {
+      "foreground": "#E9E6DF",
+      "muted_foreground": "#99948A",
+      "heading": "#FAF8F3",
+
+      "background": "#111110",
+      "background_2": "#1B1A18",
+      "background_gradient": "",
+
+      "button_primary_label": "#111110",
+      "button_primary_label_hover": "#111110",
+      "button_primary_background": "#F5F3EE",
+      "button_primary_background_hover": "#FFFFFF",
+
+      "button_secondary_label": "#E9E6DF",
+      "button_secondary_label_hover": "#FAF8F3",
+      "button_secondary_background": "#1B1A18",
+      "button_secondary_background_hover": "#252420",
+
+      "button_tertiary_label": "#E9E6DF",
+      "button_tertiary_label_hover": "#C6B89F",
+
+      "input_background": "#1B1A18",
+      "input_label": "#E9E6DF",
+      "input_border": "#2A2926",
+      "input_background_hover": "#201F1C",
+      "input_label_hover": "#FAF8F3",
+      "input_border_hover": "#C6B89F",
+
+      "badge_text": "#111110",
+      "badge_background": "#F5F3EE",
+
+      "overlay": "#000000",
+
+      "border": "#2A2926",
+
+      "accent": "#C6B89F",
+      "accent_contrast": "#111110",
+
+      "slider_arrows": "#E9E6DF",
+
+      "sale": "#C47A7A",
+      "success": "#7A9488",
+      "error": "#C47A7A"
+    }
+  },
+
+  "scheme-3": {
+    "settings": {
+      "foreground": "#252320",
+      "muted_foreground": "#6E6960",
+      "heading": "#151412",
+
+      "background": "#DDD9D1",
+      "background_2": "#D1CCC3",
+      "background_gradient": "",
+
+      "button_primary_label": "#DDD9D1",
+      "button_primary_label_hover": "#DDD9D1",
+      "button_primary_background": "#806B52",
+      "button_primary_background_hover": "#6C5A44",
+
+      "button_secondary_label": "#151412",
+      "button_secondary_label_hover": "#151412",
+      "button_secondary_background": "#D1CCC3",
+      "button_secondary_background_hover": "#C5C0B6",
+
+      "button_tertiary_label": "#151412",
+      "button_tertiary_label_hover": "#806B52",
+
+      "input_background": "#DDD9D1",
+      "input_label": "#252320",
+      "input_border": "#C5C0B6",
+      "input_background_hover": "#DDD9D1",
+      "input_label_hover": "#151412",
+      "input_border_hover": "#806B52",
+
+      "badge_text": "#DDD9D1",
+      "badge_background": "#151412",
+
+      "overlay": "#000000",
+
+      "border": "#C5C0B6",
+
+      "accent": "#806B52",
+      "accent_contrast": "#DDD9D1",
+
+      "slider_arrows": "#151412",
+
+      "sale": "#6B3A3A",
+      "success": "#4A5C52",
+      "error": "#7A3A38"
+    }
+  }
+}
     }
   }
 }
