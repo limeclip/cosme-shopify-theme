@@ -42,6 +42,7 @@
         "header_layout": "centered_logo",
         "header_width": "page_width",
         "header_height": 80,
+        "header_height_mobile": 60,
         "sticky_header": "on",
         "sticky_behavior": "always",
         "header_appearance": "blur",

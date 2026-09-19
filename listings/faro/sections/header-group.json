@@ -38,6 +38,7 @@
         "header_layout": "centered_logo",
         "header_width": "full_width",
         "header_height": 70,
+        "header_height_mobile": 60,
         "sticky_header": "on",
         "sticky_behavior": "hide_on_scroll",
         "header_appearance": "blur",

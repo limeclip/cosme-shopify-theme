@@ -25,7 +25,7 @@
   class="cosme-header-group full-width {% if header_appearance == 'transparent' or header_appearance == 'blur' %} cosme-header-group--overlay{% endif %}{% if sticky_enabled and section.settings.sticky_behavior == 'hide_on_scroll' %} cosme-header-group--hide-on-scroll{% endif %}{% if settings.enable_animations %} cosme-header-group--animated{% endif %}"
   data-header-group
   data-sticky="{{ sticky_enabled }}"
-  style="--header-height: {{ section.settings.header_height }}px;"
+  style="--header-height: {{ section.settings.header_height }}px; --header-height-mobile: {{ section.settings.header_height_mobile }}px;"
 >
   <header
     class="cosme-header full-width color-{{ initial_scheme }} cosme-header--layout-{{ section.settings.header_layout }} cosme-header--width-{{ section.settings.header_width }} cosme-header--appearance-{{ header_appearance }}{% if settings.enable_animations %} cosme-header--animated{% endif %}"
@@ -60,6 +60,18 @@
           <button
             type="button"
             class="cosme-header__action cosme-header__action--search cosme-header__action--search-leading"
+            data-header-search-toggle
+            aria-expanded="false"
+            aria-controls="CosmeHeaderSearch-{{ section.id }}"
+          >
+            {% render 'cosme-icon', icon: 'search', size: 'lg' %}
+            <span class="cosme-visually-hidden">{{ 'header.search' | t }}</span>
+          </button>
+        {%- endif -%}
+        {%- if section.settings.show_search -%}
+          <button
+            type="button"
+            class="cosme-header__action cosme-header__action--search cosme-header__action--search-actions"
             data-header-search-toggle
             aria-expanded="false"
             aria-controls="CosmeHeaderSearch-{{ section.id }}"
@@ -145,7 +157,7 @@
       {%- endif -%}
 
       <div class="cosme-header__actions">
-        {%- if section.settings.show_search -%}
+        {% comment %} {%- if section.settings.show_search -%}
           <button
             type="button"
             class="cosme-header__action cosme-header__action--search cosme-header__action--search-actions"
@@ -156,7 +168,7 @@
             {% render 'cosme-icon', icon: 'search', size: 'lg' %}
             <span class="cosme-visually-hidden">{{ 'header.search' | t }}</span>
           </button>
-        {%- endif -%}
+        {%- endif -%} {% endcomment %}
 
         {%- if section.settings.show_account and shop.customer_accounts_enabled -%}
           <shopify-account
@@ -1615,6 +1627,7 @@
     .cosme-header__inner {
       grid-template-columns: 1fr auto 1fr;
       grid-template-areas: 'leading logo actions';
+      min-height: var(--header-height-mobile, var(--header-height, 5rem));
     }
 
     .cosme-header__drawer-panel--mega_menu,
@@ -1650,12 +1663,24 @@
     .cosme-header__actions {
       grid-area: actions;
       justify-self: end;
+      gap: var(--spacing-xs);
     }
 
-    .cosme-header__action--search-leading,
+    .cosme-header__action--search-leading {
+      display: none;
+    }
+
     .cosme-header__action--search-actions,
     .cosme-header__action--account-bar {
+      display: inline-flex;
+    }
+
+    .cosme-header__action--account-bar .cosme-header__account-label {
       display: none;
+    }
+
+    .cosme-header__action--account-bar .cosme-header__account-icon {
+      display: inline-flex;
     }
 
     .cosme-header--layout-standard .cosme-header__leading {
@@ -1666,13 +1691,44 @@
       justify-self: center;
     }
 
-    .cosme-header__search-panel {
+    .cosme-header__search-dialog {
+      inset: 0;
       width: 100vw;
       max-width: 100vw;
       height: 100dvh;
       max-height: 100dvh;
       margin: 0;
+      padding: 0;
+      background-color: var(--color-background);
+    }
+
+    .cosme-header__search-dialog::backdrop {
+      background-color: var(--color-background);
+      opacity: 1;
+    }
+
+    .cosme-header__search-panel {
+      width: 100%;
+      max-width: none;
+      height: 100%;
+      max-height: none;
+      margin: 0;
       border: 0;
+      border-radius: 0;
+      transform: none;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .cosme-header__search-dialog[open] .cosme-header__search-panel {
+      transform: none;
+    }
+
+    @starting-style {
+      .cosme-header__search-dialog[open] .cosme-header__search-panel {
+        transform: none;
+        opacity: 0;
+      }
     }
 
     .cosme-header__cart-panel {
@@ -1998,6 +2054,9 @@
     let lastFocusedElement = null;
     let predictiveTimeout = null;
 
+    const getVisibleSearchToggle = () =>
+      Array.from(searchToggles).find((toggle) => toggle.getClientRects().length > 0) || searchToggles[0];
+
     const openSearch = () => {
       if (searchDialog.open) return;
 
@@ -2035,10 +2094,13 @@
         clearButton.hidden = true;
       }
 
-      if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
-        lastFocusedElement.focus();
-      } else if (searchToggles[0]) {
-        searchToggles[0].focus();
+      const returnTarget =
+        lastFocusedElement && typeof lastFocusedElement.focus === 'function'
+          ? lastFocusedElement
+          : getVisibleSearchToggle();
+
+      if (returnTarget && typeof returnTarget.focus === 'function') {
+        returnTarget.focus();
       }
     };
 
@@ -3379,6 +3441,16 @@ if (searchInput && clearButton) {
       "step": 2,
       "unit": "px",
       "label": "t:labels.header_height",
+      "default": 80
+    },
+    {
+      "type": "range",
+      "id": "header_height_mobile",
+      "min": 40,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "label": "t:labels.header_height_mobile",
       "default": 80
     },
     {

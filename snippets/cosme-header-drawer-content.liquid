@@ -31,25 +31,6 @@
     </button>
   </div>
 
-  <div class="cosme-header__drawer-utilities">
-    {%- if section.settings.show_search -%}
-      <a class="cosme-header__drawer-utility" href="{{ routes.search_url }}">
-        {% render 'cosme-icon', icon: 'search', size: 'lg' %}
-        <span>{{ 'header.search' | t }}</span>
-      </a>
-    {%- endif -%}
-
-    {%- if section.settings.show_account and shop.customer_accounts_enabled -%}
-      <shopify-account
-        class="cosme-header__drawer-utility cosme-header__drawer-utility--account"
-        menu="{{ section.settings.customer_account_menu }}"
-      >
-        {% render 'cosme-icon', icon: 'account', size: 'lg' %}
-        <span>{{ 'header.account' | t }}</span>
-      </shopify-account>
-    {%- endif -%}
-  </div>
-
   {%- if menu != blank -%}
     {%- case menu_style -%}
       {%- when 'simple' -%}

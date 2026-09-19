@@ -20,7 +20,7 @@
         "text_alignment": "left",
         "collection_source": "all",
         "columns_desktop": "3",
-        "image_ratio": "4/5",
+        "image_ratio": "4/3",
         "grid_gap": "medium",
         "show_collection_description": false,
         "show_product_count": true,

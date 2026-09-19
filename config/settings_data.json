@@ -552,7 +552,7 @@
       "max_page_width": "110rem",
       "min_page_margin": 16,
       "grid_gap": 24,
-      "section_spacing": 96,
+      "section_spacing": 56,
       "color_scheme": "scheme-1",
       "button_corner_radius": 0,
       "input_corner_radius": 0,

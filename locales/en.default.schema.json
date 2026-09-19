@@ -136,6 +136,7 @@
     "header_layout": "Header layout",
     "header_width": "Header width",
     "header_height": "Header height",
+    "header_height_mobile": "Mobile header height",
     "sticky_header": "Sticky header",
     "sticky_behavior": "Sticky behavior",
     "header_appearance": "Header appearance",
@@ -429,6 +430,7 @@
         "grid_content_below": "Below media",
         "grid_content_overlay": "Overlay active media",
         "grid_image_ratio": "Image presentation",
+        "grid_image_ratio_mobile": "Mobile image presentation",
         "ratio_portrait": "Portrait",
         "ratio_square": "Square",
         "ratio_landscape": "Landscape"

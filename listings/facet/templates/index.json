@@ -368,7 +368,7 @@
         "heading": "Worn, not shown.",
         "description": "A few words from people who keep jewelry simple.",
         "heading_alignment": "center",
-        "show_rating_summary": false,
+        "show_rating_summary": true,
         "rating": 4.9,
         "review_count": 48,
         "rating_label": "Based on customer notes",
@@ -377,7 +377,7 @@
         "show_arrows": false,
         "autoplay": false,
         "autoplay_interval": 5000,
-        "color_scheme": "scheme-3"
+        "color_scheme": "scheme-1"
       }
     },
     "editorial_cta": {
@@ -388,13 +388,13 @@
         "description": "Contemporary jewelry with a quiet presence.",
         "primary_button_label": "Explore the Collection",
         "secondary_button_label": "",
-        "layout": "text_only",
+        "layout": "image_left",
         "content_alignment": "center",
         "section_height": "large",
         "content_width": 520,
         "text_alignment": "center",
         "image_position": "center",
-        "image_width": 58,
+        "image_width": 50,
         "image_fit": "cover",
         "image_focal_position": "center",
         "background_style": "default",
