@@ -2,7 +2,6 @@
   assign collection_blocks = section.blocks | where: 'type', 'collection'
   assign block_count = collection_blocks.size
   assign desktop_columns = section.settings.desktop_columns | default: 2
-  
 
   assign layout_class = 'cosme-collections-editorial--editorial'
   if section.settings.layout == 'editorial_compact'
@@ -55,7 +54,7 @@
   data-show-pagination="{{ section.settings.show_pagination }}"
   data-show-navigation="{{ show_navigation }}"
   data-desktop-columns="{{ desktop_columns }}"
-style="--desktop-columns: {{ desktop_columns }};"
+  style="--desktop-columns: {{ desktop_columns }};"
   {% if carousel_enabled %}
     aria-roledescription="carousel"
     aria-label="{{ 'sections.main_collections_editorial.landmark_label' | t }}"
@@ -125,105 +124,114 @@ style="--desktop-columns: {{ desktop_columns }};"
               endif
             -%}
 
-            <article
-              class="cosme-collections-editorial__card"
-              {% if carousel_enabled %}
+            {% if carousel_enabled %}
+              <div
+                class="cosme-collections-editorial__card"
                 data-collections-editorial-card
                 data-card-index="{{ forloop.index0 }}"
                 role="group"
                 aria-roledescription="slide"
                 aria-label="{{ 'sections.main_collections_editorial.slide_label' | t: number: forloop.index, total: block_count }}"
-              {% endif %}
-              {{ block.shopify_attributes }}
-            >
-              <div
-                class="cosme-collections-editorial__media cosme-collections-editorial__media--{{ image_position }} cosme-collections-editorial__media--fit-{{ image_fit }}"
+                {{ block.shopify_attributes }}
               >
-                {% if card_url != blank %}
-                  <a
-                    href="{{ card_url }}"
-                    class="cosme-collections-editorial__media-link"
-                    aria-label="{{ card_title | escape }}"
-                  >
-                {% endif %}
-                {% if card_image != blank %}
-                  {% render 'cosme-image',
-                    image: card_image,
-                    alt: card_alt,
-                    class: 'cosme-collections-editorial__image',
-                    width: 1400,
-                    loading: card_loading,
-                    fetchpriority: card_fetchpriority,
-                    sizes: '(min-width: 990px) 45vw, 88vw',
-                    aspect_ratio: aspect_ratio
-                  %}
-                {% else %}
-                  <div
-                    class="cosme-collections-editorial__placeholder{% if aspect_ratio != blank %} cosme-collections-editorial__placeholder--ratio{% endif %}"
-                    {% if aspect_ratio != blank %}
-                      style="--cosme-image-ratio: {{ aspect_ratio }};"
-                    {% endif %}
-                    {% if card_alt != blank %}
-                      role="img"
-                      aria-label="{{ card_alt | escape }}"
-                    {% else %}
-                      aria-hidden="true"
-                    {% endif %}
-                  >
-                    {{ placeholder_name | placeholder_svg_tag: 'cosme-collections-editorial__placeholder-svg' }}
-                  </div>
-                {% endif %}
-                {% if card_url != blank %}
-                  </a>
-                {% endif %}
-              </div>
+            {% else %}
+              <article
+                class="cosme-collections-editorial__card"
+                {{ block.shopify_attributes }}
+              >
+            {% endif %}
+            <div
+              class="cosme-collections-editorial__media cosme-collections-editorial__media--{{ image_position }} cosme-collections-editorial__media--fit-{{ image_fit }}"
+            >
+              {% if card_url != blank %}
+                <a
+                  href="{{ card_url }}"
+                  class="cosme-collections-editorial__media-link"
+                  aria-label="{{ card_title | escape }}"
+                >
+              {% endif %}
+              {% if card_image != blank %}
+                {% render 'cosme-image',
+                  image: card_image,
+                  alt: card_alt,
+                  class: 'cosme-collections-editorial__image',
+                  width: 1400,
+                  loading: card_loading,
+                  fetchpriority: card_fetchpriority,
+                  sizes: '(min-width: 990px) 45vw, 88vw',
+                  aspect_ratio: aspect_ratio
+                %}
+              {% else %}
+                <div
+                  class="cosme-collections-editorial__placeholder{% if aspect_ratio != blank %} cosme-collections-editorial__placeholder--ratio{% endif %}"
+                  {% if aspect_ratio != blank %}
+                    style="--cosme-image-ratio: {{ aspect_ratio }};"
+                  {% endif %}
+                  {% if card_alt != blank %}
+                    role="img"
+                    aria-label="{{ card_alt | escape }}"
+                  {% else %}
+                    aria-hidden="true"
+                  {% endif %}
+                >
+                  {{ placeholder_name | placeholder_svg_tag: 'cosme-collections-editorial__placeholder-svg' }}
+                </div>
+              {% endif %}
+              {% if card_url != blank %}
+                </a>
+              {% endif %}
+            </div>
 
-              <div class="cosme-collections-editorial__content">
-                <div class="cosme-collections-editorial__content-top">
-                  <div class="cosme-collections-editorial__titles">
-                    {% if card_title != blank %}
-                      <h3
-                        class="cosme-collections-editorial__title"
-                        style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.heading_color }}{% else %}var(--color-heading){% endif %};"
-                      >
-                        {{ card_title | escape }}
-                      </h3>
-                    {% endif %}
+            <div class="cosme-collections-editorial__content">
+              <div class="cosme-collections-editorial__content-top">
+                <div class="cosme-collections-editorial__titles">
+                  {% if card_title != blank %}
+                    <h2
+                      class="cosme-collections-editorial__title"
+                      style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.heading_color }}{% else %}var(--color-heading){% endif %};"
+                    >
+                      {{ card_title | escape }}
+                    </h2>
+                  {% endif %}
 
-                    {% if card_eyebrow != blank %}
-                      <p
-                        class="cosme-collections-editorial__eyebrow"
-                        style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.eyebrow_color }}{% else %}var(--color-muted){% endif %};"
-                      >
-                        {{ card_eyebrow | escape }}
-                      </p>
-                    {% endif %}
-                  </div>
-
-                  {% if section.settings.show_card_numbers %}
-                    <p class="cosme-collections-editorial__number" aria-hidden="true">{{ forloop.index }}.1</p>
+                  {% if card_eyebrow != blank %}
+                    <p
+                      class="cosme-collections-editorial__eyebrow"
+                      style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.eyebrow_color }}{% else %}var(--color-muted){% endif %};"
+                    >
+                      {{ card_eyebrow | escape }}
+                    </p>
                   {% endif %}
                 </div>
 
-                {% if card_link_label != blank %}
-                  <div class="cosme-collections-editorial__link-wrap">
-                    {% if card_url != blank %}
-                      <a
-                        class="cosme-collections-editorial__link"
-                        href="{{ card_url }}"
-                        style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.link_color }}{% else %}var(--color-foreground){% endif %};"
-                      >
-                        {{ card_link_label | escape }}
-                      </a>
-                    {% else %}
-                      <span class="cosme-collections-editorial__link cosme-collections-editorial__link--static">
-                        {{ card_link_label | escape }}
-                      </span>
-                    {% endif %}
-                  </div>
+                {% if section.settings.show_card_numbers %}
+                  <p class="cosme-collections-editorial__number" aria-hidden="true">{{ forloop.index }}.1</p>
                 {% endif %}
               </div>
-            </article>
+
+              {% if card_link_label != blank %}
+                <div class="cosme-collections-editorial__link-wrap">
+                  {% if card_url != blank %}
+                    <a
+                      class="cosme-collections-editorial__link"
+                      href="{{ card_url }}"
+                      style="color: {% if section.settings.text_color_source == 'custom' %}{{ section.settings.link_color }}{% else %}var(--color-foreground){% endif %};"
+                    >
+                      {{ card_link_label | escape }}
+                    </a>
+                  {% else %}
+                    <span class="cosme-collections-editorial__link cosme-collections-editorial__link--static">
+                      {{ card_link_label | escape }}
+                    </span>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+            {% if carousel_enabled %}
+              </div>
+            {% else %}
+              </article>
+            {% endif %}
           {%- endfor -%}
         </div>
       </div>
@@ -349,22 +357,22 @@ style="--desktop-columns: {{ desktop_columns }};"
     overflow: visible;
   }
   .cosme-collections-editorial__track {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--grid-gap);
-  touch-action: pan-y;
-}
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--grid-gap);
+    touch-action: pan-y;
+  }
 
   .cosme-collections-editorial--editorial-compact .cosme-collections-editorial__track {
     gap: calc(var(--grid-gap) * 0.75);
   }
 
   .cosme-collections-editorial--carousel .cosme-collections-editorial__track {
-  display: flex;
-  gap: var(--grid-gap);
-  will-change: transform;
-  touch-action: pan-y;
-}
+    display: flex;
+    gap: var(--grid-gap);
+    will-change: transform;
+    touch-action: pan-y;
+  }
 
   .cosme-collections-editorial--carousel.cosme-collections-editorial[data-enable-animations='true']
     .cosme-collections-editorial__track {
@@ -378,9 +386,9 @@ style="--desktop-columns: {{ desktop_columns }};"
   }
 
   .cosme-collections-editorial--carousel .cosme-collections-editorial__card {
-  flex: 0 0 calc((100% - (var(--grid-gap) * (var(--desktop-columns, 2) - 1))) / var(--desktop-columns, 2));
-  min-width: 0;
-}
+    flex: 0 0 calc((100% - (var(--grid-gap) * (var(--desktop-columns, 2) - 1))) / var(--desktop-columns, 2));
+    min-width: 0;
+  }
   .cosme-collections-editorial__card {
     position: relative;
     display: flex;
@@ -457,8 +465,6 @@ style="--desktop-columns: {{ desktop_columns }};"
     opacity: 0.35;
   }
 
- 
-
   .cosme-collections-editorial__content {
     position: absolute;
     inset: 0;
@@ -530,7 +536,9 @@ style="--desktop-columns: {{ desktop_columns }};"
   }
 
   .cosme-collections-editorial__link {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.5rem;
     font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--color-foreground);
@@ -612,10 +620,11 @@ style="--desktop-columns: {{ desktop_columns }};"
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
 
   .cosme-collections-editorial__pagination-dot {
+    position: relative;
     display: block;
     width: 0.5rem;
     height: 0.5rem;
@@ -626,6 +635,17 @@ style="--desktop-columns: {{ desktop_columns }};"
     cursor: pointer;
     transition: background-color var(--transition-duration) var(--transition-easing),
       border-color var(--transition-duration) var(--transition-easing);
+  }
+
+  /* Invisible hit-area so the visual dot stays small but touch target is ≥24×24. */
+  .cosme-collections-editorial__pagination-dot::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    transform: translate(-50%, -50%);
   }
 
   .cosme-collections-editorial__pagination-dot.is-active {
@@ -699,14 +719,14 @@ style="--desktop-columns: {{ desktop_columns }};"
     }
   }
   @media (min-width: 990px) {
-  .cosme-collections-editorial__track {
-    grid-template-columns: repeat(var(--desktop-columns, 2), minmax(0, 1fr));
-  }
+    .cosme-collections-editorial__track {
+      grid-template-columns: repeat(var(--desktop-columns, 2), minmax(0, 1fr));
+    }
 
-  .cosme-collections-editorial--carousel .cosme-collections-editorial__card {
-    flex: 0 0 calc((100% - (var(--grid-gap) * (var(--desktop-columns, 2) - 1))) / var(--desktop-columns, 2));
+    .cosme-collections-editorial--carousel .cosme-collections-editorial__card {
+      flex: 0 0 calc((100% - (var(--grid-gap) * (var(--desktop-columns, 2) - 1))) / var(--desktop-columns, 2));
+    }
   }
-}
 {% endstylesheet %}
 
 {% javascript %}
@@ -716,13 +736,13 @@ style="--desktop-columns: {{ desktop_columns }};"
     const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const getSlidesPerView = (root) => {
-  const isDesktop = window.matchMedia('(min-width: 990px)').matches;
-  if (isDesktop) {
-    const columns = parseInt(root.dataset.desktopColumns, 10) || 2;
-    return columns;
-  }
-  return 1;
-};
+      const isDesktop = window.matchMedia('(min-width: 990px)').matches;
+      if (isDesktop) {
+        const columns = parseInt(root.dataset.desktopColumns, 10) || 2;
+        return columns;
+      }
+      return 1;
+    };
 
     const buildNavigation = (root, currentPage, totalPages) => {
       const navContainer = root.querySelector('[data-collections-editorial-nav-container]');
@@ -736,7 +756,6 @@ style="--desktop-columns: {{ desktop_columns }};"
         button.type = 'button';
         button.className = 'cosme-collections-editorial__navigation-item' + (i === currentPage ? ' is-active' : '');
         button.dataset.collectionsEditorialNav = i;
-        button.setAttribute('aria-label', `Page ${i + 1} of ${totalPages}`);
         if (i === currentPage) button.setAttribute('aria-current', 'true');
         button.innerHTML = `<span class="cosme-collections-editorial__navigation-marker" aria-hidden="true">|</span><span class="cosme-collections-editorial__navigation-label">1.${
           i + 1

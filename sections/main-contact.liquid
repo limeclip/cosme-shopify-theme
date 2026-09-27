@@ -31,6 +31,7 @@
   assign hero_alignment = section.settings.hero_alignment | default: 'left'
   assign heading_size = section.settings.heading_size | default: 'large'
   assign hero_max_width = section.settings.hero_max_width | default: 'narrow'
+    assign layout_max_width = section.settings.layout_max_width | default: 'medium'
   assign hero_spacing_top = section.settings.hero_spacing_top | default: 'large'
   assign hero_spacing_bottom = section.settings.hero_spacing_bottom | default: 'medium'
   assign section_spacing_bottom = section.settings.section_spacing_bottom | default: 'large'
@@ -237,6 +238,7 @@
     cosme-contact--align-{{ hero_alignment }}
     cosme-contact--heading-{{ heading_size }}
     cosme-contact--hero-{{ hero_max_width }}
+        cosme-contact--layout-width-{{ layout_max_width }}
     cosme-contact--hero-top-{{ hero_spacing_top }}
     cosme-contact--hero-bottom-{{ hero_spacing_bottom }}
     cosme-contact--section-bottom-{{ section_spacing_bottom }}
@@ -734,6 +736,20 @@
     display: grid;
     gap: clamp(2rem, 5vw, 4rem);
     min-width: 0;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .cosme-contact--layout-width-narrow .cosme-contact__layout {
+    max-width: 52rem;
+  }
+
+  .cosme-contact--layout-width-medium .cosme-contact__layout {
+    max-width: 68rem;
+  }
+
+  .cosme-contact--layout-width-wide .cosme-contact__layout {
+    max-width: var(--page-width);
   }
 
   .cosme-contact__info {
@@ -1317,6 +1333,18 @@
         { "value": "wide", "label": "t:options.page_width.wide" }
       ],
       "default": "narrow"
+    },
+    {
+      "type": "select",
+      "id": "layout_max_width",
+      "label": "t:sections.contact.settings.layout_max_width",
+      "options": [
+        { "value": "narrow", "label": "t:options.page_width.narrow" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "wide", "label": "t:options.page_width.wide" }
+      ],
+      "default": "medium",
+      "info": "t:sections.contact.settings.layout_max_width_info"
     },
     {
       "type": "select",

@@ -99,6 +99,21 @@
   assign related_description = section.settings.related_description | strip
   assign related_heading_id = 'ArticleRelated-' | append: section.id
 
+  case section.settings.related_image_ratio
+    when 'wide'
+      assign related_ratio = '16/9'
+      assign related_image_width = 900
+      assign related_image_height = 506
+    when 'square'
+      assign related_ratio = '1/1'
+      assign related_image_width = 900
+      assign related_image_height = 900
+    else
+      assign related_ratio = '16/10'
+      assign related_image_width = 900
+      assign related_image_height = 563
+  endcase
+
   if section.settings.show_related
     for related_article in blog.articles
       if related_found >= related_limit
@@ -394,9 +409,9 @@
                     >
                       {% render 'cosme-article-card',
                         article: related_article,
-                        aspect_ratio: '4/5',
-                        image_width: 900,
-                        image_height: 1125,
+                        aspect_ratio: related_ratio,
+                        image_width: related_image_width,
+                        image_height: related_image_height,
                         sizes: '(min-width: 990px) 30vw, 92vw',
                         heading_tag: 'h3',
                         loading: 'lazy',
@@ -487,7 +502,7 @@
           {% render 'cosme-button',
             label: comment_submit_label,
             type: 'submit',
-            style: 'outline'
+            style: 'outline',
             class: 'cosme-article__comment-submit'
           %}
         {% endform %}
@@ -692,9 +707,9 @@
     width: 100%;
     margin-block-end: var(--spacing-2xl);
   }
-.cosme-image {
-  border-radius: var(--radius-card);
-}
+  .cosme-image {
+    border-radius: var(--radius-card);
+  }
   .cosme-article__hero-image {
     width: 100%;
     border-radius: var(--radius-card);
@@ -1439,6 +1454,18 @@
       "type": "textarea",
       "id": "related_description",
       "label": "t:sections.article.settings.related_description",
+      "visible_if": "{{ section.settings.show_related }}"
+    },
+    {
+      "type": "select",
+      "id": "related_image_ratio",
+      "label": "t:sections.article.settings.related_image_ratio",
+      "options": [
+        { "value": "landscape", "label": "t:sections.article.settings.ratio_landscape" },
+        { "value": "wide", "label": "t:sections.article.settings.ratio_wide" },
+        { "value": "square", "label": "t:sections.article.settings.ratio_square" }
+      ],
+      "default": "landscape",
       "visible_if": "{{ section.settings.show_related }}"
     },
     {

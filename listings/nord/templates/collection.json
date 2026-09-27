@@ -30,7 +30,7 @@
       "settings": {
         "desktop_columns": "4",
         "mobile_columns": "2",
-        "image_aspect_ratio": "4/5",
+        "image_aspect_ratio": "1/1",
         "product_loading": "pagination",
         "products_per_page": "12",
         "show_vendor": true,

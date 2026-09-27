@@ -742,7 +742,8 @@
         "newsletter_heading": "Heading",
         "newsletter_description": "Description",
         "newsletter_button_label": "Button label",
-        "newsletter_color_scheme": "Color scheme"
+        "newsletter_color_scheme": "Color scheme",
+        "related_image_ratio": "Image ratio",
       }
     },
     "not_found": {
@@ -1047,7 +1048,9 @@
         "cta_button_link_info": "Leave blank to scroll to the contact form. Links to this Contact page also scroll to the form.",
         "cta_color_scheme": "CTA color scheme",
         "cta_spacing_top": "CTA top spacing",
-        "cta_spacing_bottom": "CTA bottom spacing"
+        "cta_spacing_bottom": "CTA bottom spacing",
+        "layout_max_width": "Layout max width",
+        "layout_max_width_info": "Controls the max width of the contact info + form block."
       },
       "blocks": {
         "item": "FAQ item",

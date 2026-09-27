@@ -398,7 +398,7 @@
         "image_fit": "cover",
         "image_focal_position": "center",
         "background_style": "default",
-        "color_scheme": "scheme-2",
+        "color_scheme": "scheme-3",
         "show_border": false,
         "border_width": 1,
         "section_spacing": "large"

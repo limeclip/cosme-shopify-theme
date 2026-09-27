@@ -40,7 +40,9 @@
   <body class="color-{{ settings.color_scheme }}">
     {% sections 'header-group' %}
 
-    {{ content_for_layout }}
+    <main id="MainContent" role="main" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
 
     {% sections 'footer-group' %}
     {% sections 'overlay-group' %}

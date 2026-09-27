@@ -26,6 +26,16 @@
     assign is_grid = true
   endif
 
+  assign emh_clone_count = 3
+  assign emh_clone_desktop = grid_desktop_items | plus: 0.0 | ceil
+  assign emh_clone_mobile = grid_mobile_items | plus: 0.0 | ceil
+  if emh_clone_desktop > emh_clone_count
+    assign emh_clone_count = emh_clone_desktop
+  endif
+  if emh_clone_mobile > emh_clone_count
+    assign emh_clone_count = emh_clone_mobile
+  endif
+
   case section.settings.grid_gap
     when 'small'
       assign grid_gap_token = 'var(--spacing-sm)'
@@ -157,476 +167,534 @@
 >
   <div class="cosme-editorial-media-hero__inner">
     <div class="cosme-editorial-media-hero__viewport" data-emh-viewport>
-      <div class="cosme-editorial-media-hero__track" data-emh-track>
-      {%- if slide_count > 0 -%}
-        {%- for block in slide_blocks -%}
+      <div
+        class="cosme-editorial-media-hero__track"
+        data-emh-track
+        {% if is_grid and slide_count > 1 %}
+          data-emh-clone-count="{{ emh_clone_count }}"
+        {% endif %}
+      >
+        {%- if slide_count > 0 -%}
           {%- liquid
-            assign media_type = block.settings.media_type | default: 'image'
-            assign desktop_image = block.settings.image
-            assign mobile_image = block.settings.mobile_image
-            assign desktop_video = block.settings.video
-            assign mobile_video = block.settings.mobile_video
-            assign has_desktop_image = false
-            assign has_mobile_image = false
-            assign has_image = false
-            assign desktop_video_playable = false
-            assign mobile_video_playable = false
-            assign use_video = false
-            assign render_dual_video = false
-            assign hydrate_video = false
-            assign media_is_decorative = false
-
-            if desktop_image != blank
-              assign has_desktop_image = true
-              assign has_image = true
-            endif
-            if mobile_image != blank
-              assign has_mobile_image = true
-              assign has_image = true
-            endif
-
-            assign hero_image = desktop_image
-            if has_desktop_image == false
-              if has_mobile_image
-                assign hero_image = mobile_image
+            assign emh_pass_start = 2
+            assign emh_pass_end = 2
+            if is_grid
+              if slide_count > 1
+                assign emh_pass_start = 1
+                assign emh_pass_end = 3
               endif
             endif
-
-            if desktop_video != blank
-              if desktop_video.sources.size > 0
-                assign desktop_video_playable = true
+          -%}
+          {%- for emh_pass in (1..3) -%}
+            {%- if emh_pass < emh_pass_start -%}{%- continue -%}{%- endif -%}
+            {%- if emh_pass > emh_pass_end -%}{%- continue -%}{%- endif -%}
+            {%- liquid
+              assign emh_is_clone = false
+              if emh_pass != 2
+                assign emh_is_clone = true
               endif
-            endif
-            if mobile_video != blank
-              if mobile_video.sources.size > 0
-                assign mobile_video_playable = true
+              assign emh_iter_count = slide_count
+              if emh_is_clone
+                assign emh_iter_count = emh_clone_count
               endif
-            endif
-
-            if media_type == 'video'
-              if desktop_video_playable
-                assign use_video = true
-              endif
-              if mobile_video_playable
-                assign use_video = true
-              endif
-            endif
-
-            if desktop_video_playable
-              if mobile_video_playable
-                if desktop_video.id != mobile_video.id
-                  assign render_dual_video = true
-                endif
-              endif
-            endif
-
-            assign slide_alt = block.settings.image_alt | strip
-            if slide_alt == blank
-              if hero_image != blank
-                if hero_image.alt != blank
-                  assign slide_alt = hero_image.alt
-                endif
-              endif
-            endif
-            if slide_alt == blank
-              if use_video
-                if desktop_video != blank
-                  if desktop_video.alt != blank
-                    assign slide_alt = desktop_video.alt
+            -%}
+            {%- for emh_iter in (1..emh_iter_count) -%}
+              {%- liquid
+                if emh_is_clone
+                  if emh_pass == 1
+                    assign emh_source_index = slide_count | minus: emh_clone_count | plus: emh_iter | minus: 1 | plus: slide_count | modulo: slide_count
+                  else
+                    assign emh_source_index = emh_iter | minus: 1 | modulo: slide_count
                   endif
-                endif
-              endif
-            endif
-            if slide_alt == blank
-              if block.settings.heading != blank
-                assign slide_alt = block.settings.heading
-              endif
-            endif
-
-            if block.settings.heading != blank
-              assign media_is_decorative = true
-            endif
-            if block.settings.eyebrow != blank
-              assign media_is_decorative = true
-            endif
-            if block.settings.text != blank
-              assign media_is_decorative = true
-            endif
-
-            assign focal_css = 'center center'
-            case block.settings.image_focal_position
-              when 'top'
-                assign focal_css = 'top center'
-              when 'bottom'
-                assign focal_css = 'bottom center'
-              when 'left'
-                assign focal_css = 'center left'
-              when 'right'
-                assign focal_css = 'center right'
-              when 'top_left'
-                assign focal_css = 'top left'
-              when 'top_right'
-                assign focal_css = 'top right'
-              when 'bottom_left'
-                assign focal_css = 'bottom left'
-              when 'bottom_right'
-                assign focal_css = 'bottom right'
-            endcase
-
-            if forloop.first
-              assign slide_loading = 'eager'
-              assign slide_fetchpriority = 'high'
-              if settings.enable_animations
-                assign hydrate_video = true
-              endif
-            else
-              assign slide_loading = 'lazy'
-              assign slide_fetchpriority = 'low'
-            endif
-
-            assign heading_id = 'EditorialMediaHeroHeading-' | append: section.id | append: '-' | append: block.id
-            assign desktop_poster = blank
-            assign mobile_poster = blank
-
-            if use_video
-              if desktop_video_playable
-                assign desktop_poster = desktop_video.preview_image
-              elsif mobile_video_playable
-                assign desktop_poster = mobile_video.preview_image
-              endif
-              if desktop_poster == blank
-                assign desktop_poster = hero_image
-              endif
-
-              if mobile_video_playable
-                assign mobile_poster = mobile_video.preview_image
-              elsif desktop_video_playable
-                assign mobile_poster = desktop_video.preview_image
-              endif
-              if mobile_poster == blank
-                if has_mobile_image
-                  assign mobile_poster = mobile_image
                 else
-                  assign mobile_poster = desktop_poster
+                  assign emh_source_index = emh_iter | minus: 1
                 endif
-              endif
-            endif
-          -%}
-          {%- liquid
-            assign slide_style_extra = ''
-            assign emh_allow_slide_align = false
-            if layout == 'fullscreen'
-              assign emh_allow_slide_align = true
-            endif
-            if layout == 'large'
-              assign emh_allow_slide_align = true
-            endif
-            if emh_allow_slide_align
-              case block.settings.slide_alignment_x
-                when 'left'
-                  assign slide_style_extra = slide_style_extra | append: '--emh-x-justify: flex-start; --emh-x-text: left; --emh-x-justify-copy: start; --emh-x-text-margin-inline: 0; --emh-x-text-margin-start: 0;'
-                when 'center'
-                  assign slide_style_extra = slide_style_extra | append: '--emh-x-justify: center; --emh-x-text: center; --emh-x-justify-copy: center; --emh-x-text-margin-inline: auto; --emh-x-text-margin-start: auto;'
-                when 'right'
-                  assign slide_style_extra = slide_style_extra | append: '--emh-x-justify: flex-end; --emh-x-text: left; --emh-x-justify-copy: start; --emh-x-text-margin-inline: 0; --emh-x-text-margin-start: 0;'
-              endcase
-              case block.settings.slide_alignment_y
-                when 'top'
-                  assign slide_style_extra = slide_style_extra | append: ' --emh-y-align: flex-start;'
-                when 'center'
-                  assign slide_style_extra = slide_style_extra | append: ' --emh-y-align: center;'
-                when 'bottom'
-                  assign slide_style_extra = slide_style_extra | append: ' --emh-y-align: flex-end;'
-              endcase
-            endif
-          -%}
+              -%}
+              {%- for block in slide_blocks -%}
+                {%- if forloop.index0 != emh_source_index -%}{%- continue -%}{%- endif -%}
+                {%- liquid
+                  assign media_type = block.settings.media_type | default: 'image'
+                  assign desktop_image = block.settings.image
+                  assign mobile_image = block.settings.mobile_image
+                  assign desktop_video = block.settings.video
+                  assign mobile_video = block.settings.mobile_video
+                  assign has_desktop_image = false
+                  assign has_mobile_image = false
+                  assign has_image = false
+                  assign desktop_video_playable = false
+                  assign mobile_video_playable = false
+                  assign use_video = false
+                  assign render_dual_video = false
+                  assign hydrate_video = false
+                  assign media_is_decorative = false
+
+                  if desktop_image != blank
+                    assign has_desktop_image = true
+                    assign has_image = true
+                  endif
+                  if mobile_image != blank
+                    assign has_mobile_image = true
+                    assign has_image = true
+                  endif
+
+                  assign hero_image = desktop_image
+                  if has_desktop_image == false
+                    if has_mobile_image
+                      assign hero_image = mobile_image
+                    endif
+                  endif
+
+                  if desktop_video != blank
+                    if desktop_video.sources.size > 0
+                      assign desktop_video_playable = true
+                    endif
+                  endif
+                  if mobile_video != blank
+                    if mobile_video.sources.size > 0
+                      assign mobile_video_playable = true
+                    endif
+                  endif
+
+                  if media_type == 'video'
+                    if desktop_video_playable
+                      assign use_video = true
+                    endif
+                    if mobile_video_playable
+                      assign use_video = true
+                    endif
+                  endif
+
+                  if desktop_video_playable
+                    if mobile_video_playable
+                      if desktop_video.id != mobile_video.id
+                        assign render_dual_video = true
+                      endif
+                    endif
+                  endif
+
+                  assign slide_alt = block.settings.image_alt | strip
+                  if slide_alt == blank
+                    if hero_image != blank
+                      if hero_image.alt != blank
+                        assign slide_alt = hero_image.alt
+                      endif
+                    endif
+                  endif
+                  if slide_alt == blank
+                    if use_video
+                      if desktop_video != blank
+                        if desktop_video.alt != blank
+                          assign slide_alt = desktop_video.alt
+                        endif
+                      endif
+                    endif
+                  endif
+                  if slide_alt == blank
+                    if block.settings.heading != blank
+                      assign slide_alt = block.settings.heading
+                    endif
+                  endif
+
+                  if block.settings.heading != blank
+                    assign media_is_decorative = true
+                  endif
+                  if block.settings.eyebrow != blank
+                    assign media_is_decorative = true
+                  endif
+                  if block.settings.text != blank
+                    assign media_is_decorative = true
+                  endif
+
+                  assign focal_css = 'center center'
+                  case block.settings.image_focal_position
+                    when 'top'
+                      assign focal_css = 'top center'
+                    when 'bottom'
+                      assign focal_css = 'bottom center'
+                    when 'left'
+                      assign focal_css = 'center left'
+                    when 'right'
+                      assign focal_css = 'center right'
+                    when 'top_left'
+                      assign focal_css = 'top left'
+                    when 'top_right'
+                      assign focal_css = 'top right'
+                    when 'bottom_left'
+                      assign focal_css = 'bottom left'
+                    when 'bottom_right'
+                      assign focal_css = 'bottom right'
+                  endcase
+
+                  if forloop.first
+                    assign slide_loading = 'eager'
+                    assign slide_fetchpriority = 'high'
+                    if settings.enable_animations
+                      assign hydrate_video = true
+                    endif
+                  else
+                    assign slide_loading = 'lazy'
+                    assign slide_fetchpriority = 'low'
+                  endif
+                  if emh_is_clone
+                    assign hydrate_video = false
+                    assign slide_loading = 'lazy'
+                    assign slide_fetchpriority = 'low'
+                  endif
+
+                  assign heading_id = 'EditorialMediaHeroHeading-' | append: section.id | append: '-' | append: block.id
+                  assign desktop_poster = blank
+                  assign mobile_poster = blank
+
+                  if use_video
+                    if desktop_video_playable
+                      assign desktop_poster = desktop_video.preview_image
+                    elsif mobile_video_playable
+                      assign desktop_poster = mobile_video.preview_image
+                    endif
+                    if desktop_poster == blank
+                      assign desktop_poster = hero_image
+                    endif
+
+                    if mobile_video_playable
+                      assign mobile_poster = mobile_video.preview_image
+                    elsif desktop_video_playable
+                      assign mobile_poster = desktop_video.preview_image
+                    endif
+                    if mobile_poster == blank
+                      if has_mobile_image
+                        assign mobile_poster = mobile_image
+                      else
+                        assign mobile_poster = desktop_poster
+                      endif
+                    endif
+                  endif
+                -%}
+                {%- liquid
+                  assign slide_style_extra = ''
+                  assign emh_allow_slide_align = false
+                  if layout == 'fullscreen'
+                    assign emh_allow_slide_align = true
+                  endif
+                  if layout == 'large'
+                    assign emh_allow_slide_align = true
+                  endif
+                  if emh_allow_slide_align
+                    case block.settings.slide_alignment_x
+                      when 'left'
+                        assign slide_style_extra = slide_style_extra | append: '--emh-x-justify: flex-start; --emh-x-text: left; --emh-x-justify-copy: start; --emh-x-text-margin-inline: 0; --emh-x-text-margin-start: 0;'
+                      when 'center'
+                        assign slide_style_extra = slide_style_extra | append: '--emh-x-justify: center; --emh-x-text: center; --emh-x-justify-copy: center; --emh-x-text-margin-inline: auto; --emh-x-text-margin-start: auto;'
+                      when 'right'
+                        assign slide_style_extra = slide_style_extra | append: '--emh-x-justify: flex-end; --emh-x-text: left; --emh-x-justify-copy: start; --emh-x-text-margin-inline: 0; --emh-x-text-margin-start: 0;'
+                    endcase
+                    case block.settings.slide_alignment_y
+                      when 'top'
+                        assign slide_style_extra = slide_style_extra | append: ' --emh-y-align: flex-start;'
+                      when 'center'
+                        assign slide_style_extra = slide_style_extra | append: ' --emh-y-align: center;'
+                      when 'bottom'
+                        assign slide_style_extra = slide_style_extra | append: ' --emh-y-align: flex-end;'
+                    endcase
+                  endif
+                -%}
+                <article
+                  class="cosme-editorial-media-hero__slide{% if emh_is_clone == false and forloop.first %} is-active{% endif %}{% if block.settings.content_color == 'light' %} cosme-editorial-media-hero__slide--content-light{% endif %}{% if block.settings.content_color == 'dark' %} cosme-editorial-media-hero__slide--content-dark{% endif %}"
+                  {% if emh_is_clone %}
+                    data-emh-slide-clone="true"
+                    aria-hidden="true"
+                    inert
+                    tabindex="-1"
+                  {% else %}
+                    data-emh-slide
+                    data-slide-index="{{ forloop.index0 }}"
+                    {% if use_video %}
+                      data-emh-has-video
+                    {% endif %}
+                    role="group"
+                    aria-roledescription="slide"
+                    aria-label="{{ 'sections.editorial_media_hero.slide_label' | t: number: forloop.index, total: slide_count }}"
+                    {% if is_grid == false %}
+                      {% unless forloop.first %}
+                        inert
+                        aria-hidden="true"
+                      {% endunless %}
+                    {% endif %}
+                    {{ block.shopify_attributes }}
+                  {% endif %}
+                  style="--emh-focal: {{ focal_css }}; {{ slide_style_extra }}"
+                >
+                  <div class="cosme-editorial-media-hero__media">
+                    {%- if use_video -%}
+                      {%- if desktop_poster != blank -%}
+                        {%- if desktop_poster != blank
+                          and mobile_poster != blank
+                          and desktop_poster.id != mobile_poster.id
+                        -%}
+                          <picture class="cosme-editorial-media-hero__poster" aria-hidden="true">
+                            <source
+                              media="(max-width: 749px)"
+                              srcset="
+                                {{ mobile_poster | image_url: width: 500 }} 500w,
+                                {{ mobile_poster | image_url: width: 750 }} 750w,
+                                {{ mobile_poster | image_url: width: 1000 }} 1000w,
+                                {{ mobile_poster | image_url: width: 1400 }} 1400w
+                              "
+                              sizes="100vw"
+                            >
+                            {{
+                              desktop_poster
+                              | image_url: width: 2400
+                              | image_tag:
+                                class: 'cosme-editorial-media-hero__img',
+                                alt: '',
+                                loading: slide_loading,
+                                fetchpriority: slide_fetchpriority,
+                                widths: '750, 990, 1200, 1500, 1800, 2400',
+                                sizes: image_sizes
+                            }}
+                          </picture>
+                        {%- else -%}
+                          {% render 'cosme-image',
+                            image: desktop_poster,
+                            alt: '',
+                            class: 'cosme-editorial-media-hero__poster',
+                            width: 2400,
+                            sizes: image_sizes,
+                            loading: slide_loading,
+                            fetchpriority: slide_fetchpriority
+                          %}
+                        {%- endif -%}
+                      {%- else -%}
+                        <div
+                          class="cosme-editorial-media-hero__placeholder cosme-editorial-media-hero__poster"
+                          aria-hidden="true"
+                        >
+                          {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-media-hero__placeholder-svg' }}
+                        </div>
+                      {%- endif -%}
+
+                      {%- if render_dual_video -%}
+                        <video
+                          class="cosme-editorial-media-hero__video cosme-editorial-media-hero__video--desktop"
+                          data-emh-video
+                          playsinline
+                          muted
+                          loop
+                          preload="none"
+                          disablepictureinpicture
+                          {% if hydrate_video %}
+                            autoplay
+                          {% endif %}
+                          {% if desktop_poster != blank %}
+                            poster="{{ desktop_poster | image_url: width: 1800 }}"
+                          {% endif %}
+                          {% if media_is_decorative %}
+                            aria-hidden="true"
+                          {% elsif slide_alt != blank %}
+                            aria-label="{{ slide_alt | escape }}"
+                          {% endif %}
+                        >
+                          {%- for source in desktop_video.sources -%}
+                            <source
+                              {% if hydrate_video %}
+                                src="{{ source.url }}"
+                              {% else %}
+                                data-src="{{ source.url }}"
+                              {% endif %}
+                              type="{{ source.mime_type }}"
+                            >
+                          {%- endfor -%}
+                        </video>
+                        <video
+                          class="cosme-editorial-media-hero__video cosme-editorial-media-hero__video--mobile"
+                          data-emh-video
+                          playsinline
+                          muted
+                          loop
+                          preload="none"
+                          disablepictureinpicture
+                          {% if mobile_poster != blank %}
+                            poster="{{ mobile_poster | image_url: width: 1200 }}"
+                          {% endif %}
+                          {% if media_is_decorative %}
+                            aria-hidden="true"
+                          {% elsif slide_alt != blank %}
+                            aria-label="{{ slide_alt | escape }}"
+                          {% endif %}
+                        >
+                          {%- for source in mobile_video.sources -%}
+                            <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+                          {%- endfor -%}
+                        </video>
+                      {%- else -%}
+                        {%- liquid
+                          assign single_video = desktop_video
+                          if desktop_video_playable == false
+                            assign single_video = mobile_video
+                          endif
+                          assign single_poster = desktop_poster
+                        -%}
+                        <video
+                          class="cosme-editorial-media-hero__video"
+                          data-emh-video
+                          playsinline
+                          muted
+                          loop
+                          preload="none"
+                          disablepictureinpicture
+                          {% if hydrate_video %}
+                            autoplay
+                          {% endif %}
+                          {% if single_poster != blank %}
+                            poster="{{ single_poster | image_url: width: 1800 }}"
+                          {% endif %}
+                          {% if media_is_decorative %}
+                            aria-hidden="true"
+                          {% elsif slide_alt != blank %}
+                            aria-label="{{ slide_alt | escape }}"
+                          {% endif %}
+                        >
+                          {%- for source in single_video.sources -%}
+                            <source
+                              {% if hydrate_video %}
+                                src="{{ source.url }}"
+                              {% else %}
+                                data-src="{{ source.url }}"
+                              {% endif %}
+                              type="{{ source.mime_type }}"
+                            >
+                          {%- endfor -%}
+                        </video>
+                      {%- endif -%}
+                    {%- elsif has_image -%}
+                      {%- if has_desktop_image and has_mobile_image -%}
+                        <picture>
+                          <source
+                            media="(max-width: 749px)"
+                            srcset="
+                              {{ mobile_image | image_url: width: 500 }} 500w,
+                              {{ mobile_image | image_url: width: 750 }} 750w,
+                              {{ mobile_image | image_url: width: 1000 }} 1000w,
+                              {{ mobile_image | image_url: width: 1400 }} 1400w
+                            "
+                            sizes="100vw"
+                          >
+                          {{
+                            desktop_image
+                            | image_url: width: 2400
+                            | image_tag:
+                              class: 'cosme-editorial-media-hero__img',
+                              alt: slide_alt,
+                              loading: slide_loading,
+                              fetchpriority: slide_fetchpriority,
+                              widths: '750, 990, 1200, 1500, 1800, 2400',
+                              sizes: image_sizes
+                          }}
+                        </picture>
+                      {%- else -%}
+                        {% render 'cosme-image',
+                          image: hero_image,
+                          alt: slide_alt,
+                          class: 'cosme-editorial-media-hero__image',
+                          width: 2400,
+                          sizes: image_sizes,
+                          loading: slide_loading,
+                          fetchpriority: slide_fetchpriority
+                        %}
+                      {%- endif -%}
+                    {%- else -%}
+                      <div
+                        class="cosme-editorial-media-hero__placeholder"
+                        {% if slide_alt != blank %}
+                          role="img"
+                          aria-label="{{ slide_alt | escape }}"
+                        {% else %}
+                          aria-hidden="true"
+                        {% endif %}
+                      >
+                        {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-media-hero__placeholder-svg' }}
+                      </div>
+                    {%- endif -%}
+                    <span class="cosme-editorial-media-hero__overlay" aria-hidden="true"></span>
+                  </div>
+
+                  <div class="cosme-editorial-media-hero__content">
+                    <div class="cosme-editorial-media-hero__copy">
+                      {%- if block.settings.eyebrow != blank -%}
+                        <p class="cosme-editorial-media-hero__eyebrow">{{ block.settings.eyebrow | escape }}</p>
+                      {%- endif -%}
+
+                      {%- if block.settings.heading != blank -%}
+                        <{{ heading_tag }}
+                          class="cosme-editorial-media-hero__heading"
+                          {% if forloop.first %}
+                            {% if emh_is_clone == false %}
+                              id="{{ heading_id }}"
+                            {% endif %}
+                          {% endif %}
+                        >
+                          {{ block.settings.heading | escape }}
+                        </{{ heading_tag }}>
+                      {%- endif -%}
+
+                      {%- if block.settings.text != blank -%}
+                        <div class="cosme-editorial-media-hero__text">
+                          {{ block.settings.text | escape | newline_to_br }}
+                        </div>
+                      {%- endif -%}
+
+                      {%- if block.settings.primary_button_label != blank
+                        or block.settings.secondary_button_label != blank
+                      -%}
+                        <div class="cosme-editorial-media-hero__actions">
+                          {%- if block.settings.primary_button_label != blank -%}
+                            {% render 'cosme-button',
+                              label: block.settings.primary_button_label,
+                              url: block.settings.primary_button_link,
+                              style: 'primary',
+                              class: 'cosme-editorial-media-hero__button'
+                            %}
+                          {%- endif -%}
+                          {%- if block.settings.secondary_button_label != blank -%}
+                            {% render 'cosme-button',
+                              label: block.settings.secondary_button_label,
+                              url: block.settings.secondary_button_link,
+                              style: 'secondary',
+                              class: 'cosme-editorial-media-hero__button'
+                            %}
+                          {%- endif -%}
+                        </div>
+                      {%- endif -%}
+                    </div>
+                  </div>
+                </article>
+              {%- endfor -%}
+            {%- endfor -%}
+          {%- endfor -%}
+        {%- else -%}
           <article
-            class="cosme-editorial-media-hero__slide{% if forloop.first %} is-active{% endif %}{% if block.settings.content_color == 'light' %} cosme-editorial-media-hero__slide--content-light{% endif %}{% if block.settings.content_color == 'dark' %} cosme-editorial-media-hero__slide--content-dark{% endif %}"
+            class="cosme-editorial-media-hero__slide is-active"
             data-emh-slide
-            data-slide-index="{{ forloop.index0 }}"
-            {% if use_video %}
-              data-emh-has-video
-            {% endif %}
+            data-slide-index="0"
             role="group"
             aria-roledescription="slide"
-            aria-label="{{ 'sections.editorial_media_hero.slide_label' | t: number: forloop.index, total: slide_count }}"
-            {% if is_grid == false %}
-              {% unless forloop.first %}
-                inert
-                aria-hidden="true"
-              {% endunless %}
-            {% endif %}
-            style="--emh-focal: {{ focal_css }}; {{ slide_style_extra }}"
-            {{ block.shopify_attributes }}
+            aria-label="{{ 'sections.editorial_media_hero.slide_label' | t: number: 1, total: 1 }}"
           >
             <div class="cosme-editorial-media-hero__media">
-              {%- if use_video -%}
-                {%- if desktop_poster != blank -%}
-                  {%- if desktop_poster != blank
-                    and mobile_poster != blank
-                    and desktop_poster.id != mobile_poster.id
-                  -%}
-                    <picture class="cosme-editorial-media-hero__poster" aria-hidden="true">
-                      <source
-                        media="(max-width: 749px)"
-                        srcset="
-                          {{ mobile_poster | image_url: width: 500 }} 500w,
-                          {{ mobile_poster | image_url: width: 750 }} 750w,
-                          {{ mobile_poster | image_url: width: 1000 }} 1000w,
-                          {{ mobile_poster | image_url: width: 1400 }} 1400w
-                        "
-                        sizes="100vw"
-                      >
-                      {{
-                        desktop_poster
-                        | image_url: width: 2400
-                        | image_tag:
-                          class: 'cosme-editorial-media-hero__img',
-                          alt: '',
-                          loading: slide_loading,
-                          fetchpriority: slide_fetchpriority,
-                          widths: '750, 990, 1200, 1500, 1800, 2400',
-                          sizes: image_sizes
-                      }}
-                    </picture>
-                  {%- else -%}
-                    {% render 'cosme-image',
-                      image: desktop_poster,
-                      alt: '',
-                      class: 'cosme-editorial-media-hero__poster',
-                      width: 2400,
-                      sizes: image_sizes,
-                      loading: slide_loading,
-                      fetchpriority: slide_fetchpriority
-                    %}
-                  {%- endif -%}
-                {%- else -%}
-                  <div
-                    class="cosme-editorial-media-hero__placeholder cosme-editorial-media-hero__poster"
-                    aria-hidden="true"
-                  >
-                    {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-media-hero__placeholder-svg' }}
-                  </div>
-                {%- endif -%}
-
-                {%- if render_dual_video -%}
-                  <video
-                    class="cosme-editorial-media-hero__video cosme-editorial-media-hero__video--desktop"
-                    data-emh-video
-                    playsinline
-                    muted
-                    loop
-                    preload="none"
-                    disablepictureinpicture
-                    {% if hydrate_video %}
-                      autoplay
-                    {% endif %}
-                    {% if desktop_poster != blank %}
-                      poster="{{ desktop_poster | image_url: width: 1800 }}"
-                    {% endif %}
-                    {% if media_is_decorative %}
-                      aria-hidden="true"
-                    {% elsif slide_alt != blank %}
-                      aria-label="{{ slide_alt | escape }}"
-                    {% endif %}
-                  >
-                    {%- for source in desktop_video.sources -%}
-                      <source
-                        {% if hydrate_video %}
-                          src="{{ source.url }}"
-                        {% else %}
-                          data-src="{{ source.url }}"
-                        {% endif %}
-                        type="{{ source.mime_type }}"
-                      >
-                    {%- endfor -%}
-                  </video>
-                  <video
-                    class="cosme-editorial-media-hero__video cosme-editorial-media-hero__video--mobile"
-                    data-emh-video
-                    playsinline
-                    muted
-                    loop
-                    preload="none"
-                    disablepictureinpicture
-                    {% if mobile_poster != blank %}
-                      poster="{{ mobile_poster | image_url: width: 1200 }}"
-                    {% endif %}
-                    {% if media_is_decorative %}
-                      aria-hidden="true"
-                    {% elsif slide_alt != blank %}
-                      aria-label="{{ slide_alt | escape }}"
-                    {% endif %}
-                  >
-                    {%- for source in mobile_video.sources -%}
-                      <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
-                    {%- endfor -%}
-                  </video>
-                {%- else -%}
-                  {%- liquid
-                    assign single_video = desktop_video
-                    if desktop_video_playable == false
-                      assign single_video = mobile_video
-                    endif
-                    assign single_poster = desktop_poster
-                  -%}
-                  <video
-                    class="cosme-editorial-media-hero__video"
-                    data-emh-video
-                    playsinline
-                    muted
-                    loop
-                    preload="none"
-                    disablepictureinpicture
-                    {% if hydrate_video %}
-                      autoplay
-                    {% endif %}
-                    {% if single_poster != blank %}
-                      poster="{{ single_poster | image_url: width: 1800 }}"
-                    {% endif %}
-                    {% if media_is_decorative %}
-                      aria-hidden="true"
-                    {% elsif slide_alt != blank %}
-                      aria-label="{{ slide_alt | escape }}"
-                    {% endif %}
-                  >
-                    {%- for source in single_video.sources -%}
-                      <source
-                        {% if hydrate_video %}
-                          src="{{ source.url }}"
-                        {% else %}
-                          data-src="{{ source.url }}"
-                        {% endif %}
-                        type="{{ source.mime_type }}"
-                      >
-                    {%- endfor -%}
-                  </video>
-                {%- endif -%}
-              {%- elsif has_image -%}
-                {%- if has_desktop_image and has_mobile_image -%}
-                  <picture>
-                    <source
-                      media="(max-width: 749px)"
-                      srcset="
-                        {{ mobile_image | image_url: width: 500 }} 500w,
-                        {{ mobile_image | image_url: width: 750 }} 750w,
-                        {{ mobile_image | image_url: width: 1000 }} 1000w,
-                        {{ mobile_image | image_url: width: 1400 }} 1400w
-                      "
-                      sizes="100vw"
-                    >
-                    {{
-                      desktop_image
-                      | image_url: width: 2400
-                      | image_tag:
-                        class: 'cosme-editorial-media-hero__img',
-                        alt: slide_alt,
-                        loading: slide_loading,
-                        fetchpriority: slide_fetchpriority,
-                        widths: '750, 990, 1200, 1500, 1800, 2400',
-                        sizes: image_sizes
-                    }}
-                  </picture>
-                {%- else -%}
-                  {% render 'cosme-image',
-                    image: hero_image,
-                    alt: slide_alt,
-                    class: 'cosme-editorial-media-hero__image',
-                    width: 2400,
-                    sizes: image_sizes,
-                    loading: slide_loading,
-                    fetchpriority: slide_fetchpriority
-                  %}
-                {%- endif -%}
-              {%- else -%}
-                <div
-                  class="cosme-editorial-media-hero__placeholder"
-                  {% if slide_alt != blank %}
-                    role="img"
-                    aria-label="{{ slide_alt | escape }}"
-                  {% else %}
-                    aria-hidden="true"
-                  {% endif %}
-                >
-                  {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-media-hero__placeholder-svg' }}
-                </div>
-              {%- endif -%}
+              <div
+                class="cosme-editorial-media-hero__placeholder"
+                role="img"
+                aria-label="{{ 'sections.editorial_media_hero.image_placeholder' | t }}"
+              >
+                {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-media-hero__placeholder-svg' }}
+              </div>
               <span class="cosme-editorial-media-hero__overlay" aria-hidden="true"></span>
             </div>
-
             <div class="cosme-editorial-media-hero__content">
-              <div class="cosme-editorial-media-hero__copy">
-                {%- if block.settings.eyebrow != blank -%}
-                  <p class="cosme-editorial-media-hero__eyebrow">{{ block.settings.eyebrow | escape }}</p>
-                {%- endif -%}
-
-                {%- if block.settings.heading != blank -%}
-                  <{{ heading_tag }}
-                    class="cosme-editorial-media-hero__heading"
-                    {% if forloop.first %}
-                      id="{{ heading_id }}"
-                    {% endif %}
-                  >
-                    {{ block.settings.heading | escape }}
-                  </{{ heading_tag }}>
-                {%- endif -%}
-
-                {%- if block.settings.text != blank -%}
-                  <div class="cosme-editorial-media-hero__text">
-                    {{ block.settings.text | escape | newline_to_br }}
-                  </div>
-                {%- endif -%}
-
-                {%- if block.settings.primary_button_label != blank
-                  or block.settings.secondary_button_label != blank
-                -%}
-                  <div class="cosme-editorial-media-hero__actions">
-                    {%- if block.settings.primary_button_label != blank -%}
-                      {% render 'cosme-button',
-                        label: block.settings.primary_button_label,
-                        url: block.settings.primary_button_link,
-                        style: 'primary',
-                        class: 'cosme-editorial-media-hero__button'
-                      %}
-                    {%- endif -%}
-                    {%- if block.settings.secondary_button_label != blank -%}
-                      {% render 'cosme-button',
-                        label: block.settings.secondary_button_label,
-                        url: block.settings.secondary_button_link,
-                        style: 'secondary',
-                        class: 'cosme-editorial-media-hero__button'
-                      %}
-                    {%- endif -%}
-                  </div>
-                {%- endif -%}
-              </div>
+              <div class="cosme-editorial-media-hero__copy"></div>
             </div>
           </article>
-        {%- endfor -%}
-      {%- else -%}
-        <article
-          class="cosme-editorial-media-hero__slide is-active"
-          data-emh-slide
-          data-slide-index="0"
-          role="group"
-          aria-roledescription="slide"
-          aria-label="{{ 'sections.editorial_media_hero.slide_label' | t: number: 1, total: 1 }}"
-        >
-          <div class="cosme-editorial-media-hero__media">
-            <div
-              class="cosme-editorial-media-hero__placeholder"
-              role="img"
-              aria-label="{{ 'sections.editorial_media_hero.image_placeholder' | t }}"
-            >
-              {{ 'lifestyle-1' | placeholder_svg_tag: 'cosme-editorial-media-hero__placeholder-svg' }}
-            </div>
-            <span class="cosme-editorial-media-hero__overlay" aria-hidden="true"></span>
-          </div>
-          <div class="cosme-editorial-media-hero__content">
-            <div class="cosme-editorial-media-hero__copy"></div>
-          </div>
-        </article>
-      {%- endif -%}
+        {%- endif -%}
       </div>
     </div>
 
@@ -862,9 +930,8 @@
     height: 100%;
     object-fit: cover;
     object-position: var(--emh-focal, center center);
- 
   }
-  .cosme-image  {
+  .cosme-image {
     border-radius: 0;
   }
   .cosme-editorial-media-hero__poster {
@@ -958,7 +1025,7 @@
     font-size: 0.75rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--emh-content-muted, var(--color-muted, var(--color-foreground)));
+    color: var(--emh-content-color, var(--color-heading, var(--color-foreground)));
   }
 
   .cosme-editorial-media-hero__heading {
@@ -1096,15 +1163,12 @@
     .cosme-editorial-media-hero__video--mobile {
       display: block;
     }
- 
   }
 
   @media screen and (min-width: 990px) {
     .cosme-editorial-media-hero {
       --emh-min-height: var(--emh-height-desktop, 75vh);
     }
-
-    
 
     .cosme-editorial-media-hero--split .cosme-editorial-media-hero__slide {
       grid-template-columns: 1.2fr 0.8fr;
@@ -1221,15 +1285,18 @@
     padding: var(--spacing-md) 0 0;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-left .cosme-editorial-media-hero__content {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-left
+    .cosme-editorial-media-hero__content {
     text-align: left;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-center .cosme-editorial-media-hero__content {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-center
+    .cosme-editorial-media-hero__content {
     text-align: center;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-right .cosme-editorial-media-hero__content {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-right
+    .cosme-editorial-media-hero__content {
     text-align: right;
   }
 
@@ -1239,27 +1306,33 @@
     gap: var(--spacing-sm);
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-left .cosme-editorial-media-hero__copy {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-left
+    .cosme-editorial-media-hero__copy {
     justify-items: start;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-center .cosme-editorial-media-hero__copy {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-center
+    .cosme-editorial-media-hero__copy {
     justify-items: center;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-right .cosme-editorial-media-hero__copy {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-right
+    .cosme-editorial-media-hero__copy {
     justify-items: end;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-left .cosme-editorial-media-hero__actions {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-left
+    .cosme-editorial-media-hero__actions {
     justify-content: flex-start;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-center .cosme-editorial-media-hero__actions {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-center
+    .cosme-editorial-media-hero__actions {
     justify-content: center;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-right .cosme-editorial-media-hero__actions {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-below.cosme-editorial-media-hero--x-right
+    .cosme-editorial-media-hero__actions {
     justify-content: flex-end;
   }
 
@@ -1290,7 +1363,9 @@
     pointer-events: none;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-overlay .cosme-editorial-media-hero__slide.is-active .cosme-editorial-media-hero__content {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--content-overlay
+    .cosme-editorial-media-hero__slide.is-active
+    .cosme-editorial-media-hero__content {
     opacity: 1;
     pointer-events: auto;
   }
@@ -1303,13 +1378,16 @@
     transition: none;
   }
 
-  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--animated.cosme-editorial-media-hero--content-overlay .cosme-editorial-media-hero__content {
+  .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--animated.cosme-editorial-media-hero--content-overlay
+    .cosme-editorial-media-hero__content {
     transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   @media screen and (min-width: 990px) {
     .cosme-editorial-media-hero--grid .cosme-editorial-media-hero__slide {
-      flex-basis: calc((100cqi - (var(--emh-gap, 0px) * (var(--emh-cols-desktop, 3) - 1))) / var(--emh-cols-desktop, 3));
+      flex-basis: calc(
+        (100cqi - (var(--emh-gap, 0px) * (var(--emh-cols-desktop, 3) - 1))) / var(--emh-cols-desktop, 3)
+      );
     }
 
     .cosme-editorial-media-hero--grid .cosme-editorial-media-hero__media {
@@ -1317,12 +1395,22 @@
     }
   }
 
+  .cosme-editorial-media-hero--grid [data-emh-slide-clone='true'] {
+    scroll-snap-align: start;
+  }
+
+  .cosme-editorial-media-hero--grid [data-emh-slide-clone='true'] a,
+  .cosme-editorial-media-hero--grid [data-emh-slide-clone='true'] button {
+    pointer-events: none;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .cosme-editorial-media-hero--animated .cosme-editorial-media-hero__slide {
       transition: none;
     }
 
-    .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--animated.cosme-editorial-media-hero--content-overlay .cosme-editorial-media-hero__content {
+    .cosme-editorial-media-hero--grid.cosme-editorial-media-hero--animated.cosme-editorial-media-hero--content-overlay
+      .cosme-editorial-media-hero__content {
       transition: none;
     }
   }
@@ -1343,6 +1431,8 @@
     const isRenderedVideo = (video) => window.getComputedStyle(video).display !== 'none';
 
     const hydrateVideo = (video) => {
+      if (video.closest('[data-emh-slide-clone]')) return;
+
       let didHydrate = false;
       video.querySelectorAll('source[data-src]').forEach((source) => {
         if (source.getAttribute('src')) return;
@@ -1364,6 +1454,7 @@
 
     const playVideo = (video) => {
       if (!isRenderedVideo(video) || video.classList.contains('is-unavailable')) return;
+      if (video.closest('[data-emh-slide-clone]')) return;
 
       hydrateVideo(video);
       video.muted = true;
@@ -1413,6 +1504,11 @@
       const isGrid = root.getAttribute('data-layout') === 'grid';
       const viewport = root.querySelector('[data-emh-viewport]');
       const isOverlayGrid = isGrid && root.classList.contains('cosme-editorial-media-hero--content-overlay');
+      const cloneSlides = isGrid ? Array.from(root.querySelectorAll('[data-emh-slide-clone="true"]')) : [];
+      const leadCount = cloneSlides.length > 1 && cloneSlides.length % 2 === 0 ? cloneSlides.length / 2 : 0;
+      const leadClones = cloneSlides.slice(0, leadCount);
+      const tailClones = cloneSlides.slice(leadCount);
+      const loopEnabled = Boolean(isGrid && hasSlider && leadCount > 0 && viewport && tailClones.length === leadCount);
 
       let currentIndex = Math.max(
         0,
@@ -1424,6 +1520,7 @@
       let visible = true;
       let focusedInside = false;
       let userPaused = false;
+      let loopJumping = false;
 
       const cleanupFns = [];
 
@@ -1470,9 +1567,11 @@
               const content = slide.querySelector('.cosme-editorial-media-hero__content');
               if (content) {
                 if (isActive) {
+                  content.removeAttribute('inert');
                   content.removeAttribute('aria-hidden');
                 } else {
-                  content.setAttribute('aria-hidden', 'true');
+                  content.setAttribute('inert', '');
+                  content.removeAttribute('aria-hidden');
                 }
               }
             }
@@ -1530,20 +1629,74 @@
       const closestSlideIndex = () => {
         if (!viewport) return currentIndex;
         const left = viewport.scrollLeft;
-        let closest = 0;
-        let min = Number.POSITIVE_INFINITY;
-        slides.forEach((slide, index) => {
-          const dist = Math.abs(slide.offsetLeft - left);
-          if (dist < min) {
-            min = dist;
-            closest = index;
-          }
-        });
-        return closest;
+
+        if (!loopEnabled || slides.length < 2) {
+          let closest = 0;
+          let min = Number.POSITIVE_INFINITY;
+          slides.forEach((slide, index) => {
+            const dist = Math.abs(slide.offsetLeft - left);
+            if (dist < min) {
+              min = dist;
+              closest = index;
+            }
+          });
+          return closest;
+        }
+
+        const firstRealLeft = slides[0].offsetLeft;
+        const step = slides[1].offsetLeft - slides[0].offsetLeft;
+        if (step <= 0) return currentIndex;
+
+        // Visual index computed from the loop position, not linear distance.
+        // In the tail-clone zone scrollLeft > last real slide, so we wrap around.
+        const rawIndex = (left - firstRealLeft) / step;
+        const roundedIndex = Math.round(rawIndex);
+        const n = slides.length;
+        return ((roundedIndex % n) + n) % n;
+      };
+
+      const snapLoopPosition = () => {
+        if (!loopEnabled || loopJumping) return;
+        const firstReal = slides[0];
+        const firstTail = tailClones[0];
+        if (!firstReal || !firstTail) return;
+
+        const firstRealLeft = firstReal.offsetLeft;
+        const firstTailLeft = firstTail.offsetLeft;
+        const cycleWidth = firstTailLeft - firstRealLeft;
+        if (cycleWidth <= 0) return;
+
+        const step = slides.length > 1 ? slides[1].offsetLeft - slides[0].offsetLeft : 0;
+        if (step <= 0) return;
+
+        const cs = getComputedStyle(viewport);
+        const padding = parseFloat(cs.paddingLeft) || 0;
+
+        const left = viewport.scrollLeft;
+
+        // Thresholds are set to the midpoint between the last/first real slide
+        // and the first/last clone, so the snap fires only once the visual
+        // has clearly moved into the clone zone.
+        const tailThreshold = firstTailLeft - padding - step * 0.5;
+        const leadThreshold = firstRealLeft - padding - step * 0.5;
+
+        if (left >= tailThreshold) {
+          loopJumping = true;
+          viewport.scrollLeft = left - cycleWidth;
+          loopJumping = false;
+          return;
+        }
+        if (left > 1 && left < leadThreshold) {
+          loopJumping = true;
+          viewport.scrollLeft = left + cycleWidth;
+          loopJumping = false;
+        }
       };
 
       const goTo = (index, fromScroll) => {
         const nextIndex = (index + slides.length) % slides.length;
+        const wrappingForward = loopEnabled && currentIndex === slides.length - 1 && nextIndex === 0;
+        const wrappingBackward = loopEnabled && currentIndex === 0 && nextIndex === slides.length - 1;
 
         if (nextIndex !== currentIndex) {
           updateChrome(nextIndex);
@@ -1552,7 +1705,13 @@
 
         if (isGrid && viewport && fromScroll !== true) {
           const behavior = allowMotion(root) ? 'smooth' : 'auto';
-          viewport.scrollTo({ left: slides[nextIndex].offsetLeft, behavior });
+          let targetLeft = slides[nextIndex].offsetLeft;
+          if (wrappingForward && tailClones[0]) {
+            targetLeft = tailClones[0].offsetLeft;
+          } else if (wrappingBackward && leadClones.length) {
+            targetLeft = leadClones[leadClones.length - 1].offsetLeft;
+          }
+          viewport.scrollTo({ left: targetLeft, behavior });
         }
 
         syncVideos();
@@ -1593,8 +1752,11 @@
         });
       }
 
+      let scrollReady = false;
+      let settleTimer = 0;
       if (isGrid && viewport) {
         let scrollTick = 0;
+
         on(
           viewport,
           'scroll',
@@ -1602,16 +1764,56 @@
             if (scrollTick) return;
             scrollTick = window.requestAnimationFrame(() => {
               scrollTick = 0;
+              if (loopJumping) return;
+              if (!scrollReady) return;
+
               const nextIndex = closestSlideIndex();
-              if (nextIndex === currentIndex) {
+              if (nextIndex !== currentIndex) {
+                pauseForInteraction();
+                goTo(nextIndex, true);
+              } else {
                 syncVideos();
-                return;
               }
-              pauseForInteraction();
-              goTo(nextIndex, true);
             });
           },
           { passive: true }
+        );
+
+        if (loopEnabled) {
+          if ('onscrollend' in window) {
+            // Preferred path: fires exactly once when the scroll fully settles,
+            // so the smooth wrap animation finishes before we snap.
+            on(viewport, 'scrollend', () => {
+              if (loopJumping) return;
+              if (!scrollReady) return;
+              snapLoopPosition();
+            });
+          } else {
+            // Fallback for older browsers without scrollend:
+            // longer debounce so it fires after the smooth scroll has finished.
+            on(
+              viewport,
+              'scroll',
+              () => {
+                if (loopJumping) return;
+                if (!scrollReady) return;
+                window.clearTimeout(settleTimer);
+                settleTimer = window.setTimeout(() => {
+                  if (loopJumping) return;
+                  snapLoopPosition();
+                }, 400);
+              },
+              { passive: true }
+            );
+          }
+        }
+
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              scrollReady = true;
+            })
+          )
         );
       }
 
@@ -1712,11 +1914,32 @@
       cleanupFns.push(() => document.removeEventListener('shopify:block:select', onBlockSelect));
 
       updateChrome(currentIndex);
+      if (loopEnabled) {
+        const applyInitialPosition = () => {
+          loopJumping = true;
+          viewport.scrollLeft = slides[currentIndex].offsetLeft;
+          loopJumping = false;
+        };
+
+        applyInitialPosition();
+        requestAnimationFrame(() => requestAnimationFrame(applyInitialPosition));
+
+        let resizeTimer = 0;
+        const onLoopResize = () => {
+          window.clearTimeout(resizeTimer);
+          resizeTimer = window.setTimeout(() => {
+            applyInitialPosition();
+            syncVideos();
+          }, 150);
+        };
+        on(window, 'resize', onLoopResize);
+      }
       syncVideos();
       scheduleAutoplay();
 
       instances.set(root, () => {
         stopAutoplay();
+        window.clearTimeout(settleTimer);
         slides.forEach((slide) => pauseSlideVideos(slide, true));
         cleanupFns.forEach((fn) => fn());
         instances.delete(root);
@@ -2091,7 +2314,7 @@
         }
       ],
       "default": "auto",
-     "visible_if": "{{ section.settings.layout != 'grid' and section.settings.layout != 'split' }}"
+      "visible_if": "{{ section.settings.layout != 'grid' and section.settings.layout != 'split' }}"
     },
     {
       "type": "header",
@@ -2174,7 +2397,7 @@
             }
           ],
           "default": "inherit",
-           "visible_if": "{{ section.settings.layout != 'grid' }}"
+          "visible_if": "{{ section.settings.layout != 'grid' }}"
         },
         {
           "type": "select",
@@ -2199,7 +2422,7 @@
             }
           ],
           "default": "inherit",
-           "visible_if": "{{ section.settings.layout != 'grid' }}"
+          "visible_if": "{{ section.settings.layout != 'grid' }}"
         },
         {
           "type": "text",
