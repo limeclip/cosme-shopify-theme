@@ -19,12 +19,12 @@
         "show_compare_at": true,
         "show_free_shipping": true,
         "free_shipping_threshold": 100,
-        "free_shipping_message": "You're [amount] away from free shipping.",
-        "free_shipping_unlocked": "You've unlocked free shipping ✦",
+        "free_shipping_message": "You're [amount] away from Fast shipping.",
+        "free_shipping_unlocked": "You've unlocked Fast shipping ✦",
         "empty_heading": "Your bag is waiting.",
         "empty_message": "Discover considered beauty essentials designed for your everyday ritual.",
         "empty_button_label": "Shop all",
-        "empty_button_link": "/collections/all",
+        "empty_button_link": "",
         "empty_show_recs": true,
         "empty_recs_heading": "You may also like",
         "empty_recs_source": "manual",
@@ -68,14 +68,14 @@
         "text": {
           "type": "text",
           "settings": {
-            "text": "<p>Join our list and receive 10% off your first order.</p>",
+            "text": "<p>Be the first to hear about new arrivals and editorial notes.</p>",
             "text_size": "base"
           }
         },
         "newsletter": {
           "type": "newsletter",
           "settings": {
-            "button_label": "GET 10% OFF",
+            "button_label": "Subscribe",
             "button_design": "design_1"
           }
         },
@@ -104,7 +104,7 @@
         "scroll_percentage": 50,
         "repeat_interval": "1d",
         "show_teaser": true,
-        "teaser_label": "GET 10% OFF",
+        "teaser_label": "Newsletter",
         "teaser_position": "right"
       }
     }

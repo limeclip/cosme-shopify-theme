@@ -3,9 +3,9 @@
     "name": "theme_info",
     "theme_name": "Cosme",
     "theme_version": "1.1.0",
-    "theme_author": "Shopify",
-    "theme_documentation_url": "https://help.shopify.com/manual/online-store/themes",
-    "theme_support_url": "https://support.shopify.com/"
+    "theme_author": "Rootly",
+    "theme_documentation_url": "https://docs-cosme.rootly.cc/",
+    "theme_support_url": "https://www.rootly.cc/"
   },
   {
     "name": "t:general.brand",

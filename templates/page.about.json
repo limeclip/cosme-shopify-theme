@@ -28,7 +28,7 @@
         "image_ratio": "portrait",
         "show_cta": true,
         "cta_label": "EXPLORE THE COLLECTION",
-        "cta_link": "/collections/all",
+        "cta_link": "",
         "color_scheme": "scheme-1",
         "section_spacing": "large"
       }
@@ -156,10 +156,10 @@
         "description": "Explore our considered collection of skincare and beauty essentials.",
         "alignment": "left",
         "primary_label": "SHOP ALL",
-        "primary_link": "/collections/all",
+        "primary_link": "",
         "show_secondary_cta": true,
         "secondary_label": "READ THE JOURNAL",
-        "secondary_link": "/blogs/news",
+        "secondary_link": "",
         "color_scheme": "scheme-3",
         "section_spacing": "large"
       }

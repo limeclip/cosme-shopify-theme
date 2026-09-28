@@ -1,0 +1,65 @@
+{
+  "sections": {
+    "main": {
+      "type": "search",
+      "settings": {
+        "eyebrow": "SEARCH",
+        "heading": "What are you looking for?",
+        "placeholder": "Search NORD",
+        "no_results_heading": "Nothing found",
+        "no_results_text": "Try a different search term.",
+        "no_results_cta_label": "Browse all",
+        "desktop_columns": "4",
+        "color_scheme": "scheme-1",
+        "show_popular_searches": true
+      },
+      "blocks": {
+        "popular-skin": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Skin",
+            "label": "Skin"
+          }
+        },
+        "popular-hair": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Hair",
+            "label": "Hair"
+          }
+        },
+        "popular-shave": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Shave",
+            "label": "Shave"
+          }
+        },
+        "popular-body": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Body",
+            "label": "Body"
+          }
+        },
+        "popular-fragrance": {
+          "type": "popular_search",
+          "settings": {
+            "term": "Fragrance",
+            "label": "Fragrance"
+          }
+        }
+      },
+      "block_order": [
+        "popular-skin",
+        "popular-hair",
+        "popular-shave",
+        "popular-body",
+        "popular-fragrance"
+      ]
+    }
+  },
+  "order": [
+    "main"
+  ]
+}

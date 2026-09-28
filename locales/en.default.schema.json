@@ -19,9 +19,11 @@
     "column": "Column",
     "content": "Content",
     "custom_section": "Custom section",
+    "custom_liquid": "Custom Liquid",
     "fonts": "Fonts",
     "favicon": "Favicon",
     "faq": "FAQ",
+    "featured_product": "Featured product",
     "contact": "Contact",
     "footer": "Footer",
     "gift_card": "Gift card",
@@ -53,7 +55,7 @@
     "default_color_scheme": "Default color scheme",
     "main_hero": "Hero",
     "quick_view": "Quick view",
-    "editorial_cta": "Editorial CTA",
+    "editorial_cta": "Editorial button",
     "editorial_media_hero": "Editorial Media Hero",
     "benefits": "Benefits",
     "main_product": "Product",
@@ -71,7 +73,7 @@
     "about_philosophy": "Philosophy",
     "about_image_story": "Image story",
     "about_brand_facts": "Brand facts",
-    "about_cta": "About CTA",
+    "about_cta": "About button",
     "overlay_group": "Overlay",
     "popup": "Popup",
     "back_to_top": "Back to top"
@@ -124,6 +126,7 @@
     "padding": "Padding",
     "page_margin": "Page margin",
     "page_width": "Page width",
+    "product": "Product",
     "sale": "Sale",
     "section_spacing": "Section spacing",
     "show_payment_icons": "Show payment icons",
@@ -164,8 +167,8 @@
     "image_heading": "Image heading",
     "image_text": "Image text",
     "image_position": "Image position",
-    "cta_label": "CTA label",
-    "cta_link": "CTA link",
+    "cta_label": "Button label",
+    "cta_link": "Button link",
     "enable_top_border": "Enable top border",
     "enable_bottom_border": "Enable bottom border",
     "border_color": "Border color",
@@ -458,7 +461,7 @@
       }
     },
     "editorial_cta": {
-      "name": "Editorial CTA",
+      "name": "Editorial button",
       "settings": {
         "content_header": "Content",
         "eyebrow": "Eyebrow",
@@ -558,7 +561,7 @@
     "testimonials": {
       "name": "Testimonials",
       "settings": {
-        "demo_info": "Preset and homepage quotes are demonstration content only. Replace them with your own customer stories.",
+        "demo_info": "Preset and home page quotes are demonstration content only. Replace them with your own customer stories.",
         "content_header": "Content",
         "eyebrow": "Eyebrow",
         "heading": "Heading",
@@ -631,7 +634,7 @@
       "settings": {
         "subheading": "Subheading",
         "product_source": "Product source",
-        "product_source_info": "Uses Shopify product recommendations. Related and recommended use the related intent. Complementary products require Search & Discovery.",
+        "product_source_info": "Uses Shopify product recommendations. Related and recommended use the related intent. Complementary products require Search and Discovery.",
         "source_related": "Related products",
         "source_complementary": "Complementary products",
         "source_recommended": "Recommended products",
@@ -678,9 +681,9 @@
         "header_filters": "Filters",
         "filter_source": {
           "label": "Filter source",
-          "info": "Select 'Native' to use Shopify's Search & Discovery filters (requires app setup). Select 'Custom' to use filters based on product data (no app required).",
+          "info": "Select 'Native' to use Shopify's Search and Discovery filters (requires app setup). Select 'Custom' to use filters based on product data (no app required).",
           "options": {
-            "native": "Native (Search & Discovery)",
+            "native": "Native (Search and Discovery)",
             "custom": "Custom (no app)"
           }
         },
@@ -716,7 +719,7 @@
         "show_date": "Show date",
         "show_reading_time": "Show reading time",
         "show_index": "Show editorial index",
-        "show_cta": "Show article CTA"
+        "show_cta": "Show article button"
       }
     },
     "article": {
@@ -743,7 +746,7 @@
         "newsletter_description": "Description",
         "newsletter_button_label": "Button label",
         "newsletter_color_scheme": "Color scheme",
-        "related_image_ratio": "Image ratio",
+        "related_image_ratio": "Image ratio"
       }
     },
     "not_found": {
@@ -975,15 +978,15 @@
         "enable_note": "Enable FAQ note",
         "note_title": "Note title",
         "note_text": "Note text",
-        "cta_header": "Contact CTA",
-        "enable_cta": "Enable contact CTA",
-        "cta_eyebrow": "CTA eyebrow",
-        "cta_heading": "CTA heading",
-        "cta_description": "CTA description",
-        "cta_button_label": "CTA button label",
-        "cta_button_link": "CTA button link",
-        "cta_color_scheme": "CTA color scheme",
-        "cta_spacing": "CTA spacing"
+        "cta_header": "Contact button",
+        "enable_cta": "Enable contact button",
+        "cta_eyebrow": "Button eyebrow",
+        "cta_heading": "Button heading",
+        "cta_description": "Button description",
+        "cta_button_label": "Button label",
+        "cta_button_link": "Button link",
+        "cta_color_scheme": "Button color scheme",
+        "cta_spacing": "Button spacing"
       },
       "blocks": {
         "item": "FAQ item",
@@ -991,6 +994,12 @@
         "answer": "Answer",
         "category": "Category",
         "open_by_default": "Open by default"
+      }
+    },
+    "custom_liquid": {
+      "settings": {
+        "custom_liquid_label": "Liquid code",
+        "custom_liquid_info": "Output raw Liquid. Use this for app snippets, custom HTML, or advanced merchant code."
       }
     },
     "contact": {
@@ -1035,20 +1044,20 @@
         "show_faq_link": "Show FAQ link",
         "faq_link_label": "FAQ link label",
         "faq_link": "FAQ link",
-        "faq_link_info": "Select your FAQ page. If left blank, the theme uses /pages/faq.",
+        "faq_link_info": "Select your FAQ page. If left blank, the FAQ link is hidden.",
         "faq_spacing_top": "Top spacing",
         "faq_spacing_bottom": "Bottom spacing",
-        "cta_header": "Final CTA",
-        "show_final_cta": "Show final CTA",
-        "cta_eyebrow": "CTA eyebrow",
-        "cta_heading": "CTA heading",
-        "cta_description": "CTA description",
-        "cta_button_label": "CTA button label",
-        "cta_button_link": "CTA button link",
+        "cta_header": "Final button",
+        "show_final_cta": "Show final button",
+        "cta_eyebrow": "Button eyebrow",
+        "cta_heading": "Button heading",
+        "cta_description": "Button description",
+        "cta_button_label": "Button label",
+        "cta_button_link": "Button link",
         "cta_button_link_info": "Leave blank to scroll to the contact form. Links to this Contact page also scroll to the form.",
-        "cta_color_scheme": "CTA color scheme",
-        "cta_spacing_top": "CTA top spacing",
-        "cta_spacing_bottom": "CTA bottom spacing",
+        "cta_color_scheme": "Button color scheme",
+        "cta_spacing_top": "Button top spacing",
+        "cta_spacing_bottom": "Button bottom spacing",
         "layout_max_width": "Layout max width",
         "layout_max_width_info": "Controls the max width of the contact info + form block."
       },
@@ -1085,7 +1094,7 @@
         "card_header": "Card content",
         "show_collection_description": "Show collection description",
         "show_product_count": "Show product count",
-        "show_cta": "Show collection CTA",
+        "show_cta": "Show collection button",
         "enable_hover_effect": "Enable hover effect",
         "collection_source_info": "All collections lists every collection in the store. Selected collections uses the collection blocks below.",
         "block_collection_info": "Duplicate selections are ignored. Block order sets the display order."
@@ -1097,7 +1106,7 @@
         "placeholder": "Search placeholder",
         "no_results_heading": "No-results heading",
         "no_results_text": "No-results text",
-        "no_results_cta_label": "No-results CTA label",
+        "no_results_cta_label": "No-results button label",
         "show_popular_searches": "Show popular searches",
         "desktop_columns": "Desktop columns"
       },
@@ -1127,9 +1136,9 @@
       "settings": {
         "show_vendor": "Show vendor",
         "show_compare_at": "Show compare-at price",
-        "show_free_shipping": "Show free shipping message",
-        "show_free_shipping_bar": "Show free shipping bar",
-        "free_shipping_threshold": "Free shipping threshold",
+        "show_free_shipping": "Show Fast shipping message",
+        "show_free_shipping_bar": "Show Fast shipping bar",
+        "free_shipping_threshold": "Fast shipping threshold",
         "free_shipping_threshold_info": "Enter the amount in your store currency, for example 100.00. The theme converts it to subunits automatically.",
         "show_discount_code": "Show discount code",
         "show_payment_methods": "Show payment methods",
@@ -1139,8 +1148,8 @@
     },
     "cart_drawer": {
       "settings": {
-        "free_shipping": "Free shipping",
-        "enable_free_shipping_bar": "Enable free shipping bar",
+        "free_shipping": "Fast shipping",
+        "enable_free_shipping_bar": "Enable Fast shipping bar",
         "free_shipping_message": "Before-threshold message",
         "free_shipping_unlocked": "Unlocked message",
         "empty_cart": "Empty cart",
@@ -1316,6 +1325,10 @@
         "buy_now_style_default": "Default (Shopify)",
         "buy_now_style_outline": "Outline",
         "show_buy_it_now": "Show Buy it now",
+        "show_gift_card_recipient": "Show gift card recipient form",
+        "show_gift_card_recipient_info": "Shown on product pages when the product is a gift card.",
+        "show_pickup_availability": "Show pickup availability",
+        "show_pickup_availability_info": "Display in-store pickup options for products available at physical locations.",
         "sticky_header": "Sticky add to cart",
         "enable_sticky_atc": "Enable sticky add to cart",
         "sticky_atc_desktop": "Show on desktop",
@@ -1324,6 +1337,15 @@
         "sticky_atc_show_title": "Show product title",
         "sticky_atc_show_price": "Show price",
         "sticky_atc_show_variant": "Show variant"
+      }
+    },
+    "featured_product": {
+      "settings": {
+        "layout": "Image position",
+        "show_vendor": "Show vendor",
+        "show_rating": "Show rating",
+        "show_description": "Show description",
+        "show_buy_it_now": "Show Buy it now"
       }
     }
   },

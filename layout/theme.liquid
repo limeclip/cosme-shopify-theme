@@ -38,6 +38,9 @@
   </head>
 
   <body class="color-{{ settings.color_scheme }}">
+    <a class="cosme-visually-hidden" href="#MainContent">
+      {{ 'general.skip_to_content' | t }}
+    </a>
     {% sections 'header-group' %}
 
     <main id="MainContent" role="main" tabindex="-1">

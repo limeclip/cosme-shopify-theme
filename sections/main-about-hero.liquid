@@ -73,6 +73,21 @@
   endcase
 
   assign image_sizes = '(min-width: 1440px) 1400px, 100vw'
+  assign about_hero_invert = 0
+  assign about_hero_scheme_id = section.settings.color_scheme
+  if section.settings.color_scheme.id != blank
+    assign about_hero_scheme_id = section.settings.color_scheme.id
+  endif
+  for about_hero_scheme in settings.color_schemes
+    if about_hero_scheme.id == about_hero_scheme_id
+      if about_hero_scheme.settings.background != blank
+        assign about_hero_brightness = about_hero_scheme.settings.background | color_brightness
+        if about_hero_brightness < 128
+          assign about_hero_invert = 1
+        endif
+      endif
+    endif
+  endfor
 %}
 
 <section
@@ -85,6 +100,7 @@
     cosme-about-hero--width-{{ content_width }}
     cosme-about-hero--spacing-{{ section_spacing }}
     {% if has_image %}cosme-about-hero--has-image{% endif %}
+         {% if about_hero_invert == 1 %}cosme-about-hero--placeholder-invert{% endif %}
     {% if settings.enable_animations %}cosme-about-hero--animated{% endif %}
   "
   style="--about-hero-ratio: {{ image_aspect_ratio }};"
@@ -310,7 +326,7 @@
     opacity: 0.35;
   }
 
-  .color-scheme-2 .cosme-about-hero__placeholder-svg {
+  .cosme-about-hero--placeholder-invert .cosme-about-hero__placeholder-svg {
     filter: brightness(0) invert(1);
     opacity: 0.25;
   }

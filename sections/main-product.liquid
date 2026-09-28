@@ -248,6 +248,12 @@
         {% endif %}
       </div>
 
+      {%- if cart.taxes_included -%}
+        <div class="cosme-product__tax-note">
+          {{ 'products.product.include_taxes' | t }}
+        </div>
+      {%- endif -%}
+
       {% if availability_status != blank %}
         <p
           class="cosme-main-product__availability cosme-main-product__availability--{{ availability_status }}"
@@ -336,7 +342,180 @@
             name: 'add',
             class: 'cosme-product-form__submit'
           %}
+          <div class="cosme-product__payment-terms">
+            {{ form | payment_terms }}
+          </div>
         </div>
+
+        {%- liquid
+          assign pickup_enabled = false
+          if section.settings.show_pickup_availability
+            if product.selected_or_first_available_variant
+              for availability in product.selected_or_first_available_variant.store_availabilities
+                if availability.pick_up_enabled
+                  assign pickup_enabled = true
+                  break
+                endif
+              endfor
+            endif
+          endif
+        -%}
+
+        {%- if pickup_enabled -%}
+          <div
+            class="cosme-pickup-availability"
+            data-pickup-availability
+            data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+            data-section-id="{{ section.id }}"
+          >
+            <button
+              type="button"
+              class="cosme-pickup-availability__toggle"
+              data-pickup-toggle
+              aria-expanded="false"
+            >
+              <span class="cosme-pickup-availability__icon" aria-hidden="true">
+                {% render 'cosme-icon', icon: 'map-pin', size: 'sm' %}
+              </span>
+              <span class="cosme-pickup-availability__summary">
+                {%- liquid
+                  assign first_available = blank
+                  assign first_unavailable = blank
+                  for availability in product.selected_or_first_available_variant.store_availabilities
+                    if availability.pick_up_enabled
+                      if availability.available and first_available == blank
+                        assign first_available = availability
+                      elsif availability.available == false and first_unavailable == blank
+                        assign first_unavailable = availability
+                      endif
+                    endif
+                  endfor
+                  if first_available
+                    echo 'products.product.pickup_availability.pick_up_available_at' | t: location_name: first_available.location.name
+                  elsif first_unavailable
+                    echo 'products.product.pickup_availability.pick_up_unavailable_at' | t: location_name: first_unavailable.location.name
+                  endif
+                -%}
+              </span>
+              <span class="cosme-pickup-availability__chevron" aria-hidden="true">
+                {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+              </span>
+            </button>
+
+            <div class="cosme-pickup-availability__panel" data-pickup-panel hidden>
+              <ul class="cosme-pickup-availability__list" role="list">
+                {% for availability in product.selected_or_first_available_variant.store_availabilities %}
+                  {%- if availability.pick_up_enabled -%}
+                    <li class="cosme-pickup-availability__item">
+                      <p class="cosme-pickup-availability__location">
+                        <strong>{{ availability.location.name | escape }}</strong>
+                      </p>
+                      {%- if availability.available -%}
+                        <p class="cosme-pickup-availability__status cosme-pickup-availability__status--available">
+                          {{ 'products.product.pickup_availability.available' | t }}
+                          {%- if availability.pick_up_time != blank -%}
+                            · {{ availability.pick_up_time | escape }}
+                          {%- endif -%}
+                        </p>
+                      {%- else -%}
+                        <p class="cosme-pickup-availability__status cosme-pickup-availability__status--unavailable">
+                          {{ 'products.product.pickup_availability.unavailable' | t }}
+                        </p>
+                      {%- endif -%}
+                      {%- if availability.location.address -%}
+                        <p class="cosme-pickup-availability__address">
+                          {{ availability.location.address | format_address }}
+                        </p>
+                      {%- endif -%}
+                    </li>
+                  {%- endif -%}
+                {% endfor %}
+              </ul>
+            </div>
+          </div>
+        {%- endif -%}
+
+        {%- liquid
+          assign gift_card_recipient_enabled = false
+          if section.settings.show_gift_card_recipient
+            if product.gift_card?
+              assign gift_card_recipient_enabled = true
+            endif
+          endif
+        -%}
+
+        {%- if gift_card_recipient_enabled -%}
+          <div class="cosme-gift-card-recipient" data-gift-card-recipient>
+            <label class="cosme-gift-card-recipient__toggle">
+              <input
+                type="checkbox"
+                name="properties[__shopify_send_gift_card_to_recipient]"
+                value="true"
+                data-gift-card-recipient-toggle
+              >
+              <span>{{ 'products.product.gift_card_recipient.checkbox' | t }}</span>
+            </label>
+
+            <div class="cosme-gift-card-recipient__fields" data-gift-card-recipient-fields hidden>
+              <div class="cosme-form-field">
+                <label for="GiftCardRecipientEmail-{{ section.id }}" class="cosme-form-field__label">
+                  {{ 'products.product.gift_card_recipient.recipient_email' | t }}
+                </label>
+                <input
+                  type="email"
+                  id="GiftCardRecipientEmail-{{ section.id }}"
+                  name="properties[Recipient email]"
+                  class="cosme-form-field__control"
+                  autocomplete="email"
+                  data-gift-card-recipient-email
+                >
+                <p class="cosme-form-field__error" data-gift-card-recipient-error hidden>
+                  {{ 'products.product.gift_card_recipient.error_email' | t }}
+                </p>
+              </div>
+
+              <div class="cosme-form-field">
+                <label for="GiftCardRecipientName-{{ section.id }}" class="cosme-form-field__label">
+                  {{ 'products.product.gift_card_recipient.recipient_name' | t }}
+                </label>
+                <input
+                  type="text"
+                  id="GiftCardRecipientName-{{ section.id }}"
+                  name="properties[Recipient name]"
+                  class="cosme-form-field__control"
+                  autocomplete="name"
+                >
+              </div>
+
+              <div class="cosme-form-field">
+                <label for="GiftCardRecipientMessage-{{ section.id }}" class="cosme-form-field__label">
+                  {{ 'products.product.gift_card_recipient.message' | t }}
+                </label>
+                <textarea
+                  id="GiftCardRecipientMessage-{{ section.id }}"
+                  name="properties[Message]"
+                  class="cosme-form-field__control"
+                  rows="3"
+                ></textarea>
+              </div>
+
+              <div class="cosme-form-field">
+                <label for="GiftCardRecipientSendOn-{{ section.id }}" class="cosme-form-field__label">
+                  {{ 'products.product.gift_card_recipient.send_on' | t }}
+                </label>
+                <input
+                  type="date"
+                  id="GiftCardRecipientSendOn-{{ section.id }}"
+                  name="properties[Send on]"
+                  class="cosme-form-field__control"
+                >
+                <p class="cosme-form-field__hint">
+                  {{ 'products.product.gift_card_recipient.send_on_info' | t }}
+                </p>
+              </div>
+            </div>
+          </div>
+        {%- endif -%}
 
         <p class="cosme-product-form__status" data-product-form-status aria-live="polite"></p>
       {% endform %}
@@ -853,6 +1032,102 @@
     color: var(--color-error);
   }
 
+  .cosme-pickup-availability {
+    margin-block-start: var(--spacing-lg);
+    padding-block-start: var(--spacing-lg);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-pickup-availability__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: start;
+    color: inherit;
+    font: inherit;
+  }
+
+  .cosme-pickup-availability__summary {
+    flex: 1 1 auto;
+  }
+
+  .cosme-pickup-availability__chevron {
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: transform var(--transition-duration, 0.2s) var(--transition-easing, ease);
+  }
+
+  .cosme-pickup-availability__toggle[aria-expanded='true'] .cosme-pickup-availability__chevron {
+    transform: rotate(180deg);
+  }
+
+  .cosme-pickup-availability__panel[hidden] {
+    display: none;
+  }
+
+  .cosme-pickup-availability__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--spacing-md);
+    margin-block-start: var(--spacing-md);
+  }
+
+  .cosme-pickup-availability__location,
+  .cosme-pickup-availability__status {
+    margin: 0;
+  }
+
+  .cosme-pickup-availability__status--available {
+    color: var(--color-success, var(--color-accent));
+  }
+
+  .cosme-pickup-availability__status--unavailable {
+    color: var(--color-muted);
+  }
+
+  .cosme-pickup-availability__address {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-pickup-availability__chevron {
+      transition: none;
+    }
+  }
+
+  .cosme-gift-card-recipient {
+    display: grid;
+    gap: var(--spacing-lg);
+    margin-block-start: var(--spacing-lg);
+    padding-block-start: var(--spacing-lg);
+    border-top: var(--border-width) solid var(--color-border);
+  }
+
+  .cosme-gift-card-recipient__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+  }
+
+  .cosme-gift-card-recipient__fields {
+    display: grid;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-gift-card-recipient__fields[hidden] {
+    display: none;
+  }
+
   .cosme-main-product__meta {
     display: flex;
     flex-direction: column;
@@ -1145,16 +1420,20 @@
       });
 
       try {
+        const payload = {
+          id: Number(variantInput.value),
+          quantity: Number(quantityInput?.value || 1),
+        };
+        const recipientProperties = giftCardRecipientProperties(form);
+        if (recipientProperties) payload.properties = recipientProperties;
+
         const response = await fetch('/cart/add.js', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-          body: JSON.stringify({
-            id: Number(variantInput.value),
-            quantity: Number(quantityInput?.value || 1),
-          }),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -1212,10 +1491,82 @@
       }
     };
 
+    const giftCardRecipientRoot = (form) => form.querySelector('[data-gift-card-recipient]');
+
+    const syncGiftCardRecipient = (form, { clear } = { clear: false }) => {
+      const root = giftCardRecipientRoot(form);
+      if (!root) return;
+      const toggle = root.querySelector('[data-gift-card-recipient-toggle]');
+      const fields = root.querySelector('[data-gift-card-recipient-fields]');
+      const error = root.querySelector('[data-gift-card-recipient-error]');
+      if (!toggle || !fields) return;
+
+      const enabled = toggle.checked;
+      fields.hidden = !enabled;
+      fields.querySelectorAll('input, textarea').forEach((input) => {
+        input.disabled = !enabled;
+        if (!enabled && clear) input.value = '';
+      });
+      if (error) error.hidden = true;
+    };
+
+    const giftCardRecipientProperties = (form) => {
+      const root = giftCardRecipientRoot(form);
+      if (!root) return null;
+      const toggle = root.querySelector('[data-gift-card-recipient-toggle]');
+      if (!toggle || !toggle.checked) return null;
+
+      const properties = {
+        __shopify_send_gift_card_to_recipient: 'true',
+      };
+      root.querySelectorAll('[data-gift-card-recipient-fields] [name]').forEach((input) => {
+        if (input.disabled) return;
+        const value = input.value.trim();
+        if (!value) return;
+        const match = input.name.match(/^properties\[(.+)\]$/);
+        if (match) properties[match[1]] = value;
+      });
+      return properties;
+    };
+
+    const validateGiftCardRecipient = (form) => {
+      const root = giftCardRecipientRoot(form);
+      if (!root) return true;
+
+      const toggle = root.querySelector('[data-gift-card-recipient-toggle]');
+      const email = root.querySelector('[data-gift-card-recipient-email]');
+      const error = root.querySelector('[data-gift-card-recipient-error]');
+      if (!toggle) return true;
+
+      if (!toggle.checked) {
+        syncGiftCardRecipient(form, { clear: true });
+        return true;
+      }
+
+      syncGiftCardRecipient(form);
+      const emailValue = email ? email.value.trim() : '';
+      const emailValid = Boolean(emailValue && email.checkValidity());
+      if (emailValid) {
+        if (error) error.hidden = true;
+        return true;
+      }
+
+      if (error) error.hidden = false;
+      if (email) email.focus();
+      return false;
+    };
+
     document.addEventListener('change', (event) => {
       const quantityInput = event.target.closest('[data-quantity-input]');
       if (quantityInput) {
         quantityInput.value = clampQuantity(quantityInput, Number(quantityInput.value || 1));
+        return;
+      }
+
+      const recipientToggle = event.target.closest('[data-gift-card-recipient-toggle]');
+      if (recipientToggle) {
+        const form = event.target.closest('[data-product-form]');
+        if (form) syncGiftCardRecipient(form, { clear: !recipientToggle.checked });
         return;
       }
 
@@ -1237,6 +1588,18 @@
         return;
       }
 
+      const pickupToggle = event.target.closest('[data-pickup-toggle]');
+      if (pickupToggle) {
+        const pickup = pickupToggle.closest('[data-pickup-availability]');
+        const panel = pickup && pickup.querySelector('[data-pickup-panel]');
+        if (!panel) return;
+
+        const expanded = pickupToggle.getAttribute('aria-expanded') === 'true';
+        pickupToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+        panel.hidden = expanded;
+        return;
+      }
+
       const shareButton = event.target.closest('[data-product-share]');
       if (shareButton) shareProduct(shareButton);
     });
@@ -1244,6 +1607,11 @@
     document.addEventListener('submit', (event) => {
       const form = event.target.closest('[data-product-form]');
       if (!form) return;
+
+      if (!validateGiftCardRecipient(form)) {
+        event.preventDefault();
+        return;
+      }
 
       const submitter = event.submitter;
       const isAddToCart =
@@ -1258,15 +1626,22 @@
     });
 
     document.querySelectorAll('[data-main-product]').forEach(observeStickyGallery);
+    document.querySelectorAll('[data-product-form]').forEach((form) => {
+      syncGiftCardRecipient(form);
+    });
 
     document.addEventListener('cosme:product-updated', (event) => {
       const section = event.target.closest('[data-main-product]') || event.target;
       if (section?.matches?.('[data-main-product]')) observeStickyGallery(section);
+      const form = (section?.querySelector?.('[data-product-form]') || event.target.querySelector?.('[data-product-form]'));
+      if (form) syncGiftCardRecipient(form);
     });
 
     document.addEventListener('shopify:section:load', (event) => {
       const section = event.target.querySelector('[data-main-product]');
       if (section) observeStickyGallery(section);
+      const form = event.target.querySelector('[data-product-form]');
+      if (form) syncGiftCardRecipient(form);
     });
 
     desktopGalleryQuery.addEventListener('change', () => {
@@ -1604,6 +1979,20 @@
       "default": true
     },
     {
+      "type": "checkbox",
+      "id": "show_gift_card_recipient",
+      "label": "t:sections.main_product.settings.show_gift_card_recipient",
+      "info": "t:sections.main_product.settings.show_gift_card_recipient_info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_pickup_availability",
+      "label": "t:sections.main_product.settings.show_pickup_availability",
+      "info": "t:sections.main_product.settings.show_pickup_availability_info",
+      "default": true
+    },
+    {
       "type": "header",
       "content": "t:sections.product_details.settings.trust_header"
     },
@@ -1617,7 +2006,7 @@
       "type": "text",
       "id": "trust_shipping",
       "label": "t:sections.product_details.settings.trust_shipping",
-      "default": "Free shipping",
+      "default": "Fast shipping",
       "visible_if": "{{ section.settings.show_trust }}"
     },
     {

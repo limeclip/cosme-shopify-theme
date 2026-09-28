@@ -1,0 +1,105 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-about-hero",
+      "settings": {
+        "eyebrow": "ABOUT",
+        "heading": "Skincare, formulated for men.",
+        "description": "NORD makes quiet, effective skincare essentials for men who prefer less, done well.",
+        "text_alignment": "left",
+        "content_width": "wide",
+        "image_alt": "",
+        "image_ratio": "wide",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "manifesto": {
+      "type": "about-manifesto",
+      "settings": {
+        "eyebrow": "THE NORD APPROACH",
+        "statement": "We believe in considered formulas, quiet confidence, and essentials made to work without excess.",
+        "supporting_text": "",
+        "alignment": "center",
+        "statement_max_width": "medium",
+        "show_index": false,
+        "index_text": "",
+        "show_divider": true,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "story": {
+      "type": "about-story",
+      "settings": {
+        "eyebrow": "",
+        "heading": "Less, but better.",
+        "body": "A short edit of men's skincare, built around precise formulations and a ritual that stays simple.",
+        "secondary_text": "",
+        "text_alignment": "left",
+        "content_width": "medium",
+        "image_alt": "",
+        "image_position": "left",
+        "image_ratio": "portrait",
+        "show_cta": false,
+        "cta_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "principles": {
+      "type": "about-manifesto",
+      "settings": {
+        "eyebrow": "",
+        "statement": "FORMULA / RITUAL / RESTRAINT",
+        "supporting_text": "",
+        "alignment": "center",
+        "statement_max_width": "wide",
+        "show_index": false,
+        "index_text": "",
+        "show_divider": false,
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "image_story": {
+      "type": "about-image-story",
+      "settings": {
+        "eyebrow": "",
+        "heading": "Effective, without ornament.",
+        "body": "",
+        "primary_image_alt": "",
+        "show_secondary_image": false,
+        "secondary_image_alt": "",
+        "image_ratio": "wide",
+        "image_position": "left",
+        "cta_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    },
+    "closing_cta": {
+      "type": "about-cta",
+      "settings": {
+        "enable": true,
+        "eyebrow": "NORD",
+        "heading": "Build your ritual.",
+        "description": "",
+        "alignment": "center",
+        "primary_label": "Explore the collection",
+        "show_secondary_cta": false,
+        "secondary_label": "",
+        "color_scheme": "scheme-1",
+        "section_spacing": "large"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "manifesto",
+    "story",
+    "principles",
+    "image_story",
+    "closing_cta"
+  ]
+}

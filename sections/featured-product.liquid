@@ -1,0 +1,570 @@
+{% liquid
+  assign product = section.settings.product
+%}
+
+{% if product != blank %}
+  {% liquid
+    assign current_variant = product.selected_or_first_available_variant
+    assign featured_image = product.featured_image
+    if product.featured_media.preview_image
+      assign featured_image = product.featured_media.preview_image
+    endif
+    if current_variant.featured_image
+      assign featured_image = current_variant.featured_image
+    endif
+
+    assign product_form_id = 'FeaturedProductForm-' | append: section.id
+    assign layout = section.settings.layout | default: 'left'
+    assign section_spacing = section.settings.section_spacing | default: 'medium'
+
+    assign product_available = product.available
+    if current_variant
+      assign product_available = current_variant.available
+    endif
+
+    assign atc_label = 'products.add_to_cart_button' | t
+    assign atc_disabled = false
+    if current_variant == blank
+      assign atc_disabled = true
+      assign atc_label = 'products.unavailable' | t
+    elsif product_available == false
+      assign atc_disabled = true
+      assign atc_label = 'products.badge.sold_out' | t
+    endif
+
+    assign variant_id = ''
+    if current_variant
+      assign variant_id = current_variant.id
+    endif
+
+    assign rating_number = 0
+    assign rating_count = 0
+    assign has_rating = false
+    assign rating_metafield = product.metafields.reviews.rating.value
+    assign rating_count_metafield = product.metafields.reviews.rating_count.value
+
+    if rating_count_metafield != blank
+      assign rating_count = rating_count_metafield | plus: 0
+    endif
+
+    if rating_metafield.rating
+      assign rating_number = rating_metafield.rating | plus: 0
+    elsif rating_metafield != blank
+      assign rating_number = rating_metafield | plus: 0
+    endif
+
+    if section.settings.show_rating
+      if rating_number > 0
+        assign has_rating = true
+      endif
+      if rating_count > 0
+        assign has_rating = true
+      endif
+    endif
+  %}
+
+  <section
+    class="cosme-featured-product full-width color-{{ section.settings.color_scheme }} cosme-featured-product--layout-{{ layout }} cosme-featured-product--spacing-{{ section_spacing }}"
+    data-featured-product
+    {{ section.shopify_attributes }}
+  >
+    <div class="cosme-featured-product__inner">
+      <div class="cosme-featured-product__media">
+        {% if featured_image != blank %}
+          {% render 'cosme-image',
+            image: featured_image,
+            url: product.url,
+            width: 1500,
+            sizes: '(min-width: 990px) 50vw, 100vw',
+            loading: 'lazy',
+            class: 'cosme-featured-product__image'
+          %}
+        {% endif %}
+      </div>
+
+      <div class="cosme-featured-product__info">
+        {% if section.settings.show_vendor %}
+          {% if product.vendor != blank %}
+            <p class="cosme-featured-product__vendor">{{ product.vendor | escape }}</p>
+          {% endif %}
+        {% endif %}
+
+        <h2 class="cosme-featured-product__title">
+          <a href="{{ product.url }}">{{ product.title | escape }}</a>
+        </h2>
+
+        <div class="cosme-featured-product__price">
+          {% if current_variant %}
+            {% render 'cosme-price', variant: current_variant, show_from: false, show_unit_price: true %}
+          {% else %}
+            {% render 'cosme-price', product: product, show_unit_price: true %}
+          {% endif %}
+        </div>
+
+        {% if has_rating %}
+          {% liquid
+            assign rating_display = rating_number | round: 1
+          %}
+          <div class="cosme-featured-product__rating">
+            <span class="cosme-visually-hidden">
+              {{ 'products.rating.summary' | t: rating: rating_display, count: rating_count }}
+            </span>
+            {% render 'cosme-review-stars', rating: rating_number %}
+            <span class="cosme-featured-product__rating-text" aria-hidden="true">
+              {% if rating_count > 0 %}
+                {{ 'products.rating.count' | t: rating: rating_display, count: rating_count }}
+              {% else %}
+                {{ 'products.rating.value' | t: rating: rating_display }}
+              {% endif %}
+            </span>
+          </div>
+        {% endif %}
+
+        {% if section.settings.show_description %}
+          {% if product.description != blank %}
+            <div class="cosme-featured-product__description">
+              {{ product.description }}
+            </div>
+          {% endif %}
+        {% endif %}
+
+        {% form 'product', product, id: product_form_id, class: 'cosme-featured-product__form', data-featured-product-form: '' %}
+          <input
+            type="hidden"
+            name="id"
+            value="{{ variant_id }}"
+            data-featured-product-variant-id
+            {% if current_variant == blank %}
+              disabled
+            {% endif %}
+          >
+
+          <script type="application/json" data-featured-product-variants>
+            {{ product.variants | json }}
+          </script>
+
+          {% render 'cosme-variant-picker', product: product, section_id: section.id %}
+
+          <div class="cosme-featured-product__actions">
+            {% render 'cosme-button',
+              label: atc_label,
+              type: 'submit',
+              style: 'primary',
+              disabled: atc_disabled,
+              name: 'add',
+              class: 'cosme-featured-product__submit'
+            %}
+
+            {% if section.settings.show_buy_it_now %}
+              <div class="cosme-featured-product__buy-now{% if atc_disabled %} is-disabled{% endif %}">
+                {{ form | payment_button }}
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="cosme-featured-product__payment-terms">
+            {{ form | payment_terms }}
+          </div>
+        {% endform %}
+
+        {% for block in section.blocks %}
+          <div {{ block.shopify_attributes }}>
+            {% render block %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-featured-product {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-featured-product__inner {
+    display: grid;
+    gap: var(--spacing-xl);
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-featured-product--spacing-small .cosme-featured-product__inner {
+    padding-block: var(--spacing-lg);
+  }
+
+  .cosme-featured-product--spacing-medium .cosme-featured-product__inner {
+    padding-block: var(--spacing-section);
+  }
+
+  .cosme-featured-product--spacing-large .cosme-featured-product__inner {
+    padding-block: calc(var(--spacing-section) + var(--spacing-xl));
+  }
+
+  .cosme-featured-product__media,
+  .cosme-featured-product__info {
+    min-width: 0;
+  }
+
+  .cosme-featured-product__info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-featured-product__vendor {
+    margin: 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-featured-product__title {
+    margin: 0;
+    font-family: var(--font-heading--family);
+    font-size: clamp(1.75rem, 2.4vw, 2.75rem);
+    font-weight: var(--font-heading--weight);
+    font-style: var(--font-heading--style);
+    line-height: 1.15;
+    letter-spacing: var(--letter-spacing-heading);
+    color: var(--color-heading);
+  }
+
+  .cosme-featured-product__title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cosme-featured-product__title a:hover,
+  .cosme-featured-product__title a:focus-visible {
+    color: var(--color-accent);
+  }
+
+  .cosme-featured-product__price .cosme-price {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-heading);
+  }
+
+  .cosme-featured-product__price .cosme-price__compare {
+    font-size: 0.9375rem;
+    font-weight: 400;
+  }
+
+  .cosme-featured-product__rating {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-muted);
+  }
+
+  .cosme-featured-product__rating-text {
+    font-size: 0.8125rem;
+  }
+
+  .cosme-featured-product__description {
+    font-size: 0.9375rem;
+    line-height: var(--line-height-body);
+  }
+
+  .cosme-featured-product__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+    width: 100%;
+  }
+
+  .cosme-featured-product .cosme-variant-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__option {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  .cosme-featured-product .cosme-variant-picker__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-block-end: var(--spacing-sm);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__legend-value {
+    color: var(--color-foreground);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__values--swatches {
+    gap: var(--spacing-xs);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .cosme-featured-product .cosme-variant-picker__label--pill {
+    min-height: 2.75rem;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-button);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__value input:checked + .cosme-variant-picker__label--pill {
+    border-color: var(--color-foreground);
+    color: var(--color-background);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__label--swatch {
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: var(--border-width) solid transparent;
+    border-radius: 50%;
+  }
+
+  .cosme-featured-product .cosme-variant-picker__value input:checked + .cosme-variant-picker__label--swatch {
+    border-color: var(--color-foreground);
+  }
+
+  .cosme-featured-product .cosme-variant-picker__swatch {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .cosme-featured-product .cosme-variant-picker__label.is-unavailable {
+    opacity: 0.45;
+  }
+
+  .cosme-featured-product .cosme-variant-picker__label--pill.is-unavailable {
+    text-decoration: line-through;
+  }
+
+  .cosme-featured-product .cosme-variant-picker__value input:focus-visible + .cosme-variant-picker__label {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-featured-product__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .cosme-featured-product__submit {
+    width: 100%;
+  }
+
+  .cosme-featured-product__buy-now .shopify-payment-button,
+  .cosme-featured-product__buy-now .shopify-payment-button__button {
+    width: 100%;
+  }
+
+  .cosme-featured-product__buy-now .shopify-payment-button__button {
+    min-height: 2.75rem;
+    border-radius: var(--radius-button) !important;
+  }
+
+  .cosme-featured-product__buy-now.is-disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .cosme-featured-product .shopify-payment-button__button--unbranded {
+    background-color: var(--color-button-secondary-background, transparent) !important;
+    border: var(--border-width) solid var(--color-border) !important;
+    color: var(--color-button-secondary-label, var(--color-foreground)) !important;
+    padding: 0.5em 2em !important;
+  }
+
+  .cosme-featured-product__payment-terms {
+    color: var(--color-muted);
+    font-size: 0.8125rem;
+  }
+
+  @media screen and (min-width: 990px) {
+    .cosme-featured-product__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--spacing-2xl);
+    }
+
+    .cosme-featured-product--layout-right .cosme-featured-product__media {
+      order: 2;
+    }
+
+    .cosme-featured-product__actions {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .cosme-featured-product__submit,
+    .cosme-featured-product__buy-now {
+      flex: 1 1 0;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!window.cosmeFeaturedProductBound) {
+    window.cosmeFeaturedProductBound = true;
+
+    document.addEventListener('change', (event) => {
+      const optionInput = event.target.closest('[data-option-value-id]');
+      const section = event.target.closest('[data-featured-product]');
+      if (!optionInput || !section) return;
+
+      const form = section.querySelector('[data-featured-product-form]');
+      const variantInput = section.querySelector('[data-featured-product-variant-id]');
+      const variantsScript = section.querySelector('[data-featured-product-variants]');
+      const submitButton = form ? form.querySelector('[name="add"]') : null;
+      if (!form || !variantInput || !variantsScript) return;
+
+      let variants = [];
+      try {
+        variants = JSON.parse(variantsScript.textContent);
+      } catch (error) {
+        return;
+      }
+
+      const selected = Array.from(section.querySelectorAll('[data-option-value-id]:checked')).map(
+        (input) => input.value
+      );
+
+      const variant = variants.find((item) => {
+        const options = item.options || [];
+        if (options.length !== selected.length) return false;
+        return options.every((option, index) => option === selected[index]);
+      });
+
+      if (!variant) {
+        variantInput.value = '';
+        variantInput.disabled = true;
+        if (submitButton) submitButton.disabled = true;
+        return;
+      }
+
+      variantInput.disabled = false;
+      variantInput.value = String(variant.id);
+      if (submitButton) submitButton.disabled = !variant.available;
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:general.featured_product",
+  "tag": "div",
+  "class": "section-featured-product",
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "settings": [
+    {
+      "type": "product",
+      "id": "product",
+      "label": "t:labels.product"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.featured_product.settings.layout",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:options.alignment.left"
+        },
+        {
+          "value": "right",
+          "label": "t:options.alignment.right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        {
+          "value": "small",
+          "label": "t:options.size.small"
+        },
+        {
+          "value": "medium",
+          "label": "t:options.size.medium"
+        },
+        {
+          "value": "large",
+          "label": "t:options.size.large"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "t:sections.featured_product.settings.show_vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "t:sections.featured_product.settings.show_rating",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "t:sections.featured_product.settings.show_description",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_buy_it_now",
+      "label": "t:sections.featured_product.settings.show_buy_it_now",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.featured_product"
+    }
+  ]
+}
+{% endschema %}

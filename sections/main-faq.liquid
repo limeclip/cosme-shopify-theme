@@ -143,9 +143,10 @@
   assign cta_heading = section.settings.cta_heading | strip
   assign cta_description = section.settings.cta_description | strip
   assign cta_label = section.settings.cta_button_label | strip
-  assign cta_link = section.settings.cta_link | default: '/pages/contact'
-  if cta_link == blank
-    assign cta_link = '/pages/contact'
+  assign cta_link = section.settings.cta_link
+  assign cta_link_show = false
+  if cta_link != blank
+    assign cta_link_show = true
   endif
   assign cta_spacing = section.settings.cta_spacing | default: 'medium'
   assign cta_heading_id = 'FaqCtaHeading-' | append: section.id
@@ -465,12 +466,14 @@
         {% endif %}
 
         {% if cta_label != blank %}
-          {% render 'cosme-button',
-            label: cta_label,
-            url: cta_link,
-            style: 'primary',
-            class: 'cosme-faq__cta-button'
-          %}
+          {% if cta_link_show %}
+            {% render 'cosme-button',
+              label: cta_label,
+              url: cta_link,
+              style: 'primary',
+              class: 'cosme-faq__cta-button'
+            %}
+          {% endif %}
         {% endif %}
       </div>
     </div>

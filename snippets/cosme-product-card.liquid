@@ -271,7 +271,7 @@
               <span class="cosme-price__regular">{{ demo_price | escape }}</span>
             </div>
           {% else %}
-            {% render 'cosme-price', product: product %}
+            {% render 'cosme-price', product: product, show_unit_price: true %}
           {% endif %}
         </div>
       {% endif %}
@@ -295,7 +295,7 @@
               <span class="cosme-price__regular">{{ demo_price | escape }}</span>
             </div>
           {% else %}
-            {% render 'cosme-price', product: product %}
+            {% render 'cosme-price', product: product, show_unit_price: true %}
           {% endif %}
         </div>
       {% endif %}

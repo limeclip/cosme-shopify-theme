@@ -93,6 +93,21 @@
 
   assign primary_sizes = '(min-width: 990px) 52vw, (min-width: 750px) 58vw, 100vw'
   assign secondary_sizes = '(min-width: 990px) 22vw, (min-width: 750px) 28vw, 72vw'
+  assign about_image_story_invert = 0
+  assign about_image_story_scheme_id = section.settings.color_scheme
+  if section.settings.color_scheme.id != blank
+    assign about_image_story_scheme_id = section.settings.color_scheme.id
+  endif
+  for about_image_story_scheme in settings.color_schemes
+    if about_image_story_scheme.id == about_image_story_scheme_id
+      if about_image_story_scheme.settings.background != blank
+        assign about_image_story_brightness = about_image_story_scheme.settings.background | color_brightness
+        if about_image_story_brightness < 128
+          assign about_image_story_invert = 1
+        endif
+      endif
+    endif
+  endfor
 %}
 
 <section
@@ -104,6 +119,7 @@
     cosme-about-image-story--spacing-{{ section_spacing }}
     cosme-about-image-story--image-{{ image_position }}
     {% if show_secondary %}cosme-about-image-story--has-secondary{% endif %}
+         {% if about_image_story_invert == 1 %}cosme-about-image-story--placeholder-invert{% endif %}
     {% if settings.enable_animations %}cosme-about-image-story--animated{% endif %}
   "
   style="
@@ -328,7 +344,7 @@
     opacity: 0.35;
   }
 
-  .color-scheme-2 .cosme-about-image-story__placeholder-svg {
+  .cosme-about-image-story--placeholder-invert .cosme-about-image-story__placeholder-svg {
     filter: brightness(0) invert(1);
     opacity: 0.25;
   }

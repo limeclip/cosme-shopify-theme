@@ -131,8 +131,9 @@
   assign faq_spacing_bottom = section.settings.faq_spacing_bottom | default: 'large'
   assign faq_link_label = section.settings.faq_link_label | strip
   assign faq_link = section.settings.faq_link
-  if faq_link == blank
-    assign faq_link = '/pages/faq'
+  assign faq_link_show = false
+  if faq_link != blank
+    assign faq_link_show = true
   endif
   if faq_link_label == blank
     assign faq_link_label = 'sections.contact.faq_link' | t
@@ -164,8 +165,10 @@
 
   assign show_faq_link = false
   if section.settings.show_faq_link
-    if faq_link_label != blank
-      assign show_faq_link = true
+    if faq_link_show
+      if faq_link_label != blank
+        assign show_faq_link = true
+      endif
     endif
   endif
 

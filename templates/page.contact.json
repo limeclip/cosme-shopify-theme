@@ -35,7 +35,7 @@
         "faq_max_width": "medium",
         "show_faq_link": true,
         "faq_link_label": "View all FAQs",
-        "faq_link": "/pages/faq",
+        "faq_link": "",
         "faq_color_scheme": "scheme-1",
         "faq_spacing_top": "medium",
         "faq_spacing_bottom": "medium",

@@ -25,6 +25,11 @@
     assign is_text_only = true
   endif
 
+  assign primary_button_link = section.settings.primary_button_link
+  if primary_button_link == blank
+    assign primary_button_link = routes.all_products_collection_url
+  endif
+
   if section.settings.primary_button_label != blank
     assign has_primary_button = true
   endif
@@ -224,7 +229,7 @@
               {%- if has_primary_button -%}
                 {% render 'cosme-button',
                   label: section.settings.primary_button_label,
-                  url: section.settings.primary_button_link,
+                  url: primary_button_link,
                   style: 'primary',
                   class: 'cosme-editorial-cta__button'
                 %}

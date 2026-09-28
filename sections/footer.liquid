@@ -303,6 +303,11 @@
           {%- if show_country_selector -%}
             <div class="cosme-footer__country">
               {% render 'cosme-country-selector', section_id: section.id %}
+              {% render 'cosme-language-selector' %}
+            </div>
+          {%- elsif localization.available_languages.size > 1 -%}
+            <div class="cosme-footer__country">
+              {% render 'cosme-language-selector' %}
             </div>
           {%- endif -%}
         </div>

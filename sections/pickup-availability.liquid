@@ -1,0 +1,161 @@
+{%- if product -%}
+  {%- liquid
+    assign current_variant = product.selected_or_first_available_variant
+    assign has_pickup = false
+    if current_variant
+      for availability in current_variant.store_availabilities
+        if availability.pick_up_enabled
+          assign has_pickup = true
+          break
+        endif
+      endfor
+    endif
+  -%}
+
+  {%- if has_pickup -%}
+    <div class="cosme-pickup-availability" data-pickup-availability>
+      <button
+        type="button"
+        class="cosme-pickup-availability__toggle"
+        data-pickup-toggle
+        aria-expanded="false"
+      >
+        <span class="cosme-pickup-availability__summary">
+          {%- liquid
+            assign first_available = blank
+            assign first_unavailable = blank
+            for availability in current_variant.store_availabilities
+              if availability.pick_up_enabled
+                if availability.available and first_available == blank
+                  assign first_available = availability
+                elsif availability.available == false and first_unavailable == blank
+                  assign first_unavailable = availability
+                endif
+              endif
+            endfor
+            if first_available
+              echo 'products.product.pickup_availability.pick_up_available_at' | t: location_name: first_available.location.name
+            elsif first_unavailable
+              echo 'products.product.pickup_availability.pick_up_unavailable_at' | t: location_name: first_unavailable.location.name
+            endif
+          -%}
+        </span>
+        <span class="cosme-pickup-availability__chevron" aria-hidden="true">
+          {% render 'cosme-icon', icon: 'chevron-down', size: 'sm' %}
+        </span>
+      </button>
+
+      <ul class="cosme-pickup-availability__list" role="list" hidden data-pickup-panel>
+        {% for availability in current_variant.store_availabilities %}
+          {%- if availability.pick_up_enabled -%}
+            <li class="cosme-pickup-availability__item">
+              <p class="cosme-pickup-availability__location">
+                <strong>{{ availability.location.name | escape }}</strong>
+              </p>
+              {%- if availability.available -%}
+                <p class="cosme-pickup-availability__status cosme-pickup-availability__status--available">
+                  {{ 'products.product.pickup_availability.available' | t }}
+                  {%- if availability.pick_up_time != blank -%}
+                    · {{ availability.pick_up_time | escape }}
+                  {%- endif -%}
+                </p>
+              {%- else -%}
+                <p class="cosme-pickup-availability__status cosme-pickup-availability__status--unavailable">
+                  {{ 'products.product.pickup_availability.unavailable' | t }}
+                </p>
+              {%- endif -%}
+              {%- if availability.location.address -%}
+                <p class="cosme-pickup-availability__address">
+                  {{ availability.location.address | format_address }}
+                </p>
+              {%- endif -%}
+            </li>
+          {%- endif -%}
+        {% endfor %}
+      </ul>
+    </div>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .cosme-pickup-availability {
+    color: var(--color-foreground);
+  }
+
+  .cosme-pickup-availability__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: start;
+    color: inherit;
+    font: inherit;
+    font-size: 0.875rem;
+  }
+
+  .cosme-pickup-availability__summary {
+    flex: 1 1 auto;
+  }
+
+  .cosme-pickup-availability__chevron {
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: transform var(--transition-duration) var(--transition-easing);
+  }
+
+  .cosme-pickup-availability__toggle[aria-expanded='true'] .cosme-pickup-availability__chevron {
+    transform: rotate(180deg);
+  }
+
+  .cosme-pickup-availability__list {
+    list-style: none;
+    margin: var(--spacing-sm) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--spacing-md);
+  }
+
+  .cosme-pickup-availability__list[hidden] {
+    display: none;
+  }
+
+  .cosme-pickup-availability__item {
+    margin: 0;
+  }
+
+  .cosme-pickup-availability__location,
+  .cosme-pickup-availability__status {
+    margin: 0;
+  }
+
+  .cosme-pickup-availability__status--available {
+    color: var(--color-success, var(--color-accent));
+  }
+
+  .cosme-pickup-availability__status--unavailable {
+    color: var(--color-muted);
+  }
+
+  .cosme-pickup-availability__address {
+    color: var(--color-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cosme-pickup-availability__chevron {
+      transition: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Pickup availability",
+ 
+}
+{% endschema %}

@@ -83,10 +83,10 @@
     "discount_code": "Discount code",
     "discount_apply": "Apply",
     "discount_empty": "Enter a discount code",
-    "free_shipping_away": "You're {{ amount }} away from free shipping.",
-    "free_shipping_eligible": "You're eligible for free shipping.",
-    "free_shipping_unlocked": "You've unlocked free shipping ✦",
-    "free_shipping_label": "Free shipping",
+    "free_shipping_away": "You're {{ amount }} away from Fast shipping.",
+    "free_shipping_eligible": "You're eligible for Fast shipping.",
+    "free_shipping_unlocked": "You've unlocked Fast shipping ✦",
+    "free_shipping_label": "Fast shipping",
     "shipping_at_checkout": "Shipping is calculated at checkout.",
     "taxes_shipping_at_checkout": "Taxes and shipping are calculated at checkout.",
     "taxes_at_checkout": "Taxes are calculated at checkout.",
@@ -100,6 +100,8 @@
     "upsell_editor_empty": "Select products in the cart drawer section to show recommendations here.",
     "order_note": "Order note",
     "order_note_placeholder": "Add a note to your order...",
+    "note_label": "Order note",
+    "note_placeholder": "Add a note to your order...",
     "note_saved": "Order note saved",
     "discount_prompt": "Have a discount code?",
     "discount_applied": "Discount applied",
@@ -155,7 +157,8 @@
     "accessibility": {
       "required": "(required)"
     },
-    "back_to_top": "Back to top"
+    "back_to_top": "Back to top",
+    "skip_to_content": "Skip to content"
   },
   "header": {
     "account": "Account",
@@ -194,6 +197,9 @@
       "label": "Country/region"
     }
   },
+  "localization": {
+    "language_label": "Language"
+  },
   "gift_card": {
     "add_to_apple_wallet": "Add to Apple Wallet",
     "balance": "Current balance",
@@ -217,10 +223,10 @@
     "email_label": "Email address",
     "email_placeholder": "Email address",
     "error": "Please enter a valid email address.",
-    "submit": "Get 10% off",
-    "success": "Thanks — your welcome offer is on the way.",
+    "submit": "Subscribe",
+    "success": "Thanks — you are on the list.",
     "social_links": "Social media",
-    "teaser_label": "Get 10% off"
+    "teaser_label": "Newsletter"
   },
   "password": {
     "title": "This shop is private",
@@ -283,6 +289,26 @@
       "in_stock": "In stock",
       "low_stock": "Low stock",
       "sold_out": "Sold out"
+    },
+    "product": {
+      "include_taxes": "Taxes included.",
+      "pickup_availability": {
+        "pick_up_available_at": "Pickup available at {{ location_name }}",
+        "pick_up_unavailable_at": "Pickup currently unavailable at {{ location_name }}",
+        "available": "Ready for pickup",
+        "unavailable": "Currently unavailable for pickup",
+        "show_pickup_options": "Check pickup options"
+      },
+      "gift_card_recipient": {
+        "heading": "Send as a gift",
+        "checkbox": "I want to send this as a gift",
+        "recipient_email": "Recipient email",
+        "recipient_name": "Recipient name (optional)",
+        "message": "Message (optional)",
+        "send_on": "Send on (optional)",
+        "send_on_info": "Leave blank to send immediately.",
+        "error_email": "Please enter a valid recipient email."
+      }
     },
     "meta": {
       "sku": "SKU",

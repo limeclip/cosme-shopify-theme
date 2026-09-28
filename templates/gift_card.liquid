@@ -26,9 +26,25 @@
     {%- endif -%}
 
     {{ content_for_header }}
+    <script src="{{ 'vendor/qrcode.js' | shopify_asset_url }}" defer></script>
   </head>
 
   <body class="color-{{ settings.gift_card_color_scheme | default: settings.color_scheme }}">
     {% render 'cosme-gift-card', gift_card: gift_card %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        if (typeof QRCode === 'undefined') return;
+        var qrContainer = document.getElementById('QrCode');
+        if (!qrContainer) return;
+        new QRCode(qrContainer, {
+          text: {{ gift_card.qr_identifier | json }},
+          width: 120,
+          height: 120,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      });
+    </script>
   </body>
 </html>

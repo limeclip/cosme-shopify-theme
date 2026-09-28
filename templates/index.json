@@ -383,7 +383,7 @@
         "heading": "Make space for your ritual.",
         "description": "Thoughtfully selected essentials designed to become part of your everyday.",
         "primary_button_label": "Shop essentials",
-        "primary_button_link": "/collections/all",
+        "primary_button_link": "",
         "secondary_button_label": "Explore collections",
         "secondary_button_link": "/collections",
         "layout": "image_left",
@@ -407,7 +407,7 @@
           "type": "benefit",
           "settings": {
             "icon": "shipping",
-            "heading": "Free shipping",
+            "heading": "Fast shipping",
             "description": "On orders over $75"
           }
         },

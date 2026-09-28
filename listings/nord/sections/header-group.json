@@ -15,7 +15,7 @@
       "type": "announcement-bar",
       "settings": {
         "show_announcement": true,
-        "message": "<p>Free shipping on all orders over $75 — worldwide.</p>",
+        "message": "<p>Complimentary shipping on all orders over $100</p>",
         "icon": "shipping",
         "text_alignment": "center",
         "height_desktop": 48,

@@ -1,0 +1,77 @@
+{% liquid
+  assign custom_liquid = section.settings.custom_liquid
+  assign section_spacing = section.settings.section_spacing | default: 'medium'
+%}
+
+<section
+  class="cosme-custom-liquid full-width color-{{ section.settings.color_scheme }} cosme-custom-liquid--spacing-{{ section_spacing }}"
+  {{ section.shopify_attributes }}
+>
+  {% if custom_liquid != blank %}
+    <div class="cosme-custom-liquid__inner">
+      {{ custom_liquid }}
+    </div>
+  {% endif %}
+</section>
+
+{% stylesheet %}
+  .cosme-custom-liquid {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  .cosme-custom-liquid__inner {
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding-inline: var(--page-margin);
+  }
+
+  .cosme-custom-liquid--spacing-small .cosme-custom-liquid__inner {
+    padding-block: var(--spacing-lg);
+  }
+
+  .cosme-custom-liquid--spacing-medium .cosme-custom-liquid__inner {
+    padding-block: var(--spacing-section);
+  }
+
+  .cosme-custom-liquid--spacing-large .cosme-custom-liquid__inner {
+    padding-block: calc(var(--spacing-section) + var(--spacing-xl));
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:general.custom_liquid",
+  "class": "cosme-custom-liquid-section",
+  "settings": [
+    {
+      "type": "liquid",
+      "id": "custom_liquid",
+      "label": "t:sections.custom_liquid.settings.custom_liquid_label",
+      "info": "t:sections.custom_liquid.settings.custom_liquid_info"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:labels.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "select",
+      "id": "section_spacing",
+      "label": "t:labels.section_spacing",
+      "options": [
+        { "value": "small", "label": "t:options.size.small" },
+        { "value": "medium", "label": "t:options.size.medium" },
+        { "value": "large", "label": "t:options.size.large" }
+      ],
+      "default": "medium"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:general.custom_liquid"
+    }
+  ]
+}
+{% endschema %}

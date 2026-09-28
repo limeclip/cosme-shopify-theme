@@ -1,0 +1,72 @@
+{% doc %}
+  Renders a Shopify Markets language selector.
+
+  Options come from `localization.available_languages`. Changing a language
+  submits Shopify's native localization form.
+
+  @example
+  {% render 'cosme-language-selector' %}
+{% enddoc %}
+
+{% if localization.available_languages.size > 1 %}
+  <div class="cosme-language-selector">
+    {% form 'localization', id: 'LanguageSelectorForm', class: 'cosme-language-selector__form' %}
+      <label class="cosme-visually-hidden" for="LanguageSelector">
+        {{ 'localization.language_label' | t }}
+      </label>
+      <select
+        name="language_code"
+        id="LanguageSelector"
+        class="cosme-language-selector__select"
+        onchange="this.form.submit()"
+      >
+        {% for language in localization.available_languages %}
+          <option
+            value="{{ language.iso_code }}"
+            {% if language.iso_code == localization.language.iso_code %}
+              selected
+            {% endif %}
+          >
+            {{ language.endonym_name | capitalize }}
+          </option>
+        {% endfor %}
+      </select>
+      <input type="hidden" name="return_to" value="{{ request.path }}">
+    {% endform %}
+  </div>
+{% endif %}
+
+{% stylesheet %}
+  .cosme-language-selector {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .cosme-language-selector__form {
+    margin: 0;
+  }
+
+  .cosme-language-selector__select {
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.75rem;
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-input);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: inherit;
+    font-size: 0.875rem;
+    line-height: var(--line-height-body);
+    cursor: pointer;
+  }
+
+  .cosme-language-selector__select:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .cosme-country-selector + .cosme-language-selector {
+    margin-block-start: var(--spacing-sm);
+  }
+{% endstylesheet %}

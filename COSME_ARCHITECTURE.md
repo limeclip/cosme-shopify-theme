@@ -479,7 +479,7 @@ JSON files defining which sections appear on each page type and their default or
 ### Cart
 - Cart type: page / drawer
 - Show cart note
-- Show free shipping bar (threshold setting)
+- Show Fast shipping bar (threshold setting)
 
 ### Social media
 - Social account links (used in footer)
@@ -1145,7 +1145,7 @@ Existing typography, layout, color, and component settings preserved unchanged. 
 - Rebuild cart page section
 - Cart drawer section (if global setting = drawer)
 - Cart API integration for quantity updates
-- Free shipping bar component
+- Fast shipping bar component
 
 ### Phase 11: Blog and content pages
 

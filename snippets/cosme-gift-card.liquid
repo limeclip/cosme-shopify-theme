@@ -83,19 +83,15 @@
         <figure class="cosme-gift-card__figure{% if card_inactive %} cosme-gift-card__figure--inactive{% endif %}">
           <div class="cosme-gift-card__face">
             <p class="cosme-gift-card__shop">{{ shop.name | escape }}</p>
-            <p class="cosme-gift-card__face-balance">
+            <div class="cosme-gift-card__face-balance">
               <span class="cosme-gift-card__face-label">{{ 'gift_card.balance' | t }}</span>
               <span class="cosme-gift-card__face-amount">{{ balance_formatted }}</span>
               <div class="cosme-gift-card__code-block-card">
-              <p
-                class="cosme-gift-card__code-card"
-                id="GiftCardCode"
-                aria-labelledby="GiftCardCodeLabel"
-              >
-                {{ gift_card.code | format_code }}
-              </p>
+                <p class="cosme-gift-card__code-card" id="GiftCardCodeCopy">
+                  {{ gift_card.code | format_code }}
+                </p>
               </div>
-            </p>
+            </div>
             <img
               class="cosme-gift-card__asset"
               src="{{ 'gift-card/card.svg' | shopify_asset_url }}"
@@ -151,6 +147,7 @@
             data-label-default="{{ copy_label | escape }}"
             data-label-copied="{{ copied_label | escape }}"
             data-label-failed="{{ copy_failed_label | escape }}"
+            aria-label="{{ copy_label | escape }}"
             aria-describedby="GiftCardCode"
           >
             {% render 'cosme-icon', icon: 'copy', size: 'sm' %}
@@ -162,11 +159,21 @@
             role="status"
             aria-live="polite"
           ></p>
+          <div
+            id="QrCode"
+            class="cosme-gift-card__qr"
+            data-identifier="{{ gift_card.qr_identifier }}"
+          ></div>
         </div>
 
         {% if gift_card.pass_url %}
           <p class="cosme-gift-card__wallet">
-            <a class="cosme-gift-card__wallet-link" href="{{ gift_card.pass_url }}">
+            <a
+              class="cosme-gift-card__wallet-link"
+              href="{{ gift_card.pass_url }}"
+              target="_blank"
+              rel="noopener"
+            >
               <img
                 src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}"
                 alt="{{ 'gift_card.add_to_apple_wallet' | t }}"
@@ -357,9 +364,9 @@
 
   .cosme-gift-card__face-balance {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: var(--spacing-xs);
-    margin: var(--spacing-md) 0 auto;
+    margin: var(--spacing-sm) 0 auto;
     justify-content: space-between;
     align-items: center;
     z-index: 1;
@@ -479,6 +486,21 @@
     min-width: 10.5rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
+  }
+
+  .cosme-gift-card__qr {
+    display: block;
+    min-width: 120px;
+    min-height: 120px;
+    margin-top: var(--spacing-md);
+    background-color: var(--color-background);
+  }
+
+  .cosme-gift-card__qr img,
+  .cosme-gift-card__qr canvas {
+    display: block;
+    width: 120px;
+    height: 120px;
   }
 
   .cosme-gift-card__wallet {
