@@ -116,6 +116,7 @@
   endif
 
   assign products_per_page = 24
+    assign search_image_ratio = section.settings.image_ratio | default: '3/4'
 %}
 
 <section
@@ -306,7 +307,7 @@
                 {% render 'cosme-product-card',
                   product: result,
                   layout: 'editorial',
-                  aspect_ratio: '3/4',
+                  aspect_ratio: search_image_ratio,
                   image_width: image_width,
                   sizes: card_sizes,
                   loading: card_loading,
@@ -817,6 +818,19 @@
         { "value": "5", "label": "5" }
       ],
       "default": "4"
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "t:sections.search.settings.image_ratio",
+      "options": [
+        { "value": "3/4", "label": "t:sections.blog.settings.ratio_portrait" },
+        { "value": "4/5", "label": "t:sections.main_product.settings.aspect_portrait" },
+        { "value": "1/1", "label": "t:sections.blog.settings.ratio_square" },
+        { "value": "4/3", "label": "t:sections.blog.settings.ratio_landscape" },
+        { "value": "16/9", "label": "t:sections.blog.settings.ratio_wide" }
+      ],
+      "default": "3/4"
     },
     {
       "type": "header",

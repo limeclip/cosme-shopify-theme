@@ -29,12 +29,35 @@
   assign image_aspect = aspect | default: 'portrait'
   assign image_fit = fit | default: 'contain'
   assign image_focal = focal | default: 'center'
-  assign thumbs_enabled = show_thumbnails | default: true
-  assign arrows_enabled = show_arrows | default: false
-  assign count_enabled = show_media_count | default: true
-  assign zoom_enabled = enable_zoom | default: true
-  assign lightbox_enabled = enable_lightbox | default: true
-  assign video_controls = enable_video_controls | default: true
+  assign thumbs_enabled = true
+  if show_thumbnails == false
+    assign thumbs_enabled = false
+  endif
+
+  assign arrows_enabled = false
+  if show_arrows == true
+    assign arrows_enabled = true
+  endif
+
+  assign count_enabled = true
+  if show_media_count == false
+    assign count_enabled = false
+  endif
+
+  assign zoom_enabled = true
+  if enable_zoom == false
+    assign zoom_enabled = false
+  endif
+
+  assign lightbox_enabled = true
+  if enable_lightbox == false
+    assign lightbox_enabled = false
+  endif
+
+  assign video_controls = true
+  if enable_video_controls == false
+    assign video_controls = false
+  endif
 
   if gallery_layout == 'media_only'
     assign thumbs_enabled = false
@@ -379,8 +402,8 @@
   .cosme-product-gallery--landscape .cosme-product-gallery__stage {
     aspect-ratio: var(--gallery-aspect);
   }
-    /* Natural: активная media в потоке, чтобы задавать высоту stage своей натуральной пропорцией */
-    .cosme-product-gallery--natural .cosme-product-gallery__stage {
+  /* Natural: активная media в потоке, чтобы задавать высоту stage своей натуральной пропорцией */
+  .cosme-product-gallery--natural .cosme-product-gallery__stage {
     aspect-ratio: auto;
   }
 
@@ -426,7 +449,7 @@
     pointer-events: auto;
     z-index: 1;
   }
-  .is-active .cosme-product-gallery__media   {
+  .is-active .cosme-product-gallery__media {
     opacity: 1;
     transform: scale(1);
     pointer-events: auto;
@@ -538,7 +561,6 @@
   .cosme-product-gallery__arrow svg,
   .cosme-product-gallery__arrow svg * {
     color: inherit;
- 
   }
 
   .cosme-product-gallery__arrow--prev {

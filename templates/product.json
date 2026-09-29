@@ -51,6 +51,73 @@
         "sticky_atc_color_scheme": "scheme-1"
       },
       "blocks": {
+        "vendor_7k2n8q": {
+          "type": "vendor",
+          "settings": {}
+        },
+        "title_4p9m1x": {
+          "type": "title",
+          "settings": {
+            "heading_tag": "h1"
+          }
+        },
+        "rating_2h6c8w": {
+          "type": "rating",
+          "settings": {}
+        },
+        "price_9s3d5b": {
+          "type": "price",
+          "settings": {}
+        },
+        "availability_1f7j4k": {
+          "type": "availability",
+          "settings": {
+            "low_stock_threshold": 5
+          }
+        },
+        "variant_picker_8n2p6m": {
+          "type": "variant_picker",
+          "settings": {}
+        },
+        "quantity_3c5r9t": {
+          "type": "quantity",
+          "settings": {}
+        },
+        "buy_buttons_6w1q8z": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_buy_it_now": true,
+            "show_dynamic_checkout": true
+          }
+        },
+        "pickup_availability_5e4y2u": {
+          "type": "pickup_availability",
+          "settings": {}
+        },
+        "gift_card_recipient_7m9k3a": {
+          "type": "gift_card_recipient",
+          "settings": {}
+        },
+        "trust_2b8n6d": {
+          "type": "trust",
+          "settings": {
+            "trust_shipping": "Fast shipping",
+            "trust_payment": "Secure payment",
+            "trust_returns": "Easy returns"
+          }
+        },
+        "meta_4x1p7s": {
+          "type": "meta",
+          "settings": {
+            "show_sku": true,
+            "show_vendor": true,
+            "show_type": false
+          }
+        },
+        "share_9c3f5h": {
+          "type": "share",
+          "settings": {}
+        },
         "description": {
           "type": "description",
           "settings": {
@@ -96,11 +163,24 @@
         }
       },
       "block_order": [
+        "vendor_7k2n8q",
+        "title_4p9m1x",
+        "rating_2h6c8w",
+        "price_9s3d5b",
+        "availability_1f7j4k",
+        "variant_picker_8n2p6m",
+        "quantity_3c5r9t",
+        "buy_buttons_6w1q8z",
+        "pickup_availability_5e4y2u",
+        "gift_card_recipient_7m9k3a",
+        "trust_2b8n6d",
         "description",
         "ingredients",
         "how_to_use",
         "shipping",
-        "additional"
+        "additional",
+        "share_9c3f5h",
+        "meta_4x1p7s"
       ]
     },
     "complementary": {

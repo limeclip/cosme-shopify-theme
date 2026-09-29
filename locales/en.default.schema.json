@@ -1108,7 +1108,8 @@
         "no_results_text": "No-results text",
         "no_results_cta_label": "No-results button label",
         "show_popular_searches": "Show popular searches",
-        "desktop_columns": "Desktop columns"
+        "desktop_columns": "Desktop columns",
+        "image_ratio": "Image ratio"
       },
       "blocks": {
         "popular_search": "Popular search",
@@ -1337,6 +1338,71 @@
         "sticky_atc_show_title": "Show product title",
         "sticky_atc_show_price": "Show price",
         "sticky_atc_show_variant": "Show variant"
+      },
+      "blocks": {
+        "vendor": {
+          "name": "Vendor"
+        },
+        "title": {
+          "name": "Title",
+          "settings": {
+            "heading_tag": "Heading tag"
+          }
+        },
+        "rating": {
+          "name": "Rating",
+          "reviews_link": "Reviews link",
+          "settings": {
+            "reviews_link": "Reviews link"
+          }
+        },
+        "price": {
+          "name": "Price"
+        },
+        "availability": {
+          "name": "Availability",
+          "settings": {
+            "low_stock_threshold": "Low stock threshold"
+          }
+        },
+        "variant_picker": {
+          "name": "Variant picker"
+        },
+        "quantity": {
+          "name": "Quantity"
+        },
+        "buy_buttons": {
+          "name": "Buy buttons",
+          "settings": {
+            "show_buy_it_now": "Show Buy it now",
+            "show_dynamic_checkout": "Show dynamic checkout"
+          }
+        },
+        "pickup_availability": {
+          "name": "Pickup availability"
+        },
+        "gift_card_recipient": {
+          "name": "Gift card recipient"
+        },
+        "trust": {
+          "name": "Trust bar",
+          "settings": {
+            "trust_shipping": "Shipping label",
+            "trust_payment": "Payment label",
+            "trust_returns": "Returns label"
+          }
+        },
+        "meta": {
+          "name": "Product meta",
+          "settings": {
+            "show_sku": "Show SKU",
+            "show_vendor": "Show vendor",
+            "show_type": "Show product type"
+          }
+        },
+        "share": {
+          "name": "Share"
+        }
       }
     },
     "featured_product": {
